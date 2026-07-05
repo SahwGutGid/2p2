@@ -1,0 +1,116 @@
+{
+  "app_name": "Investment Idle",
+  "personality": "4 Tactile / Playful",
+  "personality_one_liner": "A chunky, satisfying, and responsive interface where every tap feels rewarding and numbers pop.",
+  "color": {
+    "surface": "#FDFBF7",
+    "onSurface": "#121F17",
+    "surfaceSecondary": "#FFFFFF",
+    "onSurfaceSecondary": "#121F17",
+    "surfaceTertiary": "#E8F5E9",
+    "onSurfaceTertiary": "#121F17",
+    "surfaceInverse": "#121F17",
+    "onSurfaceInverse": "#FDFBF7",
+    "brand": "#00C853",
+    "brandPrimary": "#00C853",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#FFD54F",
+    "onBrandSecondary": "#121F17",
+    "brandTertiary": "#C8E6C9",
+    "onBrandTertiary": "#00701A",
+    "success": "#00C853",
+    "onSuccess": "#FFFFFF",
+    "warning": "#FFD54F",
+    "onWarning": "#121F17",
+    "error": "#FF5252",
+    "onError": "#FFFFFF",
+    "info": "#40C4FF",
+    "onInfo": "#121F17",
+    "border": "#E0E0E0",
+    "borderStrong": "#121F17",
+    "divider": "#E8F5E9"
+  },
+  "typography": {
+    "displayFontFamily": "Fredoka",
+    "textFontFamily": "Nunito",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24,
+      "3xl": 56
+    }
+  },
+  "spacing": {
+    "rule": "Generous tactile spacing, oversized margins for chunky feel",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "pill": 999
+  },
+  "shadow_tier": "2",
+  "navigation": "stack_only",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": "false",
+    "do's": [],
+    "dont's": [
+      "Do not use blur, rely on solid colors, thick borders, and heavy shadows for depth."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Game Prototype",
+      "purpose": "The main gameplay loop: check balance, hit invest, wait for timer, earn profit.",
+      "states": {
+        "loading": "Centered coin spinner or simple Fredoka 'Loading...' text.",
+        "empty": "Not applicable.",
+        "error": "A simple 'Bank Error' message with retry button."
+      },
+      "layout": "Root is a SafeAreaView with solid surface color. Top: A hero image (3D coins) centered with playful padding. Center: A massive chunky card (surfaceSecondary, shadow 2, lg radius) displaying 'Current Balance' in Nunito and the actual balance in huge Fredoka typography (using the 3xl scale). A small pill badge below it says '+10% Return' (brandTertiary bg, onBrandTertiary text). Bottom: A sticky CTA container hugging the bottom safe area. The CTA is a pill-shaped, oversized button (brandPrimary). When clicked, the button transforms into a progress indicator (5-second countdown) using react-native-reanimated. When the timer finishes, trigger haptics and animate a floating '+$XX' text upwards from the balance card."
+    }
+  ],
+  "images": {
+    "hero_coins": {
+      "url": "https://images.unsplash.com/photo-1669951584309-492ed24d274f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzV8MHwxfHNlYXJjaHwyfHwzZCUyMGNvaW4lMjBtb25leSUyMGJ1c2luZXNzfGVufDB8fHx8MTc4MzI1MDU4OHww&ixlib=rb-4.1.0&q=85",
+      "alt": "Stack of 3D golden coins"
+    }
+  },
+  "haptics": {
+    "events": {
+      "onInvestPress": "impactMedium",
+      "onCycleComplete": "notificationSuccess"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Build a single-screen app using only basic Views/SafeAreaView (no complex navigation needed).",
+    "Use react-native-reanimated for the 5-second countdown timer. Animate a darker overlay width inside the button (like a progress bar) OR animate the countdown text size.",
+    "When the 5s timer completes, trigger the 'notificationSuccess' haptic and animate a floating text ('+$10' or whatever the 10% profit is) moving up and fading out over the balance card.",
+    "Button States: Idle (brandPrimary, 'Invest', active), Investing (Disabled, Grey or animating green, 'Investing... 3s').",
+    "The UI must feel tactile and chunky. Use large radii (`lg`: 24, `pill`: 999), deep contrast text (`onSurface`: #121F17), and prominent tactile shadows (shadow tier 2).",
+    "Do not use emojis anywhere.",
+    "Keep the entire vibe playful, snappy, and satisfying. The text size for the balance should be massive (e.g., 56pt) to emphasize the idle game mechanics."
+  ]
+}

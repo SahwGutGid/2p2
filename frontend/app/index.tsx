@@ -9,32 +9,37 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
-  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withRepeat,
   withSequence,
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useSoundEngine } from "@/src/game/sounds";
+import { useBackgroundMusic } from "@/src/game/music";
+
 // ---------- P2P Dark Theme ----------
 const C = {
   bg: "#0B1220",
+  bgSoft: "#0F1830",
   panel: "#111B2E",
   panelElevated: "#16223A",
   accent: "#00E5FF",
+  accentDeep: "#00B8D4",
   gain: "#00FF88",
   loss: "#FF4D4D",
   text: "#E6E6E6",
   textMuted: "#8A96AD",
   border: "#1E2A44",
-  borderStrong: "#2A3A5C",
 };
 
-// ---------- Packages (rebalanced for faster early progression) ----------
+// ---------- Packages ----------
 type Pkg = {
   id: string;
   name: string;
@@ -46,18 +51,20 @@ type Pkg = {
 };
 
 const PACKAGES: Pkg[] = [
-  { id: "starter", name: "Starter Bond",   tag: "Low risk",       cost: 10,   durationMs: 3000,  profitPct: 0.08, tint: "#5EE1B0" },
-  { id: "growth",  name: "Growth Fund",    tag: "Medium",         cost: 50,   durationMs: 8000,  profitPct: 0.18, tint: "#00E5FF" },
-  { id: "momentum",name: "Momentum Pool",  tag: "High",           cost: 200,  durationMs: 20000, profitPct: 0.40, tint: "#FFB84D" },
-  { id: "whale",   name: "Whale Vault",    tag: "Very high risk", cost: 1000, durationMs: 60000, profitPct: 1.00, tint: "#FF6EC7" },
+  { id: "starter",  name: "Starter Bond",   tag: "Low risk",       cost: 10,   durationMs: 3000,  profitPct: 0.12, tint: "#5EE1B0" },
+  { id: "growth",   name: "Growth Fund",    tag: "Medium",         cost: 50,   durationMs: 8000,  profitPct: 0.22, tint: "#00E5FF" },
+  { id: "momentum", name: "Momentum Pool",  tag: "High",           cost: 200,  durationMs: 20000, profitPct: 0.45, tint: "#FFB84D" },
+  { id: "whale",    name: "Whale Vault",    tag: "Very high risk", cost: 1000, durationMs: 60000, profitPct: 1.10, tint: "#FF6EC7" },
 ];
 
+const CHEAPEST_COST = PACKAGES[0].cost;
+
 // ---------- Upgrades ----------
-type UpgradeId = "yield" | "turbo" | "passive" | "lucky";
+type UpgradeId = "yield" | "turbo" | "passive" | "lucky" | "slots";
 type Upgrade = {
   id: UpgradeId;
   name: string;
-  description: (level: number) => string;
+  description: string;
   effect: (level: number) => string;
   baseCost: number;
   costGrowth: number;
@@ -66,73 +73,49 @@ type Upgrade = {
 };
 
 const UPGRADES: Upgrade[] = [
-  {
-    id: "yield",
-    name: "Yield Boost",
-    description: () => "+5% profit multiplier per level",
-    effect: (l) => `+${(l * 5).toFixed(0)}% profit`,
-    baseCost: 25,
-    costGrowth: 1.7,
-    maxLevel: 15,
-    tint: "#00FF88",
-  },
-  {
-    id: "turbo",
-    name: "Turbo Trades",
-    description: () => "-4% investment duration per level",
-    effect: (l) => `-${Math.min(60, l * 4).toFixed(0)}% time`,
-    baseCost: 40,
-    costGrowth: 1.75,
-    maxLevel: 15,
-    tint: "#00E5FF",
-  },
-  {
-    id: "passive",
-    name: "Passive Yield",
-    description: () => "+$0.50/sec passive income per level",
-    effect: (l) => `+$${(l * 0.5).toFixed(2)}/sec`,
-    baseCost: 100,
-    costGrowth: 1.6,
-    maxLevel: 25,
-    tint: "#FFB84D",
-  },
-  {
-    id: "lucky",
-    name: "Lucky Streak",
-    description: () => "+3% chance for 2× profit per level",
-    effect: (l) => `${Math.min(60, l * 3).toFixed(0)}% x2 chance`,
-    baseCost: 150,
-    costGrowth: 1.85,
-    maxLevel: 20,
-    tint: "#FF6EC7",
-  },
+  { id: "yield",   name: "Yield Boost",     description: "+7% profit multiplier per level",     effect: (l) => `+${(l * 7).toFixed(0)}% profit`,             baseCost: 25,  costGrowth: 1.65, maxLevel: 15, tint: "#00FF88" },
+  { id: "turbo",   name: "Turbo Trades",    description: "-5% investment duration per level",   effect: (l) => `-${Math.min(70, l * 5).toFixed(0)}% time`,   baseCost: 40,  costGrowth: 1.7,  maxLevel: 14, tint: "#00E5FF" },
+  { id: "passive", name: "Passive Yield",   description: "+$0.75/sec passive income per level", effect: (l) => `+$${(l * 0.75).toFixed(2)}/sec`,             baseCost: 80,  costGrowth: 1.55, maxLevel: 25, tint: "#FFB84D" },
+  { id: "lucky",   name: "Lucky Streak",    description: "+3% chance for 2× profit per level",  effect: (l) => `${Math.min(60, l * 3).toFixed(0)}% x2`,      baseCost: 150, costGrowth: 1.8,  maxLevel: 20, tint: "#FF6EC7" },
+  { id: "slots",   name: "Portfolio Slots", description: "+1 concurrent investment per level",  effect: (l) => `${l + 1} slot${l === 0 ? "" : "s"}`,         baseCost: 500, costGrowth: 3,    maxLevel: 4,  tint: "#00E5FF" },
 ];
 
 const upgradeCost = (u: Upgrade, level: number) =>
   Math.floor(u.baseCost * Math.pow(u.costGrowth, level));
 
-// ---------- Save shape ----------
-type ActiveState = { id: string; cost: number; endsAt: number } | null;
+// ---------- Actives ----------
+type ActiveInvestment = {
+  runId: string;
+  pkgId: string;
+  cost: number;
+  startedAt: number;
+  endsAt: number;
+};
 
+// ---------- Save shape ----------
 type SaveData = {
-  v: 1;
+  v: 3;
   balance: number;
   selectedId: string;
   levels: Record<UpgradeId, number>;
-  active: ActiveState;
+  actives: ActiveInvestment[];
   lastSeenAt: number;
+  musicEnabled: boolean;
 };
 
-const SAVE_KEY = "investmentIdle:v1";
-const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000; // 8h offline earnings cap
+const SAVE_KEY = "investmentIdle:v3";
+const LEGACY_KEY_V2 = "investmentIdle:v2";
+const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
+const BAILOUT_AMOUNT = 15;
 
 const defaultSave = (): SaveData => ({
-  v: 1,
+  v: 3,
   balance: 100,
   selectedId: PACKAGES[0].id,
-  levels: { yield: 0, turbo: 0, passive: 0, lucky: 0 },
-  active: null,
+  levels: { yield: 0, turbo: 0, passive: 0, lucky: 0, slots: 0 },
+  actives: [],
   lastSeenAt: Date.now(),
+  musicEnabled: true,
 });
 
 // ---------- Helpers ----------
@@ -148,66 +131,128 @@ const fmtSecs = (ms: number) =>
   ms >= 60000 ? fmtDuration(ms) : `${(ms / 1000).toFixed(1)}s`;
 
 const effectiveProfitPct = (base: number, yieldLevel: number) =>
-  base * (1 + 0.05 * yieldLevel);
-
+  base * (1 + 0.07 * yieldLevel);
 const effectiveDurationMs = (base: number, turboLevel: number) => {
-  const reduction = Math.min(0.6, 0.04 * turboLevel);
+  const reduction = Math.min(0.7, 0.05 * turboLevel);
   return Math.round(base * (1 - reduction));
 };
-
-const passiveRate = (level: number) => 0.5 * level;
+const passiveRate = (level: number) => 0.75 * level;
 const luckyChance = (level: number) => Math.min(0.6, 0.03 * level);
+const slotCount = (level: number) => 1 + level;
+
+// Accelerate: reduce remaining by 6% (min 200ms, max 400ms) per tap
+const ACCELERATE_COOLDOWN_MS = 80;
+
+let runIdCounter = 0;
+const newRunId = () => `r${Date.now()}-${++runIdCounter}`;
 
 export default function Index() {
+  const sound = useSoundEngine();
+
   const [ready, setReady] = useState(false);
   const [balance, setBalance] = useState(100);
   const [selectedId, setSelectedId] = useState(PACKAGES[0].id);
   const [levels, setLevels] = useState<Record<UpgradeId, number>>({
-    yield: 0,
-    turbo: 0,
-    passive: 0,
-    lucky: 0,
+    yield: 0, turbo: 0, passive: 0, lucky: 0, slots: 0,
   });
-  const [active, setActive] = useState<ActiveState>(null);
-  const [msLeft, setMsLeft] = useState(0);
+  const [actives, setActives] = useState<ActiveInvestment[]>([]);
+  const [now, setNow] = useState<number>(Date.now());
   const [lastProfit, setLastProfit] = useState(0);
   const [wasLucky, setWasLucky] = useState(false);
   const [offlineGain, setOfflineGain] = useState<number>(0);
+  const [bailoutNotice, setBailoutNotice] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(true);
 
-  const progress = useSharedValue(0);
+  // Smooth balance counter (RAF-based, cross-platform safe)
+  const [displayBalance, setDisplayBalance] = useState(100);
+  const rafRef = useRef<number | null>(null);
+  const displayStartRef = useRef({ from: 100, to: 100, start: 0 });
+
+  useEffect(() => {
+    displayStartRef.current = {
+      from: displayBalance,
+      to: balance,
+      start: (typeof performance !== "undefined" ? performance.now() : Date.now()),
+    };
+    const duration = 550;
+    const tick = (t: number) => {
+      const { from, to, start } = displayStartRef.current;
+      const p = Math.min(1, (t - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplayBalance(from + (to - from) * eased);
+      if (p < 1) rafRef.current = requestAnimationFrame(tick);
+    };
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [balance]);
+
+  // Background music (respects toggle)
+  const music = useBackgroundMusic(musicEnabled);
+
+  // Reanimated values
   const floatY = useSharedValue(0);
   const floatOpacity = useSharedValue(0);
   const balancePulse = useSharedValue(1);
+  const shakeX = useSharedValue(0);
+  const flash = useSharedValue(0);
+  const selectedPulse = useSharedValue(1);
 
-  const finishRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    selectedPulse.value = withRepeat(
+      withSequence(
+        withTiming(1.015, { duration: 1200, easing: Easing.inOut(Easing.quad) }),
+        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.quad) })
+      ),
+      -1,
+      false
+    );
+  }, [selectedPulse]);
+
+  // Refs
+  const finishRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const nowTickerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const passiveRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastAccelTapRef = useRef<number>(0);
 
-  // ---- persistence ----
-  const saveState = useCallback(
-    async (data: Partial<SaveData>) => {
-      try {
-        const merged: SaveData = {
-          v: 1,
-          balance,
-          selectedId,
-          levels,
-          active,
-          lastSeenAt: Date.now(),
-          ...data,
-        };
-        await AsyncStorage.setItem(SAVE_KEY, JSON.stringify(merged));
-      } catch {}
-    },
-    [balance, selectedId, levels, active]
-  );
+  // ---- Persistence ----
+  const saveState = useCallback(async (data: Partial<SaveData>) => {
+    try {
+      const merged: SaveData = {
+        v: 3, balance, selectedId, levels, actives, musicEnabled,
+        lastSeenAt: Date.now(),
+        ...data,
+      };
+      await AsyncStorage.setItem(SAVE_KEY, JSON.stringify(merged));
+    } catch {}
+  }, [balance, selectedId, levels, actives, musicEnabled]);
 
-  // Load once
+  // Load (migrate v2 → v3 if needed)
   useEffect(() => {
     (async () => {
       try {
-        const raw = await AsyncStorage.getItem(SAVE_KEY);
-        const now = Date.now();
+        let raw = await AsyncStorage.getItem(SAVE_KEY);
+        if (!raw) {
+          const legacy = await AsyncStorage.getItem(LEGACY_KEY_V2);
+          if (legacy) {
+            try {
+              const p = JSON.parse(legacy);
+              raw = JSON.stringify({
+                ...defaultSave(),
+                balance: p.balance ?? 100,
+                selectedId: p.selectedId ?? PACKAGES[0].id,
+                levels: { ...defaultSave().levels, ...(p.levels ?? {}) },
+                actives: p.active ? [{ runId: newRunId(), pkgId: p.active.id, cost: p.active.cost, startedAt: p.active.endsAt - 3000, endsAt: p.active.endsAt }] : [],
+                lastSeenAt: p.lastSeenAt ?? Date.now(),
+              });
+            } catch {}
+          }
+        }
+
+        const nowMs = Date.now();
         let saved: SaveData = defaultSave();
         if (raw) {
           const parsed = JSON.parse(raw) as Partial<SaveData>;
@@ -215,219 +260,256 @@ export default function Index() {
             ...defaultSave(),
             ...parsed,
             levels: { ...defaultSave().levels, ...(parsed.levels ?? {}) },
+            actives: (parsed.actives ?? []) as ActiveInvestment[],
           };
         }
 
-        // Offline passive income (capped)
-        const elapsed = Math.min(
-          OFFLINE_CAP_MS,
-          Math.max(0, now - (saved.lastSeenAt ?? now))
-        );
-        const passiveEarned =
-          (elapsed / 1000) * passiveRate(saved.levels.passive ?? 0);
+        // Passive offline earnings
+        const elapsed = Math.min(OFFLINE_CAP_MS, Math.max(0, nowMs - (saved.lastSeenAt ?? nowMs)));
+        const passiveEarned = (elapsed / 1000) * passiveRate(saved.levels.passive ?? 0);
 
-        // Resolve active investment
-        let restoredActive: ActiveState = saved.active;
-        let hadCompletion = 0;
-        if (restoredActive) {
-          if (now >= restoredActive.endsAt) {
-            // Settle: pay principal + profit at the base rate captured in the package
-            const pkg = PACKAGES.find((p) => p.id === restoredActive!.id);
+        // Settle any actives that would have completed while away
+        let payout = 0;
+        const remaining: ActiveInvestment[] = [];
+        for (const a of saved.actives) {
+          if (nowMs >= a.endsAt) {
+            const pkg = PACKAGES.find((p) => p.id === a.pkgId);
             if (pkg) {
-              const p =
-                restoredActive.cost *
-                effectiveProfitPct(pkg.profitPct, saved.levels.yield ?? 0);
-              hadCompletion = restoredActive.cost + p;
+              const p = a.cost * effectiveProfitPct(pkg.profitPct, saved.levels.yield ?? 0);
+              payout += a.cost + p;
+            } else {
+              payout += a.cost;
             }
-            restoredActive = null;
+          } else {
+            remaining.push(a);
           }
         }
 
-        setBalance(saved.balance + passiveEarned + hadCompletion);
+        const nextBalance = saved.balance + passiveEarned + payout;
+        setBalance(nextBalance);
+        setDisplayBalance(nextBalance);
+        displayStartRef.current = { from: nextBalance, to: nextBalance, start: 0 };
         setSelectedId(saved.selectedId ?? PACKAGES[0].id);
         setLevels(saved.levels);
-        setActive(restoredActive);
+        setActives(remaining);
+        setMusicEnabled(saved.musicEnabled ?? true);
         if (passiveEarned > 0.01) setOfflineGain(passiveEarned);
 
-        // If active investment still running, restore progress + timer
-        if (restoredActive) {
-          const remaining = Math.max(0, restoredActive.endsAt - now);
-          const total = restoredActive.endsAt - (saved.lastSeenAt ?? now);
-          const initialProgress =
-            total > 0 ? Math.min(1, 1 - remaining / total) : 0;
-          progress.value = initialProgress;
-          progress.value = withTiming(1, {
-            duration: remaining,
-            easing: Easing.linear,
-          });
-          setMsLeft(remaining);
-          finishRef.current = setTimeout(() => {
-            finishActive(restoredActive!);
-          }, remaining);
-          tickRef.current = setInterval(() => {
-            const left = Math.max(0, restoredActive!.endsAt - Date.now());
-            setMsLeft(left);
-            if (left <= 0 && tickRef.current) {
-              clearInterval(tickRef.current);
-              tickRef.current = null;
-            }
-          }, 100);
+        // Schedule completions for remaining actives
+        for (const a of remaining) {
+          const left = Math.max(0, a.endsAt - Date.now());
+          finishRefs.current[a.runId] = setTimeout(() => completeInvestment(a.runId), left);
         }
-      } catch {
-        // ignore, use defaults
-      } finally {
-        setReady(true);
-      }
+      } catch {}
+      finally { setReady(true); }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-save on state changes (only after initial load)
+  // Auto-save
   useEffect(() => {
     if (!ready) return;
     saveState({});
-  }, [ready, balance, selectedId, levels, active, saveState]);
+  }, [ready, balance, selectedId, levels, actives, musicEnabled, saveState]);
 
-  // Save on backgrounding for extra safety
+  // Save when backgrounded
   useEffect(() => {
-    const sub = AppState.addEventListener("change", (s) => {
-      if (s !== "active") saveState({});
-    });
+    const sub = AppState.addEventListener("change", (s) => { if (s !== "active") saveState({}); });
     return () => sub.remove();
   }, [saveState]);
 
-  // Passive income loop
+  // Passive income tick
   useEffect(() => {
-    if (passiveRef.current) {
-      clearInterval(passiveRef.current);
-      passiveRef.current = null;
-    }
+    if (passiveRef.current) { clearInterval(passiveRef.current); passiveRef.current = null; }
     const rate = passiveRate(levels.passive);
     if (rate <= 0) return;
-    passiveRef.current = setInterval(() => {
-      setBalance((b) => b + rate);
-    }, 1000);
+    passiveRef.current = setInterval(() => { setBalance((b) => b + rate); }, 1000);
     return () => {
-      if (passiveRef.current) {
-        clearInterval(passiveRef.current);
-        passiveRef.current = null;
-      }
+      if (passiveRef.current) { clearInterval(passiveRef.current); passiveRef.current = null; }
     };
   }, [levels.passive]);
+
+  // Global `now` ticker while any investment is active (for progress + countdown display)
+  useEffect(() => {
+    if (nowTickerRef.current) { clearInterval(nowTickerRef.current); nowTickerRef.current = null; }
+    if (actives.length === 0) return;
+    nowTickerRef.current = setInterval(() => setNow(Date.now()), 100);
+    return () => {
+      if (nowTickerRef.current) { clearInterval(nowTickerRef.current); nowTickerRef.current = null; }
+    };
+  }, [actives.length]);
+
+  // Anti-soft-lock bailout
+  useEffect(() => {
+    if (!ready) return;
+    if (actives.length > 0) return;
+    if (passiveRate(levels.passive) > 0) return;
+    if (balance >= CHEAPEST_COST) return;
+    const t = setTimeout(() => {
+      setBalance((b) => (b < CHEAPEST_COST ? BAILOUT_AMOUNT : b));
+      setBailoutNotice(true);
+      sound.play("upgrade");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+    }, 700);
+    return () => clearTimeout(t);
+  }, [balance, actives.length, levels.passive, ready, sound]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (finishRef.current) clearTimeout(finishRef.current);
-      if (tickRef.current) clearInterval(tickRef.current);
-      cancelAnimation(progress);
+      Object.values(finishRefs.current).forEach(clearTimeout);
+      finishRefs.current = {};
+      if (nowTickerRef.current) clearInterval(nowTickerRef.current);
+      if (passiveRef.current) clearInterval(passiveRef.current);
     };
-  }, [progress]);
-
-  const selected = PACKAGES.find((p) => p.id === selectedId) ?? PACKAGES[0];
-  const isBusy = active !== null;
-  const canAffordSelected = balance >= selected.cost && !isBusy;
+  }, []);
 
   // ---- Actions ----
-  const finishActive = (a: ActiveState) => {
-    if (!a) return;
-    const pkg = PACKAGES.find((p) => p.id === a.id);
-    if (!pkg) {
-      setActive(null);
-      return;
-    }
-    const basePct = effectiveProfitPct(pkg.profitPct, levels.yield);
-    let profit = a.cost * basePct;
-    const lucky = Math.random() < luckyChance(levels.lucky);
-    if (lucky) profit *= 2;
+  const completeInvestment = useCallback((runId: string) => {
+    setActives((list) => {
+      const a = list.find((x) => x.runId === runId);
+      if (!a) return list;
+      const pkg = PACKAGES.find((p) => p.id === a.pkgId);
+      if (!pkg) return list.filter((x) => x.runId !== runId);
 
-    setBalance((b) => b + a.cost + profit);
-    setLastProfit(profit);
-    setWasLucky(lucky);
-    setActive(null);
-    setMsLeft(0);
-    progress.value = 0;
+      const basePct = effectiveProfitPct(pkg.profitPct, levels.yield);
+      let profit = a.cost * basePct;
+      const lucky = Math.random() < luckyChance(levels.lucky);
+      if (lucky) profit *= 2;
 
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
-      () => {}
-    );
+      setBalance((b) => b + a.cost + profit);
+      setLastProfit(profit);
+      setWasLucky(lucky);
 
-    balancePulse.value = withSequence(
-      withTiming(1.08, { duration: 160, easing: Easing.out(Easing.quad) }),
-      withTiming(1, { duration: 220, easing: Easing.inOut(Easing.quad) })
-    );
+      sound.play("investComplete");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 
-    floatY.value = 0;
-    floatOpacity.value = 1;
-    floatY.value = withTiming(-90, {
-      duration: 1300,
-      easing: Easing.out(Easing.cubic),
+      balancePulse.value = withSequence(
+        withTiming(1.1, { duration: 160, easing: Easing.out(Easing.quad) }),
+        withTiming(1, { duration: 260, easing: Easing.inOut(Easing.quad) })
+      );
+      floatY.value = 0;
+      floatOpacity.value = 1;
+      floatY.value = withTiming(-100, { duration: 1300, easing: Easing.out(Easing.cubic) });
+      floatOpacity.value = withDelay(700, withTiming(0, { duration: 600 }));
+
+      delete finishRefs.current[runId];
+      return list.filter((x) => x.runId !== runId);
     });
-    floatOpacity.value = withDelay(
-      700,
-      withTiming(0, { duration: 600, easing: Easing.linear })
+  }, [levels.yield, levels.lucky, sound, balancePulse, floatY, floatOpacity]);
+
+  const doShake = () => {
+    shakeX.value = withSequence(
+      withTiming(-10, { duration: 60 }),
+      withTiming(10, { duration: 60 }),
+      withTiming(-8, { duration: 60 }),
+      withTiming(8, { duration: 60 }),
+      withTiming(0, { duration: 60 })
     );
   };
 
+  const kickMusicOnce = () => { music.kick(); };
+
+  const slots = slotCount(levels.slots);
+  const hasFreeSlot = actives.length < slots;
+  const selected = PACKAGES.find((p) => p.id === selectedId) ?? PACKAGES[0];
+  const canAffordSelected = balance >= selected.cost;
+  const canInvest = hasFreeSlot && canAffordSelected;
+
   const invest = () => {
-    if (isBusy || !canAffordSelected) return;
+    kickMusicOnce();
+    if (!canInvest) {
+      sound.play("error");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      doShake();
+      return;
+    }
+    sound.play("investStart");
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    flash.value = 0.55;
+    flash.value = withTiming(0, { duration: 600, easing: Easing.out(Easing.quad) });
 
     const pkg = selected;
     const dur = effectiveDurationMs(pkg.durationMs, levels.turbo);
-    const now = Date.now();
-    const a: ActiveState = { id: pkg.id, cost: pkg.cost, endsAt: now + dur };
-
+    const startedAt = Date.now();
+    const a: ActiveInvestment = {
+      runId: newRunId(),
+      pkgId: pkg.id,
+      cost: pkg.cost,
+      startedAt,
+      endsAt: startedAt + dur,
+    };
     setBalance((b) => b - pkg.cost);
-    setActive(a);
-    setMsLeft(dur);
+    setActives((list) => [...list, a]);
+    finishRefs.current[a.runId] = setTimeout(() => completeInvestment(a.runId), dur);
+  };
 
-    progress.value = 0;
-    progress.value = withTiming(1, { duration: dur, easing: Easing.linear });
+  const accelerate = (runId: string) => {
+    kickMusicOnce();
+    const nowMs = Date.now();
+    if (nowMs - lastAccelTapRef.current < ACCELERATE_COOLDOWN_MS) return;
+    lastAccelTapRef.current = nowMs;
 
-    tickRef.current = setInterval(() => {
-      const left = Math.max(0, a.endsAt - Date.now());
-      setMsLeft(left);
-      if (left <= 0 && tickRef.current) {
-        clearInterval(tickRef.current);
-        tickRef.current = null;
-      }
-    }, 100);
+    setActives((list) => {
+      const idx = list.findIndex((x) => x.runId === runId);
+      if (idx === -1) return list;
+      const a = list[idx];
+      const remaining = Math.max(0, a.endsAt - nowMs);
+      if (remaining <= 0) return list;
+      const reduction = Math.max(200, Math.min(400, remaining * 0.06));
+      const newEndsAt = Math.max(nowMs, a.endsAt - reduction);
+      const updated: ActiveInvestment = { ...a, endsAt: newEndsAt };
+      // reschedule
+      if (finishRefs.current[a.runId]) clearTimeout(finishRefs.current[a.runId]);
+      finishRefs.current[a.runId] = setTimeout(() => completeInvestment(a.runId), Math.max(0, newEndsAt - Date.now()));
+      const copy = [...list];
+      copy[idx] = updated;
+      return copy;
+    });
 
-    finishRef.current = setTimeout(() => {
-      if (tickRef.current) {
-        clearInterval(tickRef.current);
-        tickRef.current = null;
-      }
-      finishActive(a);
-    }, dur);
+    sound.play("click");
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
   };
 
   const buyUpgrade = (u: Upgrade) => {
+    kickMusicOnce();
     const level = levels[u.id];
     if (level >= u.maxLevel) return;
     const cost = upgradeCost(u, level);
-    if (balance < cost) return;
+    if (balance < cost) {
+      sound.play("error");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      doShake();
+      return;
+    }
+    sound.play("upgrade");
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setBalance((b) => b - cost);
     setLevels((l) => ({ ...l, [u.id]: l[u.id] + 1 }));
   };
 
+  const toggleMusic = () => {
+    setMusicEnabled((v) => {
+      const next = !v;
+      // if enabling, ensure the audio context is unlocked
+      if (next) music.kick();
+      return next;
+    });
+    Haptics.selectionAsync().catch(() => {});
+  };
+
   // ---- Animated styles ----
-  const progressStyle = useAnimatedStyle(() => ({
-    width: `${progress.value * 100}%`,
-  }));
   const floatStyle = useAnimatedStyle(() => ({
     opacity: floatOpacity.value,
     transform: [{ translateY: floatY.value }],
   }));
   const balanceStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: balancePulse.value }],
+    transform: [{ scale: balancePulse.value }, { translateX: shakeX.value }],
   }));
+  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+  const ctaShakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shakeX.value }] }));
+  const selectedPulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: selectedPulse.value }] }));
 
-  const activePkg = active
-    ? PACKAGES.find((p) => p.id === active.id) ?? null
-    : null;
   const selectedEffPct = effectiveProfitPct(selected.profitPct, levels.yield);
   const selectedEffDur = effectiveDurationMs(selected.durationMs, levels.turbo);
   const selectedEffProfit = selected.cost * selectedEffPct;
@@ -442,18 +524,51 @@ export default function Index() {
     );
   }
 
+  const ctaLabel = !hasFreeSlot
+    ? "All slots busy"
+    : !canAffordSelected
+    ? "Insufficient Balance"
+    : `Invest ${money(selected.cost)}`;
+  const ctaSub = !hasFreeSlot
+    ? `Unlock more via Portfolio Slots (Lv ${levels.slots}/4)`
+    : !canAffordSelected
+    ? `Need ${money(selected.cost)} for ${selected.name}`
+    : `${selected.name} · +${money(selectedEffProfit)} in ${fmtDuration(selectedEffDur)}`;
+
   return (
     <SafeAreaView style={styles.safe} testID="game-screen">
+      {/* Flash overlay */}
+      <Animated.View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, styles.flashOverlay, flashStyle]}
+        testID="invest-flash"
+      />
+
       {/* HEADER */}
-      <View style={styles.header}>
-        <Text style={styles.balanceLabel}>PORTFOLIO BALANCE</Text>
-        <View style={styles.balanceRow}>
-          <Animated.Text
-            style={[styles.balance, balanceStyle]}
-            testID="balance-value"
+      <LinearGradient
+        colors={[C.bgSoft, C.bg]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerTopRow}>
+          <Text style={styles.balanceLabel}>PORTFOLIO BALANCE</Text>
+          <Pressable
+            onPress={toggleMusic}
+            hitSlop={12}
+            style={styles.musicToggle}
+            testID="music-toggle"
           >
-            {money(balance)}
-          </Animated.Text>
+            <Text style={styles.musicToggleText}>
+              {musicEnabled ? "MUSIC ON" : "MUSIC OFF"}
+            </Text>
+          </Pressable>
+        </View>
+
+        <Animated.View style={[styles.balanceRow, balanceStyle]}>
+          <Text style={styles.balance} testID="balance-value">
+            {money(displayBalance)}
+          </Text>
           <Animated.Text
             style={[styles.floatingProfit, floatStyle]}
             pointerEvents="none"
@@ -461,17 +576,16 @@ export default function Index() {
           >
             {wasLucky ? "2×  " : ""}+{money(lastProfit)}
           </Animated.Text>
-        </View>
+        </Animated.View>
 
         <View style={styles.pillRow}>
-          {active && activePkg ? (
-            <View style={styles.lockedPill} testID="locked-pill">
-              <View style={styles.lockDot} />
-              <Text style={styles.lockedText}>
-                {money(active.cost)} locked · {activePkg.name}
-              </Text>
-            </View>
-          ) : (
+          <View style={styles.slotPill} testID="slot-pill">
+            <Text style={styles.slotPillText}>
+              Slots {actives.length}/{slots}
+            </Text>
+          </View>
+
+          {actives.length === 0 && (
             <View style={styles.availPill}>
               <Text style={styles.availText}>Available to invest</Text>
             </View>
@@ -487,105 +601,177 @@ export default function Index() {
         </View>
 
         {offlineGain > 0.01 && (
-          <View style={styles.offlineBanner} testID="offline-banner">
-            <Text style={styles.offlineText}>
+          <View style={styles.banner} testID="offline-banner">
+            <Text style={styles.bannerText}>
               Welcome back — earned {money(offlineGain)} while away
             </Text>
-            <Pressable
-              onPress={() => setOfflineGain(0)}
-              hitSlop={12}
-              testID="offline-dismiss"
-            >
-              <Text style={styles.offlineDismiss}>OK</Text>
+            <Pressable onPress={() => setOfflineGain(0)} hitSlop={12}>
+              <Text style={styles.bannerDismiss}>OK</Text>
             </Pressable>
           </View>
         )}
-      </View>
 
-      {/* SCROLLABLE CONTENT */}
+        {bailoutNotice && (
+          <View style={[styles.banner, styles.bannerWarn]} testID="bailout-banner">
+            <Text style={[styles.bannerText, { color: C.accent }]}>
+              Stimulus received — {money(BAILOUT_AMOUNT)} added to keep you trading
+            </Text>
+            <Pressable onPress={() => setBailoutNotice(false)} hitSlop={12}>
+              <Text style={[styles.bannerDismiss, { color: C.accent }]}>OK</Text>
+            </Pressable>
+          </View>
+        )}
+      </LinearGradient>
+
       <ScrollView
         style={styles.list}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* ACTIVE INVESTMENTS */}
+        {actives.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>ACTIVE INVESTMENTS</Text>
+            {actives.map((a) => {
+              const pkg = PACKAGES.find((p) => p.id === a.pkgId);
+              if (!pkg) return null;
+              const total = a.endsAt - a.startedAt;
+              const remaining = Math.max(0, a.endsAt - now);
+              const progress = total > 0 ? Math.min(1, 1 - remaining / total) : 1;
+              const effPct = effectiveProfitPct(pkg.profitPct, levels.yield);
+              const projected = a.cost * effPct;
+              return (
+                <View key={a.runId} style={styles.activeCard} testID={`active-${a.runId}`}>
+                  <View style={styles.activeHeaderRow}>
+                    <View
+                      style={[
+                        styles.activeIcon,
+                        { backgroundColor: `${pkg.tint}22`, borderColor: pkg.tint },
+                      ]}
+                    >
+                      <Text style={[styles.activeIconText, { color: pkg.tint }]}>
+                        +{(effPct * 100).toFixed(0)}%
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.activeName}>{pkg.name}</Text>
+                      <Text style={styles.activeMeta}>
+                        {money(a.cost)} → +{money(projected)}
+                      </Text>
+                    </View>
+                    <Text style={styles.activeCountdown}>{fmtSecs(remaining)}</Text>
+                  </View>
+
+                  <View style={styles.activeBarTrack}>
+                    <LinearGradient
+                      colors={[C.accent, C.accentDeep]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[styles.activeBarFill, { width: `${progress * 100}%` }]}
+                    />
+                  </View>
+
+                  <Pressable
+                    onPress={() => accelerate(a.runId)}
+                    style={({ pressed }) => [
+                      styles.accelerateBtn,
+                      pressed && styles.accelerateBtnPressed,
+                    ]}
+                    testID={`accelerate-${a.runId}`}
+                  >
+                    <LinearGradient
+                      colors={["rgba(0,229,255,0.20)", "rgba(0,229,255,0.05)"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    <Text style={styles.accelerateText}>ACCELERATE</Text>
+                    <Text style={styles.accelerateHint}>Tap to shave time</Text>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </>
+        )}
+
         {/* PACKAGES */}
-        <Text style={styles.sectionTitle}>INVESTMENT PACKAGES</Text>
+        <Text style={[styles.sectionTitle, actives.length > 0 && { marginTop: 20 }]}>
+          INVESTMENT PACKAGES
+        </Text>
 
         {PACKAGES.map((pkg) => {
           const affordable = balance >= pkg.cost;
           const isSelected = pkg.id === selectedId;
-          const locked = isBusy;
-          const disabled = locked || !affordable;
+          const disabled = !affordable;
           const effPct = effectiveProfitPct(pkg.profitPct, levels.yield);
           const effDur = effectiveDurationMs(pkg.durationMs, levels.turbo);
           const projectedProfit = pkg.cost * effPct;
           const roi = `+${(effPct * 100).toFixed(0)}%`;
 
           return (
-            <Pressable
+            <Animated.View
               key={pkg.id}
-              disabled={disabled}
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                setSelectedId(pkg.id);
-              }}
-              style={({ pressed }) => [
-                styles.card,
-                isSelected && styles.cardSelected,
-                !affordable && !locked && styles.cardLocked,
-                pressed && !disabled && styles.cardPressed,
-              ]}
-              testID={`package-${pkg.id}`}
+              style={isSelected ? selectedPulseStyle : undefined}
             >
-              <View style={styles.cardRow}>
-                <View
-                  style={[
-                    styles.cardIcon,
-                    { backgroundColor: `${pkg.tint}22`, borderColor: pkg.tint },
-                  ]}
-                >
-                  <Text style={[styles.cardIconText, { color: pkg.tint }]}>
-                    {roi}
-                  </Text>
-                </View>
-
-                <View style={styles.cardMain}>
-                  <View style={styles.cardTitleRow}>
-                    <Text style={styles.cardTitle}>{pkg.name}</Text>
-                    {!affordable && !locked ? (
-                      <View style={styles.badgeLoss}>
-                        <Text style={styles.badgeLossText}>LOCKED</Text>
-                      </View>
-                    ) : (
-                      <View style={styles.badgeTag}>
-                        <Text style={styles.badgeTagText}>{pkg.tag}</Text>
-                      </View>
-                    )}
+              <Pressable
+                disabled={disabled}
+                onPress={() => {
+                  kickMusicOnce();
+                  sound.play("click");
+                  Haptics.selectionAsync().catch(() => {});
+                  setSelectedId(pkg.id);
+                }}
+                style={({ pressed }) => [
+                  styles.card,
+                  isSelected && styles.cardSelected,
+                  !affordable && styles.cardLocked,
+                  pressed && !disabled && styles.cardPressed,
+                ]}
+                testID={`package-${pkg.id}`}
+              >
+                {isSelected && !disabled && (
+                  <LinearGradient
+                    colors={["rgba(0,229,255,0.14)", "rgba(0,229,255,0)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                    pointerEvents="none"
+                  />
+                )}
+                <View style={styles.cardRow}>
+                  <View style={[styles.cardIcon, { backgroundColor: `${pkg.tint}22`, borderColor: pkg.tint }]}>
+                    <Text style={[styles.cardIconText, { color: pkg.tint }]}>{roi}</Text>
                   </View>
-
-                  <View style={styles.cardMetaRow}>
-                    <View style={styles.metaCell}>
-                      <Text style={styles.metaLabel}>Cost</Text>
-                      <Text style={styles.metaValue}>{money(pkg.cost)}</Text>
+                  <View style={styles.cardMain}>
+                    <View style={styles.cardTitleRow}>
+                      <Text style={styles.cardTitle}>{pkg.name}</Text>
+                      {!affordable ? (
+                        <View style={styles.badgeLoss}><Text style={styles.badgeLossText}>LOCKED</Text></View>
+                      ) : (
+                        <View style={styles.badgeTag}><Text style={styles.badgeTagText}>{pkg.tag}</Text></View>
+                      )}
                     </View>
-                    <View style={styles.metaCell}>
-                      <Text style={styles.metaLabel}>Duration</Text>
-                      <Text style={styles.metaValue}>{fmtDuration(effDur)}</Text>
-                    </View>
-                    <View style={styles.metaCell}>
-                      <Text style={styles.metaLabel}>Profit</Text>
-                      <Text style={[styles.metaValue, styles.metaGain]}>
-                        +{money(projectedProfit)}
-                      </Text>
+                    <View style={styles.cardMetaRow}>
+                      <View style={styles.metaCell}>
+                        <Text style={styles.metaLabel}>Cost</Text>
+                        <Text style={styles.metaValue}>{money(pkg.cost)}</Text>
+                      </View>
+                      <View style={styles.metaCell}>
+                        <Text style={styles.metaLabel}>Duration</Text>
+                        <Text style={styles.metaValue}>{fmtDuration(effDur)}</Text>
+                      </View>
+                      <View style={styles.metaCell}>
+                        <Text style={styles.metaLabel}>Profit</Text>
+                        <Text style={[styles.metaValue, styles.metaGain]}>+{money(projectedProfit)}</Text>
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
-
-              {isSelected && !disabled && (
-                <View style={styles.selectedGlow} pointerEvents="none" />
-              )}
-            </Pressable>
+                {isSelected && !disabled && (
+                  <View style={styles.selectedGlow} pointerEvents="none" />
+                )}
+              </Pressable>
+            </Animated.View>
           );
         })}
 
@@ -602,58 +788,37 @@ export default function Index() {
             <Pressable
               key={u.id}
               onPress={() => buyUpgrade(u)}
-              disabled={!affordable}
               style={({ pressed }) => [
                 styles.upgradeCard,
-                !affordable && styles.upgradeCardDisabled,
+                !affordable && !maxed && styles.upgradeCardDim,
                 pressed && affordable && styles.cardPressed,
+                maxed && styles.upgradeCardMaxed,
               ]}
               testID={`upgrade-${u.id}`}
             >
               <View style={styles.upgradeRow}>
-                <View
-                  style={[
-                    styles.upgradeBadge,
-                    { backgroundColor: `${u.tint}22`, borderColor: u.tint },
-                  ]}
-                >
-                  <Text style={[styles.upgradeBadgeLevel, { color: u.tint }]}>
-                    Lv {level}
-                  </Text>
+                <View style={[styles.upgradeBadge, { backgroundColor: `${u.tint}22`, borderColor: u.tint }]}>
+                  <Text style={[styles.upgradeBadgeLevel, { color: u.tint }]}>Lv {level}</Text>
                 </View>
-
                 <View style={styles.upgradeMain}>
                   <Text style={styles.upgradeName}>{u.name}</Text>
-                  <Text style={styles.upgradeDesc}>{u.description(level)}</Text>
+                  <Text style={styles.upgradeDesc}>{u.description}</Text>
                   <Text style={[styles.upgradeEffect, { color: u.tint }]}>
                     Current: {u.effect(level)}
                   </Text>
                 </View>
-
                 <View style={styles.upgradeCta}>
                   {maxed ? (
-                    <View style={styles.maxedPill}>
-                      <Text style={styles.maxedText}>MAX</Text>
-                    </View>
+                    <View style={styles.maxedPill}><Text style={styles.maxedText}>MAX</Text></View>
                   ) : (
                     <>
                       <Text
-                        style={[
-                          styles.upgradeCost,
-                          !affordable && styles.upgradeCostDim,
-                        ]}
+                        style={[styles.upgradeCost, !affordable && styles.upgradeCostDim]}
                         testID={`upgrade-cost-${u.id}`}
                       >
                         {money(cost)}
                       </Text>
-                      <Text
-                        style={[
-                          styles.upgradeBuy,
-                          !affordable && styles.upgradeBuyDim,
-                        ]}
-                      >
-                        BUY
-                      </Text>
+                      <Text style={[styles.upgradeBuy, !affordable && styles.upgradeBuyDim]}>BUY</Text>
                     </>
                   )}
                 </View>
@@ -665,65 +830,48 @@ export default function Index() {
         <View style={{ height: 32 }} />
       </ScrollView>
 
-      {/* INVEST CTA */}
+      {/* CTA */}
       <View style={styles.ctaBar}>
-        <Pressable
-          onPress={invest}
-          disabled={isBusy || !canAffordSelected}
-          style={({ pressed }) => [
-            styles.investBtn,
-            isBusy && styles.investBtnBusy,
-            !canAffordSelected && !isBusy && styles.investBtnDisabled,
-            pressed && canAffordSelected && !isBusy && styles.investBtnPressed,
-          ]}
-          testID="invest-button"
-        >
-          <Animated.View
-            style={[styles.investProgress, progressStyle]}
-            pointerEvents="none"
-            testID="invest-progress"
-          />
-          <View style={styles.investContent}>
-            {isBusy && activePkg ? (
-              <>
-                <Text
-                  style={[styles.investLabel, styles.investLabelBusy]}
-                  testID="invest-label"
-                >
-                  Investing {activePkg.name}
-                </Text>
-                <Text
-                  style={[styles.investSub, styles.investSubBusy]}
-                  testID="invest-countdown"
-                >
-                  {fmtSecs(msLeft)} left
-                </Text>
-              </>
-            ) : !canAffordSelected ? (
-              <>
-                <Text
-                  style={[styles.investLabel, styles.investLabelDisabled]}
-                  testID="invest-label"
-                >
-                  Insufficient Balance
-                </Text>
-                <Text style={styles.investSubDisabled}>
-                  Need {money(selected.cost)} for {selected.name}
-                </Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.investLabel} testID="invest-label">
-                  Invest {money(selected.cost)}
-                </Text>
-                <Text style={styles.investSub}>
-                  {selected.name} · +{money(selectedEffProfit)} in{" "}
-                  {fmtDuration(selectedEffDur)}
-                </Text>
-              </>
+        <Animated.View style={ctaShakeStyle}>
+          <Pressable
+            onPress={invest}
+            style={({ pressed }) => [
+              styles.investBtn,
+              !canInvest && styles.investBtnDisabled,
+              pressed && canInvest && styles.investBtnPressed,
+            ]}
+            testID="invest-button"
+          >
+            {canInvest && (
+              <LinearGradient
+                colors={[C.accent, C.accentDeep]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+                pointerEvents="none"
+              />
             )}
-          </View>
-        </Pressable>
+            <View style={styles.investContent}>
+              <Text
+                style={[
+                  styles.investLabel,
+                  !canInvest && styles.investLabelDisabled,
+                ]}
+                testID="invest-label"
+              >
+                {ctaLabel}
+              </Text>
+              <Text
+                style={[
+                  styles.investSub,
+                  !canInvest && styles.investSubDisabled,
+                ]}
+              >
+                {ctaSub}
+              </Text>
+            </View>
+          </Pressable>
+        </Animated.View>
       </View>
     </SafeAreaView>
   );
@@ -731,343 +879,201 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
+  flashOverlay: { backgroundColor: C.accent, zIndex: 1 },
 
   loaderWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
   loaderText: { color: C.textMuted, fontSize: 14, fontWeight: "700" },
 
-  // Header
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-    backgroundColor: C.bg,
+    paddingHorizontal: 24, paddingTop: 16, paddingBottom: 16,
+    borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  headerTopRow: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
   balanceLabel: {
-    color: C.textMuted,
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 2,
+    color: C.textMuted, fontSize: 11, fontWeight: "700", letterSpacing: 2,
+  },
+  musicToggle: {
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999,
+    borderWidth: 1, borderColor: C.border, backgroundColor: C.panel,
+  },
+  musicToggleText: {
+    color: C.accent, fontSize: 11, fontWeight: "900", letterSpacing: 0.8,
   },
   balanceRow: { position: "relative", marginTop: 6 },
-  balance: {
-    color: C.text,
-    fontSize: 40,
-    fontWeight: "800",
-    letterSpacing: -1,
-  },
+  balance: { color: C.text, fontSize: 40, fontWeight: "800", letterSpacing: -1 },
   floatingProfit: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    color: C.gain,
-    fontSize: 20,
-    fontWeight: "900",
+    position: "absolute", right: 0, top: 0,
+    color: C.gain, fontSize: 20, fontWeight: "900",
   },
   pillRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-    gap: 8,
-    flexWrap: "wrap",
+    flexDirection: "row", alignItems: "center",
+    marginTop: 12, gap: 8, flexWrap: "wrap",
   },
-  lockedPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,77,77,0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(255,77,77,0.35)",
+  slotPill: {
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
+    backgroundColor: "rgba(0,229,255,0.12)", borderWidth: 1, borderColor: C.accent,
   },
-  lockDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 999,
-    backgroundColor: C.loss,
-    marginRight: 8,
-  },
-  lockedText: { color: C.loss, fontSize: 12, fontWeight: "700" },
+  slotPillText: { color: C.accent, fontSize: 12, fontWeight: "900", letterSpacing: 0.5 },
   availPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(0,229,255,0.10)",
-    borderWidth: 1,
-    borderColor: "rgba(0,229,255,0.35)",
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
+    backgroundColor: "rgba(0,229,255,0.10)", borderWidth: 1, borderColor: "rgba(0,229,255,0.35)",
   },
-  availText: {
-    color: C.accent,
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
+  availText: { color: C.accent, fontSize: 12, fontWeight: "700", letterSpacing: 0.5 },
   passivePill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(0,255,136,0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(0,255,136,0.35)",
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
+    backgroundColor: "rgba(0,255,136,0.12)", borderWidth: 1, borderColor: "rgba(0,255,136,0.35)",
   },
-  passiveText: {
-    color: C.gain,
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
-  offlineBanner: {
-    marginTop: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: "rgba(0,255,136,0.10)",
-    borderWidth: 1,
-    borderColor: "rgba(0,255,136,0.35)",
-  },
-  offlineText: { color: C.gain, fontSize: 13, fontWeight: "700", flex: 1 },
-  offlineDismiss: {
-    color: C.gain,
-    fontSize: 13,
-    fontWeight: "900",
-    letterSpacing: 1,
-    marginLeft: 12,
-  },
+  passiveText: { color: C.gain, fontSize: 12, fontWeight: "800", letterSpacing: 0.3 },
 
-  // Scroll
+  banner: {
+    marginTop: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12,
+    backgroundColor: "rgba(0,255,136,0.10)", borderWidth: 1, borderColor: "rgba(0,255,136,0.35)",
+  },
+  bannerWarn: { backgroundColor: "rgba(0,229,255,0.10)", borderColor: "rgba(0,229,255,0.35)" },
+  bannerText: { color: C.gain, fontSize: 13, fontWeight: "700", flex: 1 },
+  bannerDismiss: { color: C.gain, fontSize: 13, fontWeight: "900", letterSpacing: 1, marginLeft: 12 },
+
   list: { flex: 1 },
   listContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
   sectionTitle: {
-    color: C.textMuted,
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 2,
-    marginBottom: 12,
-    marginLeft: 4,
+    color: C.textMuted, fontSize: 11, fontWeight: "700",
+    letterSpacing: 2, marginBottom: 12, marginLeft: 4,
   },
+
+  // Active investment card
+  activeCard: {
+    backgroundColor: C.panelElevated, borderRadius: 20,
+    borderWidth: 1, borderColor: C.accent,
+    padding: 14, marginBottom: 12, overflow: "hidden",
+    shadowColor: C.accent, shadowOpacity: 0.35, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 0 }, elevation: 6,
+  },
+  activeHeaderRow: { flexDirection: "row", alignItems: "center" },
+  activeIcon: {
+    width: 44, height: 44, borderRadius: 12, borderWidth: 1,
+    alignItems: "center", justifyContent: "center", marginRight: 12,
+  },
+  activeIconText: { fontSize: 12, fontWeight: "900" },
+  activeName: { color: C.text, fontSize: 15, fontWeight: "800" },
+  activeMeta: { color: C.gain, fontSize: 12, fontWeight: "700", marginTop: 2 },
+  activeCountdown: { color: C.accent, fontSize: 16, fontWeight: "900", letterSpacing: 0.3 },
+  activeBarTrack: {
+    height: 8, borderRadius: 999, backgroundColor: C.panel, marginTop: 12,
+    overflow: "hidden", borderWidth: 1, borderColor: C.border,
+  },
+  activeBarFill: { height: "100%", borderRadius: 999 },
+  accelerateBtn: {
+    marginTop: 12, height: 48, borderRadius: 14,
+    borderWidth: 1, borderColor: C.accent, overflow: "hidden",
+    alignItems: "center", justifyContent: "center",
+  },
+  accelerateBtnPressed: { transform: [{ scale: 0.97 }] },
+  accelerateText: { color: C.accent, fontSize: 14, fontWeight: "900", letterSpacing: 1.5 },
+  accelerateHint: { color: C.textMuted, fontSize: 10, fontWeight: "700", marginTop: 1 },
 
   // Package cards
   card: {
-    backgroundColor: C.panel,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: C.border,
-    padding: 16,
-    marginBottom: 12,
-    position: "relative",
-    overflow: "hidden",
+    backgroundColor: C.panel, borderRadius: 20,
+    borderWidth: 1, borderColor: C.border,
+    padding: 16, marginBottom: 12, position: "relative", overflow: "hidden",
   },
   cardSelected: {
-    borderColor: C.accent,
-    borderWidth: 2,
+    borderColor: C.accent, borderWidth: 2,
     backgroundColor: C.panelElevated,
-    shadowColor: C.accent,
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 6,
+    shadowColor: C.accent, shadowOpacity: 0.5, shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 }, elevation: 8,
   },
   cardLocked: { opacity: 0.55, borderColor: "rgba(255,77,77,0.25)" },
   cardPressed: { transform: [{ scale: 0.99 }] },
   cardRow: { flexDirection: "row", alignItems: "center" },
   cardIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 14,
+    width: 56, height: 56, borderRadius: 16, borderWidth: 1,
+    alignItems: "center", justifyContent: "center", marginRight: 14,
   },
   cardIconText: { fontSize: 14, fontWeight: "900", letterSpacing: 0.5 },
   cardMain: { flex: 1 },
   cardTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
+    flexDirection: "row", alignItems: "center",
+    justifyContent: "space-between", marginBottom: 10,
   },
-  cardTitle: {
-    color: C.text,
-    fontSize: 16,
-    fontWeight: "800",
-    flexShrink: 1,
-    marginRight: 8,
-  },
+  cardTitle: { color: C.text, fontSize: 16, fontWeight: "800", flexShrink: 1, marginRight: 8 },
   badgeTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    backgroundColor: "rgba(0,229,255,0.08)",
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "rgba(0,229,255,0.25)",
+    paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: "rgba(0,229,255,0.08)", borderRadius: 6,
+    borderWidth: 1, borderColor: "rgba(0,229,255,0.25)",
   },
-  badgeTagText: {
-    color: C.accent,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
+  badgeTagText: { color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
   badgeLoss: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    backgroundColor: "rgba(255,77,77,0.10)",
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "rgba(255,77,77,0.35)",
+    paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: "rgba(255,77,77,0.10)", borderRadius: 6,
+    borderWidth: 1, borderColor: "rgba(255,77,77,0.35)",
   },
-  badgeLossText: {
-    color: C.loss,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
+  badgeLossText: { color: C.loss, fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
   cardMetaRow: { flexDirection: "row" },
   metaCell: { flex: 1 },
   metaLabel: {
-    color: C.textMuted,
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    marginBottom: 2,
-    textTransform: "uppercase",
+    color: C.textMuted, fontSize: 10, fontWeight: "700",
+    letterSpacing: 0.5, marginBottom: 2, textTransform: "uppercase",
   },
   metaValue: { color: C.text, fontSize: 14, fontWeight: "800" },
   metaGain: { color: C.gain },
   selectedGlow: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-    backgroundColor: C.accent,
+    position: "absolute", left: 0, top: 0, bottom: 0, width: 3, backgroundColor: C.accent,
   },
 
   // Upgrade cards
   upgradeCard: {
-    backgroundColor: C.panel,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: C.border,
-    padding: 14,
-    marginBottom: 10,
+    backgroundColor: C.panel, borderRadius: 16,
+    borderWidth: 1, borderColor: C.border,
+    padding: 14, marginBottom: 10,
   },
-  upgradeCardDisabled: { opacity: 0.55 },
+  upgradeCardDim: { opacity: 0.6 },
+  upgradeCardMaxed: { borderColor: C.accent, backgroundColor: C.panelElevated },
   upgradeRow: { flexDirection: "row", alignItems: "center" },
   upgradeBadge: {
-    minWidth: 48,
-    height: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-    paddingHorizontal: 6,
+    minWidth: 48, height: 48, borderRadius: 12, borderWidth: 1,
+    alignItems: "center", justifyContent: "center", marginRight: 12, paddingHorizontal: 6,
   },
   upgradeBadgeLevel: { fontSize: 13, fontWeight: "900", letterSpacing: 0.3 },
   upgradeMain: { flex: 1, marginRight: 8 },
   upgradeName: { color: C.text, fontSize: 15, fontWeight: "800" },
-  upgradeDesc: {
-    color: C.textMuted,
-    fontSize: 11,
-    fontWeight: "600",
-    marginTop: 2,
-  },
+  upgradeDesc: { color: C.textMuted, fontSize: 11, fontWeight: "600", marginTop: 2 },
   upgradeEffect: { fontSize: 11, fontWeight: "800", marginTop: 4 },
   upgradeCta: { alignItems: "flex-end" },
   upgradeCost: { color: C.text, fontSize: 14, fontWeight: "900" },
   upgradeCostDim: { color: C.textMuted },
   upgradeBuy: {
-    color: C.accent,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 1.5,
-    marginTop: 4,
+    color: C.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.5, marginTop: 4,
   },
   upgradeBuyDim: { color: C.textMuted },
   maxedPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    backgroundColor: "rgba(0,229,255,0.15)",
-    borderWidth: 1,
-    borderColor: C.accent,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
+    backgroundColor: "rgba(0,229,255,0.15)", borderWidth: 1, borderColor: C.accent,
   },
-  maxedText: {
-    color: C.accent,
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 1,
-  },
+  maxedText: { color: C.accent, fontSize: 11, fontWeight: "900", letterSpacing: 1 },
 
   // CTA
   ctaBar: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
-    borderTopWidth: 1,
-    borderTopColor: C.border,
-    backgroundColor: C.bg,
+    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16,
+    borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bg,
   },
   investBtn: {
-    height: 76,
-    borderRadius: 20,
-    backgroundColor: C.accent,
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: C.accent,
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-  investBtnBusy: {
-    backgroundColor: "#0A2A44",
-    borderWidth: 1,
-    borderColor: C.accent,
-    shadowOpacity: 0.15,
+    height: 76, borderRadius: 20, backgroundColor: C.accent,
+    overflow: "hidden", justifyContent: "center", alignItems: "center",
+    shadowColor: C.accent, shadowOpacity: 0.5, shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 }, elevation: 10,
   },
   investBtnDisabled: {
-    backgroundColor: C.panelElevated,
-    borderWidth: 1,
-    borderColor: "rgba(255,77,77,0.35)",
-    shadowOpacity: 0,
+    backgroundColor: C.panelElevated, borderWidth: 1,
+    borderColor: "rgba(255,77,77,0.35)", shadowOpacity: 0,
   },
   investBtnPressed: { transform: [{ scale: 0.98 }] },
-  investProgress: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,229,255,0.35)",
-  },
   investContent: { alignItems: "center", justifyContent: "center" },
-  investLabel: {
-    color: "#001018",
-    fontSize: 20,
-    fontWeight: "900",
-    letterSpacing: 0.3,
-  },
-  investLabelBusy: { color: C.accent },
+  investLabel: { color: "#001018", fontSize: 20, fontWeight: "900", letterSpacing: 0.3 },
   investLabelDisabled: { color: C.loss },
-  investSub: {
-    color: "#001018",
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 2,
-    opacity: 0.75,
-  },
-  investSubBusy: { color: C.text, opacity: 0.85 },
-  investSubDisabled: {
-    color: C.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 2,
-  },
+  investSub: { color: "#001018", fontSize: 12, fontWeight: "700", marginTop: 2, opacity: 0.8 },
+  investSubDisabled: { color: C.textMuted, opacity: 1 },
 });

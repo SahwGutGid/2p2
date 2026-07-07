@@ -39,6 +39,18 @@ import {
   type SkillPath,
   type TreeEffects,
 } from "@/src/game/skillTree";
+import {
+  ACHIEVEMENTS,
+  achievementById,
+  defaultStats,
+  MARKET_EVENTS,
+  MARKET_ROLL_CHANCE,
+  MARKET_ROLL_INTERVAL_MS,
+  rollMarketEvent,
+  type AchievementId,
+  type ActiveMarketEvent,
+  type Stats,
+} from "@/src/game/features";
 
 // ---------- Theme ----------
 const C = {
@@ -69,12 +81,14 @@ type Pkg = {
 };
 
 const BASE_PACKAGES: Pkg[] = [
-  { id: "starter",   name: "Starter Bond",   tag: "Low risk",       cost: 10,    durationMs: 3000,   profitPct: 0.12, tint: "#5EE1B0" },
-  { id: "growth",    name: "Growth Fund",    tag: "Medium",         cost: 50,    durationMs: 8000,   profitPct: 0.22, tint: "#00E5FF" },
-  { id: "momentum",  name: "Momentum Pool",  tag: "High",           cost: 200,   durationMs: 20000,  profitPct: 0.45, tint: "#FFB84D" },
-  { id: "whale",     name: "Whale Vault",    tag: "Very high risk", cost: 1000,  durationMs: 60000,  profitPct: 1.10, tint: "#FF6EC7" },
-  { id: "contract",  name: "Long-Term Contract",  tag: "Contract",  cost: 10000, durationMs: 300000, profitPct: 4.0,  tint: "#FFD54F", unlocked: (t) => t.contractsUnlocked },
-  { id: "legendary", name: "Legendary Contract",  tag: "Legendary", cost: 100000,durationMs: 900000, profitPct: 9.0,  tint: "#B9F2FF", unlocked: (t) => t.legendaryUnlocked },
+  { id: "starter",    name: "Starter Bond",         tag: "Low risk",       cost: 10,     durationMs: 2500,   profitPct: 0.18, tint: "#5EE1B0" },
+  { id: "growth",     name: "Growth Fund",          tag: "Medium",         cost: 50,     durationMs: 6000,   profitPct: 0.32, tint: "#00E5FF" },
+  { id: "momentum",   name: "Momentum Pool",        tag: "High",           cost: 200,    durationMs: 15000,  profitPct: 0.60, tint: "#FFB84D" },
+  { id: "realestate", name: "Real Estate REIT",     tag: "Housing",        cost: 600,    durationMs: 25000,  profitPct: 0.85, tint: "#FFD54F" },
+  { id: "crypto",     name: "Crypto Vault",         tag: "Volatile",       cost: 2500,   durationMs: 40000,  profitPct: 1.30, tint: "#B9F2FF" },
+  { id: "whale",      name: "Whale Vault",          tag: "Very high risk", cost: 1000,   durationMs: 50000,  profitPct: 1.40, tint: "#FF6EC7" },
+  { id: "contract",   name: "Long-Term Contract",   tag: "Contract",       cost: 10000,  durationMs: 240000, profitPct: 4.5,  tint: "#FFD54F", unlocked: (t) => t.contractsUnlocked },
+  { id: "legendary",  name: "Legendary Contract",   tag: "Legendary",      cost: 100000, durationMs: 720000, profitPct: 10.0, tint: "#B9F2FF", unlocked: (t) => t.legendaryUnlocked },
 ];
 
 const getPackages = (t: TreeEffects): Pkg[] =>
@@ -90,11 +104,11 @@ type Upgrade = {
   baseCost: number; costGrowth: number; maxLevel: number; tint: string;
 };
 const UPGRADES: Upgrade[] = [
-  { id: "yield",   name: "Yield Boost",     description: "+7% profit multiplier per level",     effect: (l) => `+${(l * 7).toFixed(0)}% profit`,             baseCost: 25,  costGrowth: 1.65, maxLevel: 15, tint: "#00FF88" },
-  { id: "turbo",   name: "Turbo Trades",    description: "-5% investment duration per level",   effect: (l) => `-${Math.min(70, l * 5).toFixed(0)}% time`,   baseCost: 40,  costGrowth: 1.7,  maxLevel: 14, tint: "#00E5FF" },
-  { id: "passive", name: "Passive Yield",   description: "+$0.75/sec passive income per level", effect: (l) => `+$${(l * 0.75).toFixed(2)}/sec`,             baseCost: 80,  costGrowth: 1.55, maxLevel: 25, tint: "#FFB84D" },
-  { id: "lucky",   name: "Lucky Streak",    description: "+3% chance for 2× profit per level",  effect: (l) => `${Math.min(60, l * 3).toFixed(0)}% x2`,      baseCost: 150, costGrowth: 1.8,  maxLevel: 20, tint: "#FF6EC7" },
-  { id: "slots",   name: "Portfolio Slots", description: "+1 concurrent investment per level",  effect: (l) => `${l + 1} slot${l === 0 ? "" : "s"}`,         baseCost: 500, costGrowth: 3,    maxLevel: 4,  tint: "#00E5FF" },
+  { id: "yield",   name: "Yield Boost",     description: "+8% profit multiplier per level",       effect: (l) => `+${(l * 8).toFixed(0)}% profit`,               baseCost: 15,  costGrowth: 1.55, maxLevel: 15, tint: "#00FF88" },
+  { id: "turbo",   name: "Turbo Trades",    description: "-6% investment duration per level",     effect: (l) => `-${Math.min(72, l * 6).toFixed(0)}% time`,     baseCost: 25,  costGrowth: 1.6,  maxLevel: 12, tint: "#00E5FF" },
+  { id: "passive", name: "Passive Yield",   description: "+$1.00/sec passive income per level",   effect: (l) => `+$${(l * 1.0).toFixed(2)}/sec`,                baseCost: 40,  costGrowth: 1.5,  maxLevel: 25, tint: "#FFB84D" },
+  { id: "lucky",   name: "Lucky Streak",    description: "+4% chance for 2× profit per level",    effect: (l) => `${Math.min(60, l * 4).toFixed(0)}% x2`,        baseCost: 100, costGrowth: 1.7,  maxLevel: 15, tint: "#FF6EC7" },
+  { id: "slots",   name: "Portfolio Slots", description: "+1 concurrent investment per level",    effect: (l) => `${l + 1} slot${l === 0 ? "" : "s"}`,           baseCost: 300, costGrowth: 2.5,  maxLevel: 4,  tint: "#00E5FF" },
 ];
 const upgradeCost = (u: Upgrade, level: number) =>
   Math.floor(u.baseCost * Math.pow(u.costGrowth, level));
@@ -105,24 +119,39 @@ type ActiveInvestment = {
   startedAt: number; endsAt: number;
 };
 
-// ---------- Save shape (v5) ----------
+// ---------- Save shape (v6) ----------
+type Settings = {
+  music: boolean;
+  sfx: boolean;
+  haptics: boolean;
+  notifications: boolean;
+};
+const defaultSettings = (): Settings => ({
+  music: true, sfx: true, haptics: true, notifications: true,
+});
+
 type SaveData = {
-  v: 5;
+  v: 6;
   balance: number;
   selectedId: string;
   levels: Record<UpgradeId, number>;
   actives: ActiveInvestment[];
   lastSeenAt: number;
-  musicEnabled: boolean;
+  musicEnabled: boolean;   // legacy — mirrors settings.music
   prestige: number;
   totalPrestiges: number;
   skills: SkillLevels;
+  stats: Stats;
+  unlockedAchievements: AchievementId[];
+  activeMarket: ActiveMarketEvent | null;
+  lastMarketRollAt: number;
+  settings: Settings;
 };
-const SAVE_KEY = "investmentIdle:v5";
-const LEGACY_KEYS = ["investmentIdle:v4", "investmentIdle:v3", "investmentIdle:v2"];
+const SAVE_KEY = "investmentIdle:v6";
+const LEGACY_KEYS = ["investmentIdle:v5", "investmentIdle:v4", "investmentIdle:v3", "investmentIdle:v2"];
 const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
 
-const PRESTIGE_MIN_BALANCE = 10000;
+const PRESTIGE_MIN_BALANCE = 5000;
 const PRESTIGE_BONUS_PER_POINT = 0.02;
 const computePrestigeGain = (balance: number) => {
   if (balance < PRESTIGE_MIN_BALANCE) return 0;
@@ -130,7 +159,7 @@ const computePrestigeGain = (balance: number) => {
 };
 
 const defaultSave = (): SaveData => ({
-  v: 5,
+  v: 6,
   balance: 100,
   selectedId: BASE_PACKAGES[0].id,
   levels: { yield: 0, turbo: 0, passive: 0, lucky: 0, slots: 0 },
@@ -140,6 +169,11 @@ const defaultSave = (): SaveData => ({
   prestige: 0,
   totalPrestiges: 0,
   skills: {},
+  stats: defaultStats(),
+  unlockedAchievements: [],
+  activeMarket: null,
+  lastMarketRollAt: Date.now(),
+  settings: defaultSettings(),
 });
 
 // ---------- Helpers ----------
@@ -173,25 +207,46 @@ const computeProfitPct = (
   yieldLevel: number,
   prestige: number,
   t: TreeEffects,
-  filledSlots: number = 1
+  filledSlots: number = 1,
+  market: ActiveMarketEvent | null = null,
 ) => {
   let m = pkg.profitPct;
-  m *= 1 + 0.07 * yieldLevel;
+  m *= 1 + 0.08 * yieldLevel;
   m *= prestigeBonus(prestige);
   m *= t.profitMult;
   m *= 1 + t.slotSynergyPct * Math.max(0, filledSlots - 1);
   if (pkg.id === "whale") m *= 1 + t.whaleBonus;
   if (pkg.id === "legendary") m *= 1 + t.legendaryBonus;
+  if (market) {
+    const ev = MARKET_EVENTS.find((e) => e.id === market.id);
+    if (ev) {
+      if (ev.profitMult) m *= ev.profitMult;
+      const pkgBoost = ev.pkgBoost?.[pkg.id];
+      if (pkgBoost) m *= 1 + pkgBoost;
+    }
+  }
   return m;
 };
 
-const computeDuration = (pkg: Pkg, turbo: number, t: TreeEffects) => {
-  const turboRed = Math.min(0.7, 0.05 * turbo);
-  return Math.max(300, Math.round(pkg.durationMs * t.durationMult * (1 - turboRed)));
+const computeDuration = (pkg: Pkg, turbo: number, t: TreeEffects, market: ActiveMarketEvent | null = null) => {
+  const turboRed = Math.min(0.72, 0.06 * turbo);
+  let d = pkg.durationMs * t.durationMult * (1 - turboRed);
+  if (market) {
+    const ev = MARKET_EVENTS.find((e) => e.id === market.id);
+    if (ev?.durMult) d *= ev.durMult;
+  }
+  return Math.max(200, Math.round(d));
+};
+
+const computePkgCost = (pkg: Pkg, market: ActiveMarketEvent | null = null) => {
+  if (!market) return pkg.cost;
+  const ev = MARKET_EVENTS.find((e) => e.id === market.id);
+  if (ev?.costMult) return Math.round(pkg.cost * ev.costMult);
+  return pkg.cost;
 };
 
 const computePassiveRate = (passiveLvl: number, t: TreeEffects) =>
-  0.75 * passiveLvl * t.passiveMult;
+  1.0 * passiveLvl * t.passiveMult;
 
 const luckyChance = (level: number) => Math.min(0.6, 0.03 * level);
 const slotCount = (level: number) => 1 + level;
@@ -229,6 +284,22 @@ export default function Index() {
   const [prestigeCelebrate, setPrestigeCelebrate] = useState<number>(0);
   const [rankUpBanner, setRankUpBanner] = useState<Rank | null>(null);
 
+  // Features state
+  const [stats, setStats] = useState<Stats>(defaultStats());
+  const [unlockedAchievements, setUnlockedAchievements] = useState<AchievementId[]>([]);
+  const [activeMarket, setActiveMarket] = useState<ActiveMarketEvent | null>(null);
+  const [lastMarketRollAt, setLastMarketRollAt] = useState<number>(Date.now());
+  const [settings, setSettings] = useState<Settings>(defaultSettings());
+  const [showStats, setShowStats] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [achievementToast, setAchievementToast] = useState<AchievementId | null>(null);
+  const [devMode, setDevMode] = useState({ infiniteMoney: false, instantInvestments: false });
+  const secretTapRef = useRef<number[]>([]);
+  const runStartRef = useRef<number>(Date.now());
+
   // Derived
   const treeEffects = useMemo(() => deriveTreeEffects(skills), [skills]);
   const packages = useMemo(() => getPackages(treeEffects), [treeEffects]);
@@ -256,6 +327,12 @@ export default function Index() {
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [balance]);
+
+  // Sync music flag with settings.music (single source of truth: settings)
+  useEffect(() => {
+    if (musicEnabled !== settings.music) setMusicEnabled(settings.music);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.music]);
 
   const music = useBackgroundMusic(musicEnabled);
 
@@ -303,14 +380,15 @@ export default function Index() {
   const saveState = useCallback(async (data: Partial<SaveData>) => {
     try {
       const merged: SaveData = {
-        v: 5, balance, selectedId, levels, actives, musicEnabled,
+        v: 6, balance, selectedId, levels, actives, musicEnabled,
         prestige, totalPrestiges, skills,
+        stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings,
         lastSeenAt: Date.now(),
         ...data,
       };
       await AsyncStorage.setItem(SAVE_KEY, JSON.stringify(merged));
     } catch {}
-  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills]);
+  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings]);
 
   // Load (migrate v2/v3/v4 → v5)
   useEffect(() => {
@@ -447,6 +525,12 @@ export default function Index() {
         setPrestige(saved.prestige ?? 0);
         setTotalPrestiges(saved.totalPrestiges ?? 0);
         setSkills(saved.skills ?? {});
+        setStats({ ...defaultStats(), ...(saved.stats ?? {}) });
+        setUnlockedAchievements(saved.unlockedAchievements ?? []);
+        const savedMarket = saved.activeMarket ?? null;
+        setActiveMarket(savedMarket && savedMarket.endsAt > Date.now() ? savedMarket : null);
+        setLastMarketRollAt(saved.lastMarketRollAt ?? Date.now());
+        setSettings({ ...defaultSettings(), ...(saved.settings ?? {}) });
         if (passiveEarned > 0.01 || (savedTree.savingsRatePerSec > 0 && elapsed > 1000)) {
           setOfflineGain(simBal - (saved.balance ?? 100));
         }
@@ -464,7 +548,7 @@ export default function Index() {
   useEffect(() => {
     if (!ready) return;
     saveState({});
-  }, [ready, balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, saveState]);
+  }, [ready, balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, settings, saveState]);
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (s) => { if (s !== "active") saveState({}); });

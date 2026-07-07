@@ -94,32 +94,69 @@ type ActiveInvestment = {
 
 // ---------- Save shape ----------
 type SaveData = {
-  v: 3;
+  v: 4;
   balance: number;
   selectedId: string;
   levels: Record<UpgradeId, number>;
   actives: ActiveInvestment[];
   lastSeenAt: number;
   musicEnabled: boolean;
+  prestige: number;
+  totalPrestiges: number;
 };
 
-const SAVE_KEY = "investmentIdle:v3";
+const SAVE_KEY = "investmentIdle:v4";
+const LEGACY_KEY_V3 = "investmentIdle:v3";
 const LEGACY_KEY_V2 = "investmentIdle:v2";
 const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
 const BAILOUT_AMOUNT = 15;
 
+// Prestige mechanic
+const PRESTIGE_MIN_BALANCE = 10000;      // must earn $10K before first prestige
+const PRESTIGE_BONUS_PER_POINT = 0.02;   // +2% profit multiplier per PP (permanent)
+// PP earned this prestige = floor(sqrt(balance / 10000))
+const computePrestigeGain = (balance: number) => {
+  if (balance < PRESTIGE_MIN_BALANCE) return 0;
+  return Math.floor(Math.sqrt(balance / PRESTIGE_MIN_BALANCE));
+};
+
 const defaultSave = (): SaveData => ({
-  v: 3,
+  v: 4,
   balance: 100,
   selectedId: PACKAGES[0].id,
   levels: { yield: 0, turbo: 0, passive: 0, lucky: 0, slots: 0 },
   actives: [],
   lastSeenAt: Date.now(),
   musicEnabled: true,
+  prestige: 0,
+  totalPrestiges: 0,
 });
 
 // ---------- Helpers ----------
-const money = (n: number) => `$${n.toFixed(2)}`;
+// Compact currency formatter: cents-precise under $10K, K/M/B/T/… above.
+const UNITS: { v: number; s: string }[] = [
+  { v: 1e33, s: "D" },
+  { v: 1e30, s: "N" },
+  { v: 1e27, s: "Oc" },
+  { v: 1e24, s: "Sp" },
+  { v: 1e21, s: "Sx" },
+  { v: 1e18, s: "Qi" },
+  { v: 1e15, s: "Qa" },
+  { v: 1e12, s: "T" },
+  { v: 1e9,  s: "B" },
+  { v: 1e6,  s: "M" },
+  { v: 1e3,  s: "K" },
+];
+const money = (n: number) => {
+  if (!isFinite(n)) return "$∞";
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  if (abs < 10000) return `${sign}$${abs.toFixed(2)}`;
+  for (const u of UNITS) {
+    if (abs >= u.v) return `${sign}$${(abs / u.v).toFixed(2)}${u.s}`;
+  }
+  return `${sign}$${abs.toFixed(2)}`;
+};
 const fmtDuration = (ms: number) => {
   const s = Math.max(0, Math.round(ms / 1000));
   if (s < 60) return `${s}s`;
@@ -130,8 +167,9 @@ const fmtDuration = (ms: number) => {
 const fmtSecs = (ms: number) =>
   ms >= 60000 ? fmtDuration(ms) : `${(ms / 1000).toFixed(1)}s`;
 
-const effectiveProfitPct = (base: number, yieldLevel: number) =>
-  base * (1 + 0.07 * yieldLevel);
+const prestigeMultiplier = (prestige: number) => 1 + PRESTIGE_BONUS_PER_POINT * prestige;
+const effectiveProfitPct = (base: number, yieldLevel: number, prestige: number = 0) =>
+  base * (1 + 0.07 * yieldLevel) * prestigeMultiplier(prestige);
 const effectiveDurationMs = (base: number, turboLevel: number) => {
   const reduction = Math.min(0.7, 0.05 * turboLevel);
   return Math.round(base * (1 - reduction));
@@ -162,6 +200,10 @@ export default function Index() {
   const [offlineGain, setOfflineGain] = useState<number>(0);
   const [bailoutNotice, setBailoutNotice] = useState(false);
   const [musicEnabled, setMusicEnabled] = useState(true);
+  const [prestige, setPrestige] = useState(0);
+  const [totalPrestiges, setTotalPrestiges] = useState(0);
+  const [prestigeArmed, setPrestigeArmed] = useState(false);
+  const [prestigeCelebrate, setPrestigeCelebrate] = useState<number>(0);
 
   // Smooth balance counter (RAF-based, cross-platform safe)
   const [displayBalance, setDisplayBalance] = useState(100);
@@ -222,33 +264,51 @@ export default function Index() {
   const saveState = useCallback(async (data: Partial<SaveData>) => {
     try {
       const merged: SaveData = {
-        v: 3, balance, selectedId, levels, actives, musicEnabled,
+        v: 4, balance, selectedId, levels, actives, musicEnabled,
+        prestige, totalPrestiges,
         lastSeenAt: Date.now(),
         ...data,
       };
       await AsyncStorage.setItem(SAVE_KEY, JSON.stringify(merged));
     } catch {}
-  }, [balance, selectedId, levels, actives, musicEnabled]);
+  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges]);
 
-  // Load (migrate v2 → v3 if needed)
+  // Load (migrate v2/v3 → v4 if needed)
   useEffect(() => {
     (async () => {
       try {
         let raw = await AsyncStorage.getItem(SAVE_KEY);
         if (!raw) {
-          const legacy = await AsyncStorage.getItem(LEGACY_KEY_V2);
-          if (legacy) {
+          // Try v3 first
+          const legacy3 = await AsyncStorage.getItem(LEGACY_KEY_V3);
+          if (legacy3) {
             try {
-              const p = JSON.parse(legacy);
+              const p = JSON.parse(legacy3);
               raw = JSON.stringify({
                 ...defaultSave(),
                 balance: p.balance ?? 100,
                 selectedId: p.selectedId ?? PACKAGES[0].id,
                 levels: { ...defaultSave().levels, ...(p.levels ?? {}) },
-                actives: p.active ? [{ runId: newRunId(), pkgId: p.active.id, cost: p.active.cost, startedAt: p.active.endsAt - 3000, endsAt: p.active.endsAt }] : [],
+                actives: (p.actives ?? []) as ActiveInvestment[],
                 lastSeenAt: p.lastSeenAt ?? Date.now(),
+                musicEnabled: p.musicEnabled ?? true,
               });
             } catch {}
+          } else {
+            const legacy = await AsyncStorage.getItem(LEGACY_KEY_V2);
+            if (legacy) {
+              try {
+                const p = JSON.parse(legacy);
+                raw = JSON.stringify({
+                  ...defaultSave(),
+                  balance: p.balance ?? 100,
+                  selectedId: p.selectedId ?? PACKAGES[0].id,
+                  levels: { ...defaultSave().levels, ...(p.levels ?? {}) },
+                  actives: p.active ? [{ runId: newRunId(), pkgId: p.active.id, cost: p.active.cost, startedAt: p.active.endsAt - 3000, endsAt: p.active.endsAt }] : [],
+                  lastSeenAt: p.lastSeenAt ?? Date.now(),
+                });
+              } catch {}
+            }
           }
         }
 
@@ -275,7 +335,7 @@ export default function Index() {
           if (nowMs >= a.endsAt) {
             const pkg = PACKAGES.find((p) => p.id === a.pkgId);
             if (pkg) {
-              const p = a.cost * effectiveProfitPct(pkg.profitPct, saved.levels.yield ?? 0);
+              const p = a.cost * effectiveProfitPct(pkg.profitPct, saved.levels.yield ?? 0, saved.prestige ?? 0);
               payout += a.cost + p;
             } else {
               payout += a.cost;
@@ -293,6 +353,8 @@ export default function Index() {
         setLevels(saved.levels);
         setActives(remaining);
         setMusicEnabled(saved.musicEnabled ?? true);
+        setPrestige(saved.prestige ?? 0);
+        setTotalPrestiges(saved.totalPrestiges ?? 0);
         if (passiveEarned > 0.01) setOfflineGain(passiveEarned);
 
         // Schedule completions for remaining actives
@@ -310,7 +372,7 @@ export default function Index() {
   useEffect(() => {
     if (!ready) return;
     saveState({});
-  }, [ready, balance, selectedId, levels, actives, musicEnabled, saveState]);
+  }, [ready, balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, saveState]);
 
   // Save when backgrounded
   useEffect(() => {
@@ -372,7 +434,7 @@ export default function Index() {
       const pkg = PACKAGES.find((p) => p.id === a.pkgId);
       if (!pkg) return list.filter((x) => x.runId !== runId);
 
-      const basePct = effectiveProfitPct(pkg.profitPct, levels.yield);
+      const basePct = effectiveProfitPct(pkg.profitPct, levels.yield, prestige);
       let profit = a.cost * basePct;
       const lucky = Math.random() < luckyChance(levels.lucky);
       if (lucky) profit *= 2;
@@ -396,7 +458,7 @@ export default function Index() {
       delete finishRefs.current[runId];
       return list.filter((x) => x.runId !== runId);
     });
-  }, [levels.yield, levels.lucky, sound, balancePulse, floatY, floatOpacity]);
+  }, [levels.yield, levels.lucky, prestige, sound, balancePulse, floatY, floatOpacity]);
 
   const doShake = () => {
     shakeX.value = withSequence(
@@ -498,6 +560,50 @@ export default function Index() {
     Haptics.selectionAsync().catch(() => {});
   };
 
+  // ---- Prestige ----
+  const prestigeGainAvailable = computePrestigeGain(balance);
+  const canPrestige = prestigeGainAvailable > 0;
+
+  const doPrestige = () => {
+    kickMusicOnce();
+    if (!canPrestige) {
+      sound.play("error");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      doShake();
+      return;
+    }
+    if (!prestigeArmed) {
+      setPrestigeArmed(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      // auto-disarm after 5s if not confirmed
+      setTimeout(() => setPrestigeArmed(false), 5000);
+      return;
+    }
+    // Confirm: reset run, keep prestige gains
+    const gain = prestigeGainAvailable;
+    // Clear all running timers
+    Object.values(finishRefs.current).forEach(clearTimeout);
+    finishRefs.current = {};
+    setActives([]);
+    setBalance(100);
+    setDisplayBalance(100);
+    displayStartRef.current = { from: 100, to: 100, start: 0 };
+    setSelectedId(PACKAGES[0].id);
+    setLevels({ yield: 0, turbo: 0, passive: 0, lucky: 0, slots: 0 });
+    setPrestige((p) => p + gain);
+    setTotalPrestiges((t) => t + 1);
+    setPrestigeArmed(false);
+    setPrestigeCelebrate(gain);
+    setTimeout(() => setPrestigeCelebrate(0), 4500);
+
+    sound.play("upgrade");
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    balancePulse.value = withSequence(
+      withTiming(1.18, { duration: 220, easing: Easing.out(Easing.quad) }),
+      withTiming(1, { duration: 320, easing: Easing.inOut(Easing.quad) })
+    );
+  };
+
   // ---- Animated styles ----
   const floatStyle = useAnimatedStyle(() => ({
     opacity: floatOpacity.value,
@@ -510,7 +616,7 @@ export default function Index() {
   const ctaShakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shakeX.value }] }));
   const selectedPulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: selectedPulse.value }] }));
 
-  const selectedEffPct = effectiveProfitPct(selected.profitPct, levels.yield);
+  const selectedEffPct = effectiveProfitPct(selected.profitPct, levels.yield, prestige);
   const selectedEffDur = effectiveDurationMs(selected.durationMs, levels.turbo);
   const selectedEffProfit = selected.cost * selectedEffPct;
 
@@ -585,6 +691,14 @@ export default function Index() {
             </Text>
           </View>
 
+          {prestige > 0 && (
+            <View style={styles.prestigePill} testID="prestige-pill">
+              <Text style={styles.prestigePillText}>
+                ★ {prestige} PP · +{(prestige * PRESTIGE_BONUS_PER_POINT * 100).toFixed(0)}%
+              </Text>
+            </View>
+          )}
+
           {actives.length === 0 && (
             <View style={styles.availPill}>
               <Text style={styles.availText}>Available to invest</Text>
@@ -638,7 +752,7 @@ export default function Index() {
               const total = a.endsAt - a.startedAt;
               const remaining = Math.max(0, a.endsAt - now);
               const progress = total > 0 ? Math.min(1, 1 - remaining / total) : 1;
-              const effPct = effectiveProfitPct(pkg.profitPct, levels.yield);
+              const effPct = effectiveProfitPct(pkg.profitPct, levels.yield, prestige);
               const projected = a.cost * effPct;
               return (
                 <View key={a.runId} style={styles.activeCard} testID={`active-${a.runId}`}>
@@ -703,7 +817,7 @@ export default function Index() {
           const affordable = balance >= pkg.cost;
           const isSelected = pkg.id === selectedId;
           const disabled = !affordable;
-          const effPct = effectiveProfitPct(pkg.profitPct, levels.yield);
+          const effPct = effectiveProfitPct(pkg.profitPct, levels.yield, prestige);
           const effDur = effectiveDurationMs(pkg.durationMs, levels.turbo);
           const projectedProfit = pkg.cost * effPct;
           const roi = `+${(effPct * 100).toFixed(0)}%`;
@@ -826,6 +940,105 @@ export default function Index() {
             </Pressable>
           );
         })}
+
+        {/* PRESTIGE */}
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>PRESTIGE</Text>
+
+        <View style={styles.prestigeCard} testID="prestige-card">
+          <LinearGradient
+            colors={["rgba(0,229,255,0.16)", "rgba(0,229,255,0.03)"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+          <View style={styles.prestigeHeader}>
+            <View>
+              <Text style={styles.prestigeTitle}>Cash Out</Text>
+              <Text style={styles.prestigeSubtitle}>
+                Reset run · keep permanent profit boosts
+              </Text>
+            </View>
+            <View style={styles.prestigeStarWrap}>
+              <Text style={styles.prestigeStar}>★</Text>
+              <Text style={styles.prestigeStarLabel}>
+                {prestige} PP
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.prestigeStatsRow}>
+            <View style={styles.prestigeStatCell}>
+              <Text style={styles.prestigeStatLabel}>Current bonus</Text>
+              <Text style={styles.prestigeStatValue}>
+                +{(prestige * PRESTIGE_BONUS_PER_POINT * 100).toFixed(0)}%
+              </Text>
+            </View>
+            <View style={styles.prestigeStatDivider} />
+            <View style={styles.prestigeStatCell}>
+              <Text style={styles.prestigeStatLabel}>Cash-outs</Text>
+              <Text style={styles.prestigeStatValue}>{totalPrestiges}</Text>
+            </View>
+            <View style={styles.prestigeStatDivider} />
+            <View style={styles.prestigeStatCell}>
+              <Text style={styles.prestigeStatLabel}>Available now</Text>
+              <Text
+                style={[
+                  styles.prestigeStatValue,
+                  { color: canPrestige ? C.gain : C.textMuted },
+                ]}
+                testID="prestige-available"
+              >
+                +{prestigeGainAvailable} PP
+              </Text>
+            </View>
+          </View>
+
+          {!canPrestige && (
+            <Text style={styles.prestigeHint}>
+              Reach {money(PRESTIGE_MIN_BALANCE)} balance to unlock your first cash-out.
+            </Text>
+          )}
+
+          <Pressable
+            onPress={doPrestige}
+            style={({ pressed }) => [
+              styles.prestigeBtn,
+              !canPrestige && styles.prestigeBtnDisabled,
+              prestigeArmed && styles.prestigeBtnArmed,
+              pressed && canPrestige && { transform: [{ scale: 0.98 }] },
+            ]}
+            testID="prestige-button"
+          >
+            <Text
+              style={[
+                styles.prestigeBtnText,
+                !canPrestige && { color: C.textMuted },
+                prestigeArmed && { color: "#001018" },
+              ]}
+              testID="prestige-button-label"
+            >
+              {!canPrestige
+                ? "PRESTIGE LOCKED"
+                : prestigeArmed
+                ? `TAP AGAIN TO CONFIRM (+${prestigeGainAvailable} PP)`
+                : `CASH OUT FOR +${prestigeGainAvailable} PP`}
+            </Text>
+            {canPrestige && !prestigeArmed && (
+              <Text style={styles.prestigeBtnSub}>
+                Permanent +{(prestigeGainAvailable * PRESTIGE_BONUS_PER_POINT * 100).toFixed(0)}% profit boost
+              </Text>
+            )}
+          </Pressable>
+
+          {prestigeCelebrate > 0 && (
+            <View style={styles.prestigeCelebrateBanner} testID="prestige-celebrate">
+              <Text style={styles.prestigeCelebrateText}>
+                +{prestigeCelebrate} PP earned — welcome to run #{totalPrestiges}!
+              </Text>
+            </View>
+          )}
+        </View>
 
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -1076,4 +1289,87 @@ const styles = StyleSheet.create({
   investLabelDisabled: { color: C.loss },
   investSub: { color: "#001018", fontSize: 12, fontWeight: "700", marginTop: 2, opacity: 0.8 },
   investSubDisabled: { color: C.textMuted, opacity: 1 },
+
+  // Prestige
+  prestigePill: {
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
+    backgroundColor: "rgba(255,214,79,0.15)", borderWidth: 1, borderColor: "#FFD54F",
+  },
+  prestigePillText: {
+    color: "#FFD54F", fontSize: 12, fontWeight: "900", letterSpacing: 0.3,
+  },
+  prestigeCard: {
+    backgroundColor: C.panelElevated,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: C.accent,
+    padding: 16,
+    overflow: "hidden",
+    shadowColor: C.accent,
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 8,
+  },
+  prestigeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  prestigeTitle: {
+    color: C.text, fontSize: 18, fontWeight: "900", letterSpacing: 0.3,
+  },
+  prestigeSubtitle: {
+    color: C.textMuted, fontSize: 12, fontWeight: "600", marginTop: 2,
+  },
+  prestigeStarWrap: {
+    alignItems: "center", justifyContent: "center",
+    paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: 12, borderWidth: 1, borderColor: "#FFD54F",
+    backgroundColor: "rgba(255,214,79,0.1)",
+  },
+  prestigeStar: { color: "#FFD54F", fontSize: 20, fontWeight: "900", lineHeight: 22 },
+  prestigeStarLabel: { color: "#FFD54F", fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
+  prestigeStatsRow: {
+    flexDirection: "row", alignItems: "center",
+    marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: C.border,
+  },
+  prestigeStatCell: { flex: 1, alignItems: "center" },
+  prestigeStatDivider: { width: 1, height: 28, backgroundColor: C.border },
+  prestigeStatLabel: {
+    color: C.textMuted, fontSize: 10, fontWeight: "700",
+    letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 3,
+  },
+  prestigeStatValue: { color: C.text, fontSize: 16, fontWeight: "900" },
+  prestigeHint: {
+    color: C.textMuted, fontSize: 12, fontWeight: "600",
+    marginTop: 14, textAlign: "center",
+  },
+  prestigeBtn: {
+    marginTop: 16, height: 56, borderRadius: 16,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(0,229,255,0.15)",
+    borderWidth: 1, borderColor: C.accent, overflow: "hidden",
+  },
+  prestigeBtnDisabled: {
+    backgroundColor: C.panel, borderColor: C.border,
+  },
+  prestigeBtnArmed: {
+    backgroundColor: C.accent, borderColor: C.accent,
+  },
+  prestigeBtnText: {
+    color: C.accent, fontSize: 14, fontWeight: "900", letterSpacing: 1.2,
+  },
+  prestigeBtnSub: {
+    color: C.gain, fontSize: 11, fontWeight: "700", marginTop: 2,
+  },
+  prestigeCelebrateBanner: {
+    marginTop: 14, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12,
+    backgroundColor: "rgba(255,214,79,0.15)",
+    borderWidth: 1, borderColor: "#FFD54F",
+    alignItems: "center",
+  },
+  prestigeCelebrateText: {
+    color: "#FFD54F", fontSize: 13, fontWeight: "800",
+  },
 });

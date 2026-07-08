@@ -109,6 +109,18 @@ const UPGRADES: Upgrade[] = [
 const upgradeCost = (u: Upgrade, level: number) =>
   Math.floor(u.baseCost * Math.pow(u.costGrowth, level));
 
+const effectivePkgCost = (pkg: Pkg, t: TreeEffects, market: ActiveMarketEvent | null = null) => {
+  let c = pkg.cost * t.endgameCostMult;
+  if (market) {
+    const ev = MARKET_EVENTS.find((e) => e.id === market.id);
+    if (ev?.costMult) c *= ev.costMult;
+  }
+  return Math.max(1, Math.round(c));
+};
+
+const effectiveUpgradeCost = (u: Upgrade, level: number, t: TreeEffects) =>
+  Math.max(1, Math.round(upgradeCost(u, level) * t.endgameUpgradeCostMult));
+
 // ---------- Actives ----------
 type ActiveInvestment = {
   runId: string; pkgId: string; cost: number;
@@ -148,7 +160,7 @@ const LEGACY_KEYS = ["investmentIdle:v5", "investmentIdle:v4", "investmentIdle:v
 const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
 
 const PRESTIGE_MIN_BALANCE = 5000;
-const PRESTIGE_BONUS_PER_POINT = 0.02;
+const PRESTIGE_BONUS_PER_POINT = 0.05;
 const computePrestigeGain = (balance: number) => {
   if (balance < PRESTIGE_MIN_BALANCE) return 0;
   return Math.floor(Math.sqrt(balance / PRESTIGE_MIN_BALANCE));
@@ -187,6 +199,16 @@ const money = (n: number) => {
   for (const u of UNITS) if (abs >= u.v) return `${sign}$${(abs / u.v).toFixed(2)}${u.s}`;
   return `${sign}$${abs.toFixed(2)}`;
 };
+
+// Compact non-currency number formatter (K/M/B/T/…).
+const compact = (n: number) => {
+  if (!isFinite(n)) return "∞";
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  if (abs < 1000) return `${sign}${Math.floor(abs)}`;
+  for (const u of UNITS) if (abs >= u.v) return `${sign}${(abs / u.v).toFixed(abs / u.v >= 100 ? 0 : abs / u.v >= 10 ? 1 : 2)}${u.s}`;
+  return `${sign}${Math.floor(abs)}`;
+};
 const fmtDuration = (ms: number) => {
   const s = Math.max(0, Math.round(ms / 1000));
   if (s < 60) return `${s}s`;
@@ -210,6 +232,7 @@ const computeProfitPct = (
   m *= 1 + 0.08 * yieldLevel;
   m *= prestigeBonus(prestige);
   m *= t.profitMult;
+  m *= t.endgameProfitMult;
   m *= 1 + t.slotSynergyPct * Math.max(0, filledSlots - 1);
   if (pkg.id === "whale") m *= 1 + t.whaleBonus;
   if (pkg.id === "legendary") m *= 1 + t.legendaryBonus;
@@ -235,7 +258,7 @@ const computeDuration = (pkg: Pkg, turbo: number, t: TreeEffects, market: Active
 };
 
 const computePassiveRate = (passiveLvl: number, t: TreeEffects) =>
-  1.0 * passiveLvl * t.passiveMult;
+  1.0 * passiveLvl * t.passiveMult * t.endgamePassiveMult;
 
 const luckyChance = (level: number) => Math.min(0.6, 0.03 * level);
 const slotCount = (level: number) => 1 + level;
@@ -673,15 +696,16 @@ export default function Index() {
     const state = stateRef.current;
     const slots = slotCount(state.levels.slots);
     if (state.actives.length >= slots) return false;
-    if (state.balance < pkg.cost) return false;
+    const cost = effectivePkgCost(pkg, state.treeEffects);
+    if (state.balance < cost) return false;
 
     const dur = computeDuration(pkg, state.levels.turbo, state.treeEffects);
     const startedAt = Date.now();
     const a: ActiveInvestment = {
-      runId: newRunId(), pkgId: pkg.id, cost: pkg.cost,
+      runId: newRunId(), pkgId: pkg.id, cost,
       startedAt, endsAt: startedAt + dur,
     };
-    setBalance((b) => b - pkg.cost);
+    setBalance((b) => b - cost);
     setActives((list) => [...list, a]);
     finishRefs.current[a.runId] = setTimeout(() => completeInvestment(a.runId), dur);
     return true;
@@ -693,7 +717,7 @@ export default function Index() {
     const slots = slotCount(state.levels.slots);
     const hasFreeSlot = state.actives.length < slots;
     const selected = state.packages.find((p) => p.id === state.selectedId) ?? state.packages[0];
-    if (!hasFreeSlot || state.balance < selected.cost) {
+    if (!hasFreeSlot || state.balance < effectivePkgCost(selected, state.treeEffects)) {
       sound.play("error");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       doShake();

@@ -248,6 +248,48 @@ export const SKILLS: SkillNode[] = [
     baseCost: 200, costGrowth: 1, maxLevel: 1,
     prereqs: [{ id: "super-contract", level: 1 }], requiredRank: "legend", tint: "#FFD54F",
   },
+
+  // ─── ENDGAME (Legend-only chain in the Money column) ──────────
+  {
+    id: "endgame-profit",
+    name: "Ascended Trader",
+    short: "Ascendant",
+    description: "All investment profits tripled — the market bends to your will.",
+    effect: () => "All profits ×3",
+    path: "money", row: 7,
+    baseCost: 800, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "legend-bonus", level: 1 }], requiredRank: "legend", tint: "#FF6EC7",
+  },
+  {
+    id: "endgame-costs",
+    name: "Financial Enlightenment",
+    short: "Enlightened",
+    description: "Every investment costs 50% less.",
+    effect: () => "Pkg costs −50%",
+    path: "money", row: 8,
+    baseCost: 1200, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "endgame-profit", level: 1 }], requiredRank: "legend", tint: "#FF6EC7",
+  },
+  {
+    id: "endgame-passive",
+    name: "Infinite Yield",
+    short: "Infinite Yield",
+    description: "Passive income and savings interest quintupled.",
+    effect: () => "Passive ×5",
+    path: "money", row: 9,
+    baseCost: 1500, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "endgame-costs", level: 1 }], requiredRank: "legend", tint: "#FF6EC7",
+  },
+  {
+    id: "endgame-capstone",
+    name: "The Ascendant",
+    short: "The Ascendant",
+    description: "All upgrade costs reduced by 75%. You have beaten the market.",
+    effect: () => "Upgrade costs −75%",
+    path: "money", row: 10,
+    baseCost: 3000, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "endgame-passive", level: 1 }], requiredRank: "legend", tint: "#FF6EC7",
+  },
 ];
 
 export const skillCost = (node: SkillNode, level: number) =>
@@ -293,6 +335,12 @@ export type TreeEffects = {
   legendaryUnlocked: boolean;
   whaleBonus: number;         // additive %, e.g. 0.5
   legendaryBonus: number;
+  // Endgame
+  endgameProfitMult: number;      // ×3 from Ascended Trader
+  endgameCostMult: number;        // ×0.5 from Financial Enlightenment
+  endgamePassiveMult: number;     // ×5 from Infinite Yield
+  endgameUpgradeCostMult: number; // ×0.25 from The Ascendant
+  endgameComplete: boolean;
 };
 
 const lvl = (levels: SkillLevels, id: string) => levels[id] ?? 0;
@@ -320,6 +368,15 @@ export const deriveTreeEffects = (levels: SkillLevels): TreeEffects => {
     legendaryUnlocked: lvl(levels, "super-contract") >= 1,
     whaleBonus:       lvl(levels, "whale-mult") >= 1 ? 0.5 : 0,
     legendaryBonus:   lvl(levels, "legend-bonus") >= 1 ? 1.0 : 0,
+    endgameProfitMult:      lvl(levels, "endgame-profit") >= 1 ? 3 : 1,
+    endgameCostMult:        lvl(levels, "endgame-costs") >= 1 ? 0.5 : 1,
+    endgamePassiveMult:     lvl(levels, "endgame-passive") >= 1 ? 5 : 1,
+    endgameUpgradeCostMult: lvl(levels, "endgame-capstone") >= 1 ? 0.25 : 1,
+    endgameComplete:
+      lvl(levels, "endgame-profit") >= 1 &&
+      lvl(levels, "endgame-costs") >= 1 &&
+      lvl(levels, "endgame-passive") >= 1 &&
+      lvl(levels, "endgame-capstone") >= 1,
   };
 };
 

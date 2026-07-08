@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -40,13 +41,8 @@ import {
   type TreeEffects,
 } from "@/src/game/skillTree";
 import {
-  ACHIEVEMENTS,
-  achievementById,
   defaultStats,
   MARKET_EVENTS,
-  MARKET_ROLL_CHANCE,
-  MARKET_ROLL_INTERVAL_MS,
-  rollMarketEvent,
   type AchievementId,
   type ActiveMarketEvent,
   type Stats,
@@ -238,13 +234,6 @@ const computeDuration = (pkg: Pkg, turbo: number, t: TreeEffects, market: Active
   return Math.max(200, Math.round(d));
 };
 
-const computePkgCost = (pkg: Pkg, market: ActiveMarketEvent | null = null) => {
-  if (!market) return pkg.cost;
-  const ev = MARKET_EVENTS.find((e) => e.id === market.id);
-  if (ev?.costMult) return Math.round(pkg.cost * ev.costMult);
-  return pkg.cost;
-};
-
 const computePassiveRate = (passiveLvl: number, t: TreeEffects) =>
   1.0 * passiveLvl * t.passiveMult;
 
@@ -290,15 +279,15 @@ export default function Index() {
   const [activeMarket, setActiveMarket] = useState<ActiveMarketEvent | null>(null);
   const [lastMarketRollAt, setLastMarketRollAt] = useState<number>(Date.now());
   const [settings, setSettings] = useState<Settings>(defaultSettings());
-  const [showStats, setShowStats] = useState(false);
-  const [showAchievements, setShowAchievements] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+
+  // Developer menu (hidden gesture → password → menu)
   const [showDebug, setShowDebug] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const [achievementToast, setAchievementToast] = useState<AchievementId | null>(null);
-  const [devMode, setDevMode] = useState({ infiniteMoney: false, instantInvestments: false });
+  const [debugAuthed, setDebugAuthed] = useState(false);
+  const [debugPassword, setDebugPassword] = useState("");
+  const [debugPwError, setDebugPwError] = useState(false);
+  const [debugMoneyInput, setDebugMoneyInput] = useState("");
+  const [debugPPInput, setDebugPPInput] = useState("");
   const secretTapRef = useRef<number[]>([]);
-  const runStartRef = useRef<number>(Date.now());
 
   // Derived
   const treeEffects = useMemo(() => deriveTreeEffects(skills), [skills]);
@@ -830,6 +819,70 @@ export default function Index() {
     Haptics.selectionAsync().catch(() => {});
   };
 
+  // ---------- Developer menu (hidden gesture) ----------
+  const DEBUG_PASSWORD = "1337";
+  const DEBUG_TAP_COUNT = 7;
+  const DEBUG_TAP_WINDOW_MS = 3000;
+
+  const handleSecretTap = () => {
+    const nowMs = Date.now();
+    const recent = [...secretTapRef.current, nowMs].filter(
+      (t) => nowMs - t < DEBUG_TAP_WINDOW_MS
+    );
+    secretTapRef.current = recent;
+    if (recent.length >= DEBUG_TAP_COUNT) {
+      secretTapRef.current = [];
+      setDebugAuthed(false);
+      setDebugPassword("");
+      setDebugPwError(false);
+      setDebugMoneyInput("");
+      setDebugPPInput("");
+      setShowDebug(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+    }
+  };
+
+  const submitDebugPassword = () => {
+    if (debugPassword === DEBUG_PASSWORD) {
+      setDebugAuthed(true);
+      setDebugPwError(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    } else {
+      setDebugPwError(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+    }
+  };
+
+  const closeDebug = () => {
+    setShowDebug(false);
+    setDebugAuthed(false);
+    setDebugPassword("");
+    setDebugPwError(false);
+    setDebugMoneyInput("");
+    setDebugPPInput("");
+  };
+
+  const parseAmount = (raw: string): number => {
+    const n = Number(raw.replace(/[^0-9.eE+-]/g, ""));
+    return isFinite(n) ? n : 0;
+  };
+
+  const devAddMoney = () => {
+    const amount = parseAmount(debugMoneyInput);
+    if (amount <= 0) return;
+    setBalance((b) => b + amount);
+    setDebugMoneyInput("");
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  };
+
+  const devAddPP = () => {
+    const amount = Math.floor(parseAmount(debugPPInput));
+    if (amount <= 0) return;
+    setPrestige((p) => p + amount);
+    setDebugPPInput("");
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  };
+
   const prestigeGainAvailable = computePrestigeGain(balance);
   const canPrestige = prestigeGainAvailable > 0;
 
@@ -1110,7 +1163,14 @@ export default function Index() {
         style={styles.header}
       >
         <View style={styles.headerTopRow}>
-          <Text style={styles.balanceLabel}>PORTFOLIO BALANCE</Text>
+          <Pressable
+            onPress={handleSecretTap}
+            hitSlop={8}
+            testID="secret-tap-target"
+            accessibilityLabel="Portfolio Balance"
+          >
+            <Text style={styles.balanceLabel}>PORTFOLIO BALANCE</Text>
+          </Pressable>
           <View style={styles.headerRightRow}>
             <Pressable
               onPress={toggleMusic}
@@ -1453,6 +1513,127 @@ export default function Index() {
           </Pressable>
         </Animated.View>
       </View>
+
+      {/* Developer menu overlay (hidden gesture: 7 taps on "PORTFOLIO BALANCE" within 3s) */}
+      {showDebug && (
+        <View style={styles.debugOverlay} testID="debug-overlay">
+          <View style={styles.debugCard}>
+            <View style={styles.debugHeader}>
+              <Text style={styles.debugTitle}>DEVELOPER MENU</Text>
+              <Pressable
+                onPress={closeDebug}
+                hitSlop={12}
+                testID="debug-close"
+                style={styles.debugCloseBtn}
+              >
+                <Text style={styles.debugCloseText}>✕</Text>
+              </Pressable>
+            </View>
+
+            {!debugAuthed ? (
+              <View>
+                <Text style={styles.debugLabel}>Password required</Text>
+                <TextInput
+                  value={debugPassword}
+                  onChangeText={(v) => { setDebugPassword(v); setDebugPwError(false); }}
+                  onSubmitEditing={submitDebugPassword}
+                  placeholder="••••"
+                  placeholderTextColor={C.textMuted}
+                  secureTextEntry
+                  keyboardType="numeric"
+                  autoFocus
+                  style={[styles.debugInput, debugPwError && styles.debugInputError]}
+                  testID="debug-password-input"
+                />
+                {debugPwError && (
+                  <Text style={styles.debugErrorText} testID="debug-password-error">
+                    Incorrect password
+                  </Text>
+                )}
+                <Pressable
+                  onPress={submitDebugPassword}
+                  style={({ pressed }) => [
+                    styles.debugActionBtn,
+                    styles.debugActionPrimary,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                  testID="debug-password-submit"
+                >
+                  <Text style={styles.debugActionText}>UNLOCK</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View>
+                <View style={styles.debugSection}>
+                  <Text style={styles.debugLabel}>Add money</Text>
+                  <View style={styles.debugRow}>
+                    <TextInput
+                      value={debugMoneyInput}
+                      onChangeText={setDebugMoneyInput}
+                      placeholder="Amount"
+                      placeholderTextColor={C.textMuted}
+                      keyboardType="numeric"
+                      style={[styles.debugInput, { flex: 1, marginBottom: 0 }]}
+                      testID="debug-money-input"
+                    />
+                    <Pressable
+                      onPress={devAddMoney}
+                      style={({ pressed }) => [
+                        styles.debugActionBtn,
+                        styles.debugActionSecondary,
+                        { marginLeft: 8, marginTop: 0, flex: 0 },
+                        pressed && { opacity: 0.85 },
+                      ]}
+                      testID="debug-add-money"
+                    >
+                      <Text style={styles.debugActionText}>ADD</Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                <View style={styles.debugSection}>
+                  <Text style={styles.debugLabel}>Add prestige points</Text>
+                  <View style={styles.debugRow}>
+                    <TextInput
+                      value={debugPPInput}
+                      onChangeText={setDebugPPInput}
+                      placeholder="Amount"
+                      placeholderTextColor={C.textMuted}
+                      keyboardType="numeric"
+                      style={[styles.debugInput, { flex: 1, marginBottom: 0 }]}
+                      testID="debug-pp-input"
+                    />
+                    <Pressable
+                      onPress={devAddPP}
+                      style={({ pressed }) => [
+                        styles.debugActionBtn,
+                        styles.debugActionSecondary,
+                        { marginLeft: 8, marginTop: 0, flex: 0 },
+                        pressed && { opacity: 0.85 },
+                      ]}
+                      testID="debug-add-pp"
+                    >
+                      <Text style={styles.debugActionText}>ADD</Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                <Pressable
+                  onPress={closeDebug}
+                  style={({ pressed }) => [
+                    styles.debugActionBtn,
+                    styles.debugActionClose,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                  testID="debug-close-btn"
+                >
+                  <Text style={[styles.debugActionText, { color: C.text }]}>CLOSE</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -1818,4 +1999,66 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   skillCostText: { fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
+
+  // Developer menu
+  debugOverlay: {
+    position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    alignItems: "center", justifyContent: "center",
+    padding: 24, zIndex: 100,
+  },
+  debugCard: {
+    width: "100%", maxWidth: 360,
+    backgroundColor: C.panelElevated,
+    borderRadius: 20, borderWidth: 1, borderColor: C.accent,
+    padding: 20,
+    shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 }, elevation: 10,
+  },
+  debugHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    marginBottom: 16, paddingBottom: 12,
+    borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  debugTitle: {
+    color: C.accent, fontSize: 14, fontWeight: "900", letterSpacing: 2,
+  },
+  debugCloseBtn: {
+    width: 32, height: 32, borderRadius: 8,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: C.panel, borderWidth: 1, borderColor: C.border,
+  },
+  debugCloseText: { color: C.textMuted, fontSize: 16, fontWeight: "900" },
+  debugSection: { marginBottom: 14 },
+  debugLabel: {
+    color: C.textMuted, fontSize: 10, fontWeight: "800",
+    letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8,
+  },
+  debugRow: { flexDirection: "row", alignItems: "center" },
+  debugInput: {
+    backgroundColor: C.panel, color: C.text,
+    fontSize: 15, fontWeight: "700",
+    paddingHorizontal: 12, paddingVertical: 10,
+    borderRadius: 10, borderWidth: 1, borderColor: C.border,
+    marginBottom: 8,
+  },
+  debugInputError: { borderColor: C.loss },
+  debugErrorText: {
+    color: C.loss, fontSize: 11, fontWeight: "700", marginBottom: 8,
+  },
+  debugActionBtn: {
+    marginTop: 8, height: 40, borderRadius: 10,
+    alignItems: "center", justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  debugActionPrimary: { backgroundColor: C.accent },
+  debugActionSecondary: {
+    backgroundColor: C.accent, height: 40,
+  },
+  debugActionClose: {
+    backgroundColor: C.panel, borderWidth: 1, borderColor: C.border, marginTop: 4,
+  },
+  debugActionText: {
+    color: "#001018", fontSize: 12, fontWeight: "900", letterSpacing: 1,
+  },
 });

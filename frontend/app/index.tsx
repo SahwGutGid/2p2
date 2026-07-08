@@ -365,6 +365,41 @@ export default function Index() {
     "ultimate-investor": false,
   });
 
+  // Loading screen animation hooks (always called, conditionally rendered)
+  const logoScale = useSharedValue(0);
+  const logoOpacity = useSharedValue(0);
+  const textOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (loadingComplete) return;
+    logoScale.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic) });
+    logoOpacity.value = withDelay(200, withTiming(1, { duration: 600 }));
+    textOpacity.value = withDelay(600, withTiming(1, { duration: 600 }));
+  }, [loadingComplete]);
+
+  const logoStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: logoScale.value }],
+    opacity: logoOpacity.value,
+  }));
+
+  const textStyle = useAnimatedStyle(() => ({
+    opacity: textOpacity.value,
+  }));
+
+  // Onboarding screen hooks (always called, conditionally rendered)
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const slideAnim = useSharedValue(0);
+
+  useEffect(() => {
+    if (!showOnboarding) return;
+    slideAnim.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) });
+  }, [showOnboarding, onboardingStep]);
+
+  const slideStyle = useAnimatedStyle(() => ({
+    opacity: slideAnim.value,
+    transform: [{ translateY: (1 - slideAnim.value) * 20 }],
+  }));
+
   // Developer menu (hidden gesture → password → menu)
   const [showDebug, setShowDebug] = useState(false);
   const [debugAuthed, setDebugAuthed] = useState(false);
@@ -1050,6 +1085,13 @@ export default function Index() {
     if (newTotalPrestiges >= LEGACY_UNLOCK_THRESHOLD) {
       const legacyGain = Math.max(1, Math.floor(gain / 100));
       setLegacyPoints((lp: number) => lp + legacyGain);
+      // Persist Legacy Points immediately to ensure they're saved
+      setTimeout(() => {
+        setLegacyPoints((currentLp) => {
+          saveState({ legacyPoints: currentLp });
+          return currentLp;
+        });
+      }, 100);
     }
 
     sound.play("upgrade");
@@ -1132,11 +1174,11 @@ export default function Index() {
                 <Pressable
                   onPress={() => { sound.play("click"); setShowLegacy(true); }}
                   hitSlop={12}
-                  style={[styles.iconChip, { borderColor: "#FFFFFF", backgroundColor: `${C.gold}30`, marginLeft: 6 }]}
+                  style={[styles.iconChip, { borderColor: C.gold, backgroundColor: `${C.gold}25`, marginLeft: 6, borderWidth: 1.5 }]}
                   testID="open-legacy"
                 >
                   <Text style={[styles.iconChipText, { color: C.gold }]}>
-                    LEGACY
+                    LEGACY · {compact(legacyPoints)}
                   </Text>
                 </Pressable>
               )}
@@ -1355,9 +1397,11 @@ export default function Index() {
       if (legacyPoints < upgrade.cost || legacyUpgrades[upgrade.id]) return;
       sound.play("upgrade");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      setLegacyPoints((lp: number) => lp - upgrade.cost);
-      setLegacyUpgrades((prev: Record<LegacyUpgradeId, boolean>) => ({ ...prev, [upgrade.id]: true }));
-      saveState({ legacyPoints: legacyPoints - upgrade.cost, legacyUpgrades: { ...legacyUpgrades, [upgrade.id]: true } });
+      const newLegacyPoints = legacyPoints - upgrade.cost;
+      const newLegacyUpgrades = { ...legacyUpgrades, [upgrade.id]: true };
+      setLegacyPoints(newLegacyPoints);
+      setLegacyUpgrades(newLegacyUpgrades);
+      saveState({ legacyPoints: newLegacyPoints, legacyUpgrades: newLegacyUpgrades });
     };
 
     const isUltimateOwned = legacyUpgrades["ultimate-investor"];
@@ -1469,25 +1513,6 @@ export default function Index() {
   // Loading Screen
   // ============================================================
   if (!loadingComplete) {
-    const logoScale = useSharedValue(0);
-    const logoOpacity = useSharedValue(0);
-    const textOpacity = useSharedValue(0);
-
-    useEffect(() => {
-      logoScale.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic) });
-      logoOpacity.value = withDelay(200, withTiming(1, { duration: 600 }));
-      textOpacity.value = withDelay(600, withTiming(1, { duration: 600 }));
-    }, []);
-
-    const logoStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: logoScale.value }],
-      opacity: logoOpacity.value,
-    }));
-
-    const textStyle = useAnimatedStyle(() => ({
-      opacity: textOpacity.value,
-    }));
-
     return (
       <SafeAreaView style={styles.loadingContainer} testID="loading-screen">
         <LinearGradient
@@ -1517,7 +1542,6 @@ export default function Index() {
   // Onboarding Screen
   // ============================================================
   if (showOnboarding) {
-    const [step, setStep] = useState(0);
     const onboardingSteps = [
       {
         title: "Welcome to Investment Idle",
@@ -1547,25 +1571,16 @@ export default function Index() {
     ];
 
     const nextStep = () => {
-      if (step < onboardingSteps.length - 1) {
-        setStep(step + 1);
+      if (onboardingStep < onboardingSteps.length - 1) {
+        setOnboardingStep(onboardingStep + 1);
       } else {
         setShowOnboarding(false);
+        setOnboardingComplete(true);
         saveState({ onboardingComplete: true });
       }
     };
 
-    const slideAnim = useSharedValue(0);
-    useEffect(() => {
-      slideAnim.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) });
-    }, [step]);
-
-    const slideStyle = useAnimatedStyle(() => ({
-      opacity: slideAnim.value,
-      transform: [{ translateY: (1 - slideAnim.value) * 20 }],
-    }));
-
-    const current = onboardingSteps[step];
+    const current = onboardingSteps[onboardingStep];
 
     return (
       <SafeAreaView style={styles.onboardingContainer} testID="onboarding-screen">
@@ -1581,8 +1596,8 @@ export default function Index() {
                 key={i}
                 style={[
                   styles.progressDot,
-                  i <= step && { backgroundColor: C.accent },
-                  i < step && { backgroundColor: C.accentDeep },
+                  i <= onboardingStep && { backgroundColor: C.accent },
+                  i < onboardingStep && { backgroundColor: C.accentDeep },
                 ]}
               />
             ))}
@@ -1605,13 +1620,14 @@ export default function Index() {
             testID="onboarding-next"
           >
             <Text style={styles.onboardingButtonText}>
-              {step === onboardingSteps.length - 1 ? "START INVESTING" : "NEXT"}
+              {onboardingStep === onboardingSteps.length - 1 ? "START INVESTING" : "NEXT"}
             </Text>
           </Pressable>
 
           <Pressable
             onPress={() => {
               setShowOnboarding(false);
+              setOnboardingComplete(true);
               saveState({ onboardingComplete: true });
             }}
             style={styles.onboardingSkip}

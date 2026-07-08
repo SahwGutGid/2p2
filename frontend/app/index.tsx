@@ -653,6 +653,7 @@ export default function Index() {
         setActiveMarket(savedMarket && savedMarket.endsAt > Date.now() ? savedMarket : null);
         setLastMarketRollAt(saved.lastMarketRollAt ?? Date.now());
         setSettings({ ...defaultSettings(), ...(saved.settings ?? {}) });
+        setPrestigeUpgrades(saved.prestigeUpgrades ?? { foundation: false });
         setLegacyPoints(saved.legacyPoints ?? 0);
         setLegacyUpgrades(saved.legacyUpgrades ?? {
           "investors-foundation": false,
@@ -1258,9 +1259,10 @@ export default function Index() {
                       if (canAfford) {
                         sound.play("upgrade");
                         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+                        const newPrestigeUpgrades = { ...prestigeUpgrades, [upgrade.id]: true };
                         setPrestige((p) => p - upgrade.cost);
-                        setPrestigeUpgrades((prev) => ({ ...prev, [upgrade.id]: true }));
-                        saveState({ prestigeUpgrades: { ...prestigeUpgrades, [upgrade.id]: true } });
+                        setPrestigeUpgrades(newPrestigeUpgrades);
+                        saveState({ prestigeUpgrades: newPrestigeUpgrades });
                       }
                     }}
                     disabled={!canAfford}

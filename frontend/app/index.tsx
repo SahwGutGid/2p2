@@ -164,6 +164,7 @@ type SaveData = {
   prestigeUpgrades: Record<PrestigeUpgradeId, boolean>;
   legacyPoints: number;
   legacyUpgrades: Record<LegacyUpgradeId, boolean>;
+  onboardingComplete: boolean;
 };
 const SAVE_KEY = "investmentIdle:v6";
 const LEGACY_KEYS = ["investmentIdle:v5", "investmentIdle:v4", "investmentIdle:v3", "investmentIdle:v2"];
@@ -203,6 +204,7 @@ const defaultSave = (): SaveData => ({
     "global-network": false,
     "ultimate-investor": false,
   },
+  onboardingComplete: false,
 });
 
 // ---------- Helpers ----------
@@ -315,6 +317,9 @@ export default function Index() {
 
   // Core state
   const [ready, setReady] = useState(false);
+  const [loadingComplete, setLoadingComplete] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [balance, setBalance] = useState(100);
   const [selectedId, setSelectedId] = useState(BASE_PACKAGES[0].id);
   const [levels, setLevels] = useState<Record<UpgradeId, number>>({
@@ -334,6 +339,9 @@ export default function Index() {
   const [prestigeCelebrate, setPrestigeCelebrate] = useState<number>(0);
   const [rankUpBanner, setRankUpBanner] = useState<Rank | null>(null);
   const [showLegacy, setShowLegacy] = useState(false);
+
+  // Celebration banners for early game milestones
+  const [celebrationBanner, setCelebrationBanner] = useState<string | null>(null);
 
   // Features state
   const [stats, setStats] = useState<Stats>(defaultStats());
@@ -436,11 +444,11 @@ export default function Index() {
 
   // Live access to volatile values from stable callbacks (avoids stale closures).
   const stateRef = useRef({
-    balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades,
+    balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete,
   });
   useEffect(() => {
-    stateRef.current = { balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades };
-  }, [balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades]);
+    stateRef.current = { balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete };
+  }, [balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete]);
 
   // -------- Persistence --------
   const saveState = useCallback(async (data: Partial<SaveData>) => {
@@ -449,13 +457,13 @@ export default function Index() {
         v: 6, balance, selectedId, levels, actives, musicEnabled,
         prestige, totalPrestiges, skills,
         stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings,
-        prestigeUpgrades, legacyPoints, legacyUpgrades,
+        prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete,
         lastSeenAt: Date.now(),
         ...data,
       };
       await AsyncStorage.setItem(SAVE_KEY, JSON.stringify(merged));
     } catch {}
-  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings, prestigeUpgrades, legacyPoints, legacyUpgrades]);
+  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete]);
 
   // Load (migrate v2/v3/v4 → v5)
   useEffect(() => {
@@ -510,6 +518,7 @@ export default function Index() {
               "global-network": false,
               "ultimate-investor": false,
             },
+            onboardingComplete: parsed.onboardingComplete ?? false,
           };
         }
 
@@ -619,6 +628,8 @@ export default function Index() {
           "global-network": false,
           "ultimate-investor": false,
         });
+        setOnboardingComplete(saved.onboardingComplete ?? false);
+        setShowOnboarding(!(saved.onboardingComplete ?? false));
         if (passiveEarned > 0.01 || (savedTree.savingsRatePerSec > 0 && elapsed > 1000)) {
           setOfflineGain(simBal - (saved.balance ?? 100));
         }
@@ -628,7 +639,11 @@ export default function Index() {
           finishRefs.current[a.runId] = setTimeout(() => completeInvestment(a.runId), left);
         }
       } catch {}
-      finally { setReady(true); }
+      finally {
+        setReady(true);
+        // Trigger loading screen transition
+        setTimeout(() => setLoadingComplete(true), 1500);
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -775,7 +790,7 @@ export default function Index() {
     const cost = effectivePkgCost(pkg, state.treeEffects);
     if (state.balance < cost) return false;
 
-    const dur = computeDuration(pkg, state.levels.turbo, state.treeEffects, null, state.prestigeUpgrades?.foundation ?? false);
+    const dur = computeDuration(pkg, state.levels.turbo, state.treeEffects, null, state.prestigeUpgrades?.foundation ?? false, state.legacyUpgrades ?? {});
     const startedAt = Date.now();
     const a: ActiveInvestment = {
       runId: newRunId(), pkgId: pkg.id, cost,
@@ -784,8 +799,15 @@ export default function Index() {
     setBalance((b) => b - cost);
     setActives((list) => [...list, a]);
     finishRefs.current[a.runId] = setTimeout(() => completeInvestment(a.runId), dur);
+
+    // Early game milestone: First investment
+    if (state.actives.length === 0 && !onboardingComplete) {
+      setCelebrationBanner("First Investment Started!");
+      setTimeout(() => setCelebrationBanner(null), 3000);
+    }
+
     return true;
-  }, [completeInvestment]);
+  }, [completeInvestment, onboardingComplete]);
 
   const invest = () => {
     kickMusicOnce();
@@ -888,6 +910,12 @@ export default function Index() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setBalance((b) => b - cost);
     setLevels((l) => ({ ...l, [u.id]: l[u.id] + 1 }));
+
+    // Early game milestone: First upgrade
+    if (level === 0 && !onboardingComplete) {
+      setCelebrationBanner("First Upgrade Purchased!");
+      setTimeout(() => setCelebrationBanner(null), 3000);
+    }
   };
 
   const buySkill = (node: SkillNode) => {
@@ -1438,6 +1466,165 @@ export default function Index() {
   }
 
   // ============================================================
+  // Loading Screen
+  // ============================================================
+  if (!loadingComplete) {
+    const logoScale = useSharedValue(0);
+    const logoOpacity = useSharedValue(0);
+    const textOpacity = useSharedValue(0);
+
+    useEffect(() => {
+      logoScale.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic) });
+      logoOpacity.value = withDelay(200, withTiming(1, { duration: 600 }));
+      textOpacity.value = withDelay(600, withTiming(1, { duration: 600 }));
+    }, []);
+
+    const logoStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: logoScale.value }],
+      opacity: logoOpacity.value,
+    }));
+
+    const textStyle = useAnimatedStyle(() => ({
+      opacity: textOpacity.value,
+    }));
+
+    return (
+      <SafeAreaView style={styles.loadingContainer} testID="loading-screen">
+        <LinearGradient
+          colors={[C.bg, C.bgSoft, C.bg]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <Animated.View style={[styles.loadingLogo, logoStyle]}>
+          <View style={[styles.loadingLogoInner, { borderColor: C.accent }]}>
+            <Text style={[styles.loadingLogoText, { color: C.accent }]}>P2P</Text>
+          </View>
+        </Animated.View>
+        <Animated.View style={[styles.loadingTextContainer, textStyle]}>
+          <Text style={styles.loadingTitle}>INVESTMENT IDLE</Text>
+          <Text style={styles.loadingSubtitle}>Build Your Financial Empire</Text>
+        </Animated.View>
+        <View style={styles.loadingSpinner}>
+          <View style={[styles.spinnerDot, { backgroundColor: C.accent }]} />
+          <View style={[styles.spinnerDot, { backgroundColor: C.accent, opacity: 0.6 }]} />
+          <View style={[styles.spinnerDot, { backgroundColor: C.accent, opacity: 0.3 }]} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ============================================================
+  // Onboarding Screen
+  // ============================================================
+  if (showOnboarding) {
+    const [step, setStep] = useState(0);
+    const onboardingSteps = [
+      {
+        title: "Welcome to Investment Idle",
+        description: "Build your financial empire through smart investments. Start small, grow big.",
+        highlight: "Tap to continue",
+      },
+      {
+        title: "How It Works",
+        description: "Invest in funds, wait for returns, and reinvest your profits to compound growth.",
+        highlight: "Investments complete automatically",
+      },
+      {
+        title: "Upgrades Matter",
+        description: "Buy upgrades to increase profits, speed up investments, and unlock new opportunities.",
+        highlight: "Always upgrade when possible",
+      },
+      {
+        title: "Prestige System",
+        description: "Cash out to earn Prestige Points. Use them to unlock permanent bonuses and new ranks.",
+        highlight: "Prestige resets your run but keeps upgrades",
+      },
+      {
+        title: "You're Ready!",
+        description: "Start with $100 and make your first investment. Your journey to wealth begins now.",
+        highlight: "Tap to start investing",
+      },
+    ];
+
+    const nextStep = () => {
+      if (step < onboardingSteps.length - 1) {
+        setStep(step + 1);
+      } else {
+        setShowOnboarding(false);
+        saveState({ onboardingComplete: true });
+      }
+    };
+
+    const slideAnim = useSharedValue(0);
+    useEffect(() => {
+      slideAnim.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) });
+    }, [step]);
+
+    const slideStyle = useAnimatedStyle(() => ({
+      opacity: slideAnim.value,
+      transform: [{ translateY: (1 - slideAnim.value) * 20 }],
+    }));
+
+    const current = onboardingSteps[step];
+
+    return (
+      <SafeAreaView style={styles.onboardingContainer} testID="onboarding-screen">
+        <LinearGradient
+          colors={[C.bg, C.bgSoft, C.bg]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.onboardingContent}>
+          <View style={styles.onboardingProgress}>
+            {onboardingSteps.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.progressDot,
+                  i <= step && { backgroundColor: C.accent },
+                  i < step && { backgroundColor: C.accentDeep },
+                ]}
+              />
+            ))}
+          </View>
+
+          <Animated.View style={[styles.onboardingCard, slideStyle]}>
+            <Text style={styles.onboardingTitle}>{current.title}</Text>
+            <Text style={styles.onboardingDescription}>{current.description}</Text>
+            <View style={styles.onboardingHighlight}>
+              <Text style={styles.onboardingHighlightText}>{current.highlight}</Text>
+            </View>
+          </Animated.View>
+
+          <Pressable
+            onPress={nextStep}
+            style={({ pressed }) => [
+              styles.onboardingButton,
+              pressed && styles.onboardingButtonPressed,
+            ]}
+            testID="onboarding-next"
+          >
+            <Text style={styles.onboardingButtonText}>
+              {step === onboardingSteps.length - 1 ? "START INVESTING" : "NEXT"}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              setShowOnboarding(false);
+              saveState({ onboardingComplete: true });
+            }}
+            style={styles.onboardingSkip}
+            hitSlop={16}
+          >
+            <Text style={styles.onboardingSkipText}>Skip Tutorial</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ============================================================
   // Main Game Screen
   // ============================================================
   return (
@@ -1446,6 +1633,24 @@ export default function Index() {
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, styles.flashOverlay, flashStyle]}
       />
+
+      {/* Celebration Banner */}
+      {celebrationBanner && (
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            styles.celebrationOverlay,
+          ]}
+        >
+          <LinearGradient
+            colors={[`${C.accent}30`, `${C.accent}10`, `${C.accent}30`]}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.celebrationContent}>
+            <Text style={styles.celebrationText}>{celebrationBanner}</Text>
+          </View>
+        </Animated.View>
+      )}
 
       {/* HEADER */}
       <LinearGradient
@@ -2329,6 +2534,169 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   legacyCostText: { fontSize: 13, fontWeight: "900", letterSpacing: 0.5 },
+
+  // Loading screen
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: C.bg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingLogo: {
+    marginBottom: 24,
+  },
+  loadingLogoInner: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    borderWidth: 3,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: C.panelElevated,
+  },
+  loadingLogoText: {
+    fontSize: 28,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+  loadingTextContainer: {
+    alignItems: "center",
+    marginBottom: 40,
+  },
+  loadingTitle: {
+    color: C.text,
+    fontSize: 24,
+    fontWeight: "900",
+    letterSpacing: 3,
+    marginBottom: 8,
+  },
+  loadingSubtitle: {
+    color: C.textMuted,
+    fontSize: 14,
+    fontWeight: "600",
+    letterSpacing: 1,
+  },
+  loadingSpinner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  spinnerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+
+  // Onboarding screen
+  onboardingContainer: {
+    flex: 1,
+    backgroundColor: C.bg,
+  },
+  onboardingContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 40,
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  onboardingProgress: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 40,
+  },
+  progressDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: C.border,
+  },
+  onboardingCard: {
+    backgroundColor: C.panelElevated,
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: C.border,
+    width: "100%",
+    marginBottom: 40,
+  },
+  onboardingTitle: {
+    color: C.text,
+    fontSize: 22,
+    fontWeight: "900",
+    letterSpacing: 1,
+    marginBottom: 12,
+  },
+  onboardingDescription: {
+    color: C.textMuted,
+    fontSize: 15,
+    fontWeight: "600",
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  onboardingHighlight: {
+    backgroundColor: `${C.accent}15`,
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: `${C.accent}30`,
+  },
+  onboardingHighlightText: {
+    color: C.accent,
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  onboardingButton: {
+    backgroundColor: C.accent,
+    paddingHorizontal: 48,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  onboardingButtonPressed: {
+    opacity: 0.8,
+  },
+  onboardingButtonText: {
+    color: "#001018",
+    fontSize: 16,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+  },
+  onboardingSkip: {
+    padding: 8,
+  },
+  onboardingSkipText: {
+    color: C.textMuted,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  // Celebration banner
+  celebrationOverlay: {
+    zIndex: 100,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  celebrationContent: {
+    backgroundColor: C.panelElevated,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: C.accent,
+    shadowColor: C.accent,
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 10,
+  },
+  celebrationText: {
+    color: C.accent,
+    fontSize: 20,
+    fontWeight: "900",
+    letterSpacing: 1,
+    textAlign: "center",
+  },
 
   cashOutBtn: {
     marginTop: 14, height: 56, borderRadius: 16,

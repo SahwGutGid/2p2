@@ -5,6 +5,119 @@
 export type SkillPath = "automation" | "bonus" | "money";
 export type Rank = "bronze" | "silver" | "gold" | "platinum" | "diamond" | "legend";
 
+// ---------- Prestige Upgrades ----------
+// Separate from skill tree - these are one-time permanent upgrades bought with PP
+export type PrestigeUpgradeId = "foundation";
+
+export type PrestigeUpgrade = {
+  id: PrestigeUpgradeId;
+  name: string;
+  description: string;
+  cost: number;
+  effect: string;
+  tint: string;
+};
+
+export const PRESTIGE_UPGRADES: PrestigeUpgrade[] = [
+  {
+    id: "foundation",
+    name: "Prestige Foundation",
+    description: "2x investment profits · 1.5x investment speed · Unlocks prestige upgrade paths",
+    cost: 1,
+    effect: "2x profit, 1.5x speed",
+    tint: "#FFD700",
+  },
+];
+
+// ---------- Legacy Endgame System ----------
+// Unlocks at 10,000 total Prestige Points. Final progression layer.
+export const LEGACY_UNLOCK_THRESHOLD = 10000;
+
+export type LegacyUpgradeId =
+  | "investors-foundation"
+  | "global-market"
+  | "financial-automation"
+  | "corporate-empire"
+  | "market-dominance"
+  | "global-network"
+  | "ultimate-investor";
+
+export type LegacyUpgrade = {
+  id: LegacyUpgradeId;
+  name: string;
+  description: string;
+  cost: number;
+  effect: string;
+  tint: string;
+  isFinal: boolean;
+};
+
+export const LEGACY_UPGRADES: LegacyUpgrade[] = [
+  {
+    id: "investors-foundation",
+    name: "Investor's Foundation",
+    description: "+50% investment profits · +25% investment speed · Strong foundation for endgame progression",
+    cost: 10,
+    effect: "+50% profit, +25% speed",
+    tint: "#FFD700",
+    isFinal: false,
+  },
+  {
+    id: "global-market",
+    name: "Global Market Access",
+    description: "Unlocks elite investment opportunities · +30% market event rewards · Better rare package drops",
+    cost: 50,
+    effect: "Elite access, +30% market rewards",
+    tint: "#00E5FF",
+    isFinal: false,
+  },
+  {
+    id: "financial-automation",
+    name: "Financial Automation Network",
+    description: "Auto-invest 2x faster · +100% offline earnings cap · Smart portfolio rebalancing",
+    cost: 150,
+    effect: "2x auto speed, +100% offline",
+    tint: "#00FF88",
+    isFinal: false,
+  },
+  {
+    id: "corporate-empire",
+    name: "Corporate Empire",
+    description: "Generate +$1M/h passive income · +25% all profits · Unlock empire reputation bonuses",
+    cost: 400,
+    effect: "+$1M/h passive, +25% profit",
+    tint: "#FF6EC7",
+    isFinal: false,
+  },
+  {
+    id: "market-dominance",
+    name: "Market Dominance",
+    description: "Negative market events reduced by 75% · Positive events +50% stronger · You control the market",
+    cost: 1000,
+    effect: "-75% bad events, +50% good events",
+    tint: "#B9F2FF",
+    isFinal: false,
+  },
+  {
+    id: "global-network",
+    name: "Global Investment Network",
+    description: "+100% all profits · +50% investment speed · Unlock ultimate business network bonuses",
+    cost: 2500,
+    effect: "+100% profit, +50% speed",
+    tint: "#FFD54F",
+    isFinal: false,
+  },
+  {
+    id: "ultimate-investor",
+    name: "The Ultimate Investor",
+    description: "FINAL ACHIEVEMENT · +200% all profits · Legendary golden theme · Ultimate Investor title · Game completion celebration",
+    cost: 10000,
+    effect: "+200% profit, legendary theme, title",
+    tint: "#FFFFFF",
+    isFinal: true,
+  },
+];
+
 export const RANKS: Rank[] = ["bronze", "silver", "gold", "platinum", "diamond", "legend"];
 
 export const RANK_META: Record<
@@ -304,7 +417,7 @@ export const missingPrereqs = (
   for (const p of node.prereqs) {
     const cur = levels[p.id] ?? 0;
     if (cur < p.level) {
-      const src = SKILLS.find((s) => s.id === p.id);
+      const src = SKILLS.find((s: SkillNode) => s.id === p.id);
       if (src) missing.push(`${src.short} Lv${p.level}`);
     }
   }

@@ -27,13 +27,20 @@ import { useBackgroundMusic } from "@/src/game/music";
 import {
   computeRank,
   deriveTreeEffects,
+  LEGACY_UNLOCK_THRESHOLD,
+  LEGACY_UPGRADES,
   missingPrereqs,
   nextRank,
+  PRESTIGE_UPGRADES,
   RANK_META,
   rankMeetsRequirement,
   skillCost,
   SKILLS,
   totalSpentPP,
+  type LegacyUpgrade,
+  type LegacyUpgradeId,
+  type PrestigeUpgrade,
+  type PrestigeUpgradeId,
   type Rank,
   type SkillLevels,
   type SkillNode,
@@ -154,6 +161,9 @@ type SaveData = {
   activeMarket: ActiveMarketEvent | null;
   lastMarketRollAt: number;
   settings: Settings;
+  prestigeUpgrades: Record<PrestigeUpgradeId, boolean>;
+  legacyPoints: number;
+  legacyUpgrades: Record<LegacyUpgradeId, boolean>;
 };
 const SAVE_KEY = "investmentIdle:v6";
 const LEGACY_KEYS = ["investmentIdle:v5", "investmentIdle:v4", "investmentIdle:v3", "investmentIdle:v2"];
@@ -182,6 +192,17 @@ const defaultSave = (): SaveData => ({
   activeMarket: null,
   lastMarketRollAt: Date.now(),
   settings: defaultSettings(),
+  prestigeUpgrades: { foundation: false },
+  legacyPoints: 0,
+  legacyUpgrades: {
+    "investors-foundation": false,
+    "global-market": false,
+    "financial-automation": false,
+    "corporate-empire": false,
+    "market-dominance": false,
+    "global-network": false,
+    "ultimate-investor": false,
+  },
 });
 
 // ---------- Helpers ----------
@@ -227,29 +248,46 @@ const computeProfitPct = (
   t: TreeEffects,
   filledSlots: number = 1,
   market: ActiveMarketEvent | null = null,
+  hasFoundation: boolean = false,
+  legacyUpgrades: Record<LegacyUpgradeId, boolean> = {} as Record<LegacyUpgradeId, boolean>,
 ) => {
   let m = pkg.profitPct;
   m *= 1 + 0.08 * yieldLevel;
   m *= prestigeBonus(prestige);
   m *= t.profitMult;
+  if (hasFoundation) m *= 2;
   m *= t.endgameProfitMult;
-  m *= 1 + t.slotSynergyPct * Math.max(0, filledSlots - 1);
-  if (pkg.id === "whale") m *= 1 + t.whaleBonus;
-  if (pkg.id === "legendary") m *= 1 + t.legendaryBonus;
+  // Legacy upgrade multipliers
+  if (legacyUpgrades["investors-foundation"]) m *= 1.5;
+  if (legacyUpgrades["corporate-empire"]) m *= 1.25;
+  if (legacyUpgrades["global-network"]) m *= 2;
+  if (legacyUpgrades["ultimate-investor"]) m *= 3;
+  // Market event bonuses
   if (market) {
     const ev = MARKET_EVENTS.find((e) => e.id === market.id);
     if (ev) {
-      if (ev.profitMult) m *= ev.profitMult;
+      let marketMult = ev.profitMult ?? 1;
+      if (legacyUpgrades["market-dominance"] && marketMult > 1) {
+        marketMult *= 1.5; // Positive events +50% stronger
+      }
+      m *= marketMult;
       const pkgBoost = ev.pkgBoost?.[pkg.id];
       if (pkgBoost) m *= 1 + pkgBoost;
     }
   }
+  m *= 1 + t.slotSynergyPct * Math.max(0, filledSlots - 1);
+  if (pkg.id === "whale") m *= 1 + t.whaleBonus;
+  if (pkg.id === "legendary") m *= 1 + t.legendaryBonus;
   return m;
 };
 
-const computeDuration = (pkg: Pkg, turbo: number, t: TreeEffects, market: ActiveMarketEvent | null = null) => {
+const computeDuration = (pkg: Pkg, turbo: number, t: TreeEffects, market: ActiveMarketEvent | null = null, hasFoundation: boolean = false, legacyUpgrades: Record<LegacyUpgradeId, boolean> = {} as Record<LegacyUpgradeId, boolean>) => {
   const turboRed = Math.min(0.72, 0.06 * turbo);
   let d = pkg.durationMs * t.durationMult * (1 - turboRed);
+  if (hasFoundation) d /= 1.5;
+  // Legacy upgrade speed bonuses
+  if (legacyUpgrades["investors-foundation"]) d /= 1.25;
+  if (legacyUpgrades["global-network"]) d /= 1.5;
   if (market) {
     const ev = MARKET_EVENTS.find((e) => e.id === market.id);
     if (ev?.durMult) d *= ev.durMult;
@@ -295,6 +333,7 @@ export default function Index() {
   const [prestigeArmed, setPrestigeArmed] = useState(false);
   const [prestigeCelebrate, setPrestigeCelebrate] = useState<number>(0);
   const [rankUpBanner, setRankUpBanner] = useState<Rank | null>(null);
+  const [showLegacy, setShowLegacy] = useState(false);
 
   // Features state
   const [stats, setStats] = useState<Stats>(defaultStats());
@@ -302,6 +341,21 @@ export default function Index() {
   const [activeMarket, setActiveMarket] = useState<ActiveMarketEvent | null>(null);
   const [lastMarketRollAt, setLastMarketRollAt] = useState<number>(Date.now());
   const [settings, setSettings] = useState<Settings>(defaultSettings());
+
+  // Prestige upgrades state
+  const [prestigeUpgrades, setPrestigeUpgrades] = useState<Record<PrestigeUpgradeId, boolean>>({ foundation: false });
+
+  // Legacy endgame state
+  const [legacyPoints, setLegacyPoints] = useState<number>(0);
+  const [legacyUpgrades, setLegacyUpgrades] = useState<Record<LegacyUpgradeId, boolean>>({
+    "investors-foundation": false,
+    "global-market": false,
+    "financial-automation": false,
+    "corporate-empire": false,
+    "market-dominance": false,
+    "global-network": false,
+    "ultimate-investor": false,
+  });
 
   // Developer menu (hidden gesture → password → menu)
   const [showDebug, setShowDebug] = useState(false);
@@ -382,11 +436,11 @@ export default function Index() {
 
   // Live access to volatile values from stable callbacks (avoids stale closures).
   const stateRef = useRef({
-    balance, selectedId, levels, actives, prestige, treeEffects, packages,
+    balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades,
   });
   useEffect(() => {
-    stateRef.current = { balance, selectedId, levels, actives, prestige, treeEffects, packages };
-  }, [balance, selectedId, levels, actives, prestige, treeEffects, packages]);
+    stateRef.current = { balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades };
+  }, [balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades]);
 
   // -------- Persistence --------
   const saveState = useCallback(async (data: Partial<SaveData>) => {
@@ -395,12 +449,13 @@ export default function Index() {
         v: 6, balance, selectedId, levels, actives, musicEnabled,
         prestige, totalPrestiges, skills,
         stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings,
+        prestigeUpgrades, legacyPoints, legacyUpgrades,
         lastSeenAt: Date.now(),
         ...data,
       };
       await AsyncStorage.setItem(SAVE_KEY, JSON.stringify(merged));
     } catch {}
-  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings]);
+  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings, prestigeUpgrades, legacyPoints, legacyUpgrades]);
 
   // Load (migrate v2/v3/v4 → v5)
   useEffect(() => {
@@ -444,6 +499,17 @@ export default function Index() {
             levels: { ...defaultSave().levels, ...(parsed.levels ?? {}) },
             actives: (parsed.actives ?? []) as ActiveInvestment[],
             skills: parsed.skills ?? {},
+            prestigeUpgrades: parsed.prestigeUpgrades ?? { foundation: false },
+            legacyPoints: parsed.legacyPoints ?? 0,
+            legacyUpgrades: parsed.legacyUpgrades ?? {
+              "investors-foundation": false,
+              "global-market": false,
+              "financial-automation": false,
+              "corporate-empire": false,
+              "market-dominance": false,
+              "global-network": false,
+              "ultimate-investor": false,
+            },
           };
         }
 
@@ -470,7 +536,7 @@ export default function Index() {
             const pkg = savedPkgs.find((p) => p.id === a.pkgId);
             if (pkg) {
               const filled = saved.actives.length; // approx
-              const pct = computeProfitPct(pkg, saved.levels.yield ?? 0, saved.prestige ?? 0, savedTree, filled);
+              const pct = computeProfitPct(pkg, saved.levels.yield ?? 0, saved.prestige ?? 0, savedTree, filled, null, saved.prestigeUpgrades?.foundation ?? false, saved.legacyUpgrades ?? {});
               const div = a.cost * pct * savedTree.dividendPct;
               simBal += a.cost + a.cost * pct + div;
             } else simBal += a.cost;
@@ -491,7 +557,7 @@ export default function Index() {
           while (remaining.length > slotCap) remaining.shift();
 
           // Auto-fill empty slots from cursor onwards
-          const dur = computeDuration(selPkg, saved.levels.turbo ?? 0, savedTree);
+          const dur = computeDuration(selPkg, saved.levels.turbo ?? 0, savedTree, null, saved.prestigeUpgrades?.foundation ?? false, saved.legacyUpgrades ?? {});
           const filled: ActiveInvestment[] = [...remaining];
           let iters = 0;
           while (iters < 2000 && cursor < nowMs) {
@@ -500,7 +566,7 @@ export default function Index() {
             for (const a of doneNow) {
               const pkg = savedPkgs.find((p) => p.id === a.pkgId);
               if (pkg) {
-                const pct = computeProfitPct(pkg, saved.levels.yield ?? 0, saved.prestige ?? 0, savedTree, filled.length);
+                const pct = computeProfitPct(pkg, saved.levels.yield ?? 0, saved.prestige ?? 0, savedTree, filled.length, null, saved.prestigeUpgrades?.foundation ?? false, saved.legacyUpgrades ?? {});
                 const div = a.cost * pct * savedTree.dividendPct;
                 simBal += a.cost + a.cost * pct + div;
               }
@@ -543,6 +609,16 @@ export default function Index() {
         setActiveMarket(savedMarket && savedMarket.endsAt > Date.now() ? savedMarket : null);
         setLastMarketRollAt(saved.lastMarketRollAt ?? Date.now());
         setSettings({ ...defaultSettings(), ...(saved.settings ?? {}) });
+        setLegacyPoints(saved.legacyPoints ?? 0);
+        setLegacyUpgrades(saved.legacyUpgrades ?? {
+          "investors-foundation": false,
+          "global-market": false,
+          "financial-automation": false,
+          "corporate-empire": false,
+          "market-dominance": false,
+          "global-network": false,
+          "ultimate-investor": false,
+        });
         if (passiveEarned > 0.01 || (savedTree.savingsRatePerSec > 0 && elapsed > 1000)) {
           setOfflineGain(simBal - (saved.balance ?? 100));
         }
@@ -560,7 +636,7 @@ export default function Index() {
   useEffect(() => {
     if (!ready) return;
     saveState({});
-  }, [ready, balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, settings, saveState]);
+  }, [ready, balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, settings, prestigeUpgrades, legacyPoints, legacyUpgrades, saveState]);
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (s) => { if (s !== "active") saveState({}); });
@@ -644,7 +720,7 @@ export default function Index() {
       if (!pkg) return list.filter((x) => x.runId !== runId);
 
       const filled = list.length;
-      const pct = computeProfitPct(pkg, state.levels.yield, state.prestige, state.treeEffects, filled);
+      const pct = computeProfitPct(pkg, state.levels.yield, state.prestige, state.treeEffects, filled, null, state.prestigeUpgrades?.foundation ?? false, state.legacyUpgrades);
       let profit = a.cost * pct;
       const lucky = Math.random() < luckyChance(state.levels.lucky);
       if (lucky) profit *= 2;
@@ -699,7 +775,7 @@ export default function Index() {
     const cost = effectivePkgCost(pkg, state.treeEffects);
     if (state.balance < cost) return false;
 
-    const dur = computeDuration(pkg, state.levels.turbo, state.treeEffects);
+    const dur = computeDuration(pkg, state.levels.turbo, state.treeEffects, null, state.prestigeUpgrades?.foundation ?? false);
     const startedAt = Date.now();
     const a: ActiveInvestment = {
       runId: newRunId(), pkgId: pkg.id, cost,
@@ -940,6 +1016,14 @@ export default function Index() {
     setPrestigeCelebrate(gain);
     setTimeout(() => setPrestigeCelebrate(0), 4500);
 
+    // Award Legacy Points after threshold is reached
+    // Earn 1 LP per 100 PP gained (slow progression)
+    const newTotalPrestiges = totalPrestiges + 1;
+    if (newTotalPrestiges >= LEGACY_UNLOCK_THRESHOLD) {
+      const legacyGain = Math.max(1, Math.floor(gain / 100));
+      setLegacyPoints((lp: number) => lp + legacyGain);
+    }
+
     sound.play("upgrade");
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     balancePulse.value = withSequence(
@@ -978,8 +1062,8 @@ export default function Index() {
   const selected = packages.find((p) => p.id === selectedId) ?? packages[0];
   const canAffordSelected = balance >= selected.cost;
   const canInvest = hasFreeSlot && canAffordSelected;
-  const selectedEffPct = computeProfitPct(selected, levels.yield, prestige, treeEffects, Math.max(1, actives.length + 1));
-  const selectedEffDur = computeDuration(selected, levels.turbo, treeEffects);
+  const selectedEffPct = computeProfitPct(selected, levels.yield, prestige, treeEffects, Math.max(1, actives.length + 1), null, prestigeUpgrades.foundation, legacyUpgrades);
+  const selectedEffDur = computeDuration(selected, levels.turbo, treeEffects, null, prestigeUpgrades.foundation, legacyUpgrades);
   const selectedEffProfit = selected.cost * selectedEffPct;
   const rankMeta = RANK_META[rank];
   const nRank = nextRank(rank);
@@ -1016,7 +1100,18 @@ export default function Index() {
                 <Text style={styles.backBtnText}>← BACK</Text>
               </Pressable>
               <Text style={styles.treeTitle}>PRESTIGE TREE</Text>
-              <View style={{ width: 60 }} />
+              {totalPrestiges >= LEGACY_UNLOCK_THRESHOLD && (
+                <Pressable
+                  onPress={() => { sound.play("click"); setShowLegacy(true); }}
+                  hitSlop={12}
+                  style={[styles.iconChip, { borderColor: "#FFFFFF", backgroundColor: `${C.gold}30`, marginLeft: 6 }]}
+                  testID="open-legacy"
+                >
+                  <Text style={[styles.iconChipText, { color: C.gold }]}>
+                    LEGACY
+                  </Text>
+                </Pressable>
+              )}
             </View>
 
             <View style={styles.rankCard}>
@@ -1078,6 +1173,60 @@ export default function Index() {
                 <Text style={styles.treeStatLabel}>CASH-OUTS</Text>
                 <Text style={styles.treeStatValue}>{totalPrestiges}</Text>
               </View>
+            </View>
+
+            {/* Prestige Upgrades */}
+            <View style={styles.upgradesSection}>
+              <Text style={styles.upgradesSectionTitle}>PRESTIGE UPGRADES</Text>
+              {PRESTIGE_UPGRADES.map((upgrade) => {
+                const owned = prestigeUpgrades[upgrade.id];
+                const canAfford = prestige >= upgrade.cost && !owned;
+                return (
+                  <Pressable
+                    key={upgrade.id}
+                    onPress={() => {
+                      if (canAfford) {
+                        sound.play("upgrade");
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+                        setPrestige((p) => p - upgrade.cost);
+                        setPrestigeUpgrades((prev) => ({ ...prev, [upgrade.id]: true }));
+                        saveState({ prestigeUpgrades: { ...prestigeUpgrades, [upgrade.id]: true } });
+                      }
+                    }}
+                    disabled={!canAfford}
+                    style={({ pressed }) => [
+                      styles.prestigeUpgradeCard,
+                      owned && styles.prestigeUpgradeCardOwned,
+                      !owned && { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}15` },
+                      pressed && canAfford && { transform: [{ scale: 0.98 }] },
+                    ]}
+                    testID={`upgrade-${upgrade.id}`}
+                  >
+                    {owned && (
+                      <View style={[styles.prestigeUpgradeOwnedBadge, { backgroundColor: upgrade.tint }]}>
+                        <Text style={styles.prestigeUpgradeOwnedIcon}>✓</Text>
+                      </View>
+                    )}
+                    <View style={styles.prestigeUpgradeCardLeft}>
+                      <Text style={[styles.prestigeUpgradeCardName, owned && { color: upgrade.tint }]}>
+                        {upgrade.name}
+                      </Text>
+                      <Text style={styles.prestigeUpgradeCardDesc}>{upgrade.description}</Text>
+                    </View>
+                    <View style={styles.prestigeUpgradeCardRight}>
+                      {owned ? (
+                        <Text style={[styles.prestigeUpgradeCardStatus, { color: upgrade.tint }]}>OWNED</Text>
+                      ) : (
+                        <View style={[styles.prestigeUpgradeCostBadge, { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}25` }]}>
+                          <Text style={[styles.prestigeUpgradeCostText, { color: upgrade.tint }]}>
+                            ★ {upgrade.cost} PP
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </Pressable>
+                );
+              })}
             </View>
 
             {/* Cash out */}
@@ -1166,6 +1315,124 @@ export default function Index() {
             <View style={{ height: 40 }} />
           </ScrollView>
         </Animated.View>
+      </SafeAreaView>
+    );
+  }
+
+  // ============================================================
+  // Legacy Endgame Screen
+  // ============================================================
+  if (showLegacy) {
+    const buyLegacyUpgrade = (upgrade: LegacyUpgrade) => {
+      if (legacyPoints < upgrade.cost || legacyUpgrades[upgrade.id]) return;
+      sound.play("upgrade");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      setLegacyPoints((lp: number) => lp - upgrade.cost);
+      setLegacyUpgrades((prev: Record<LegacyUpgradeId, boolean>) => ({ ...prev, [upgrade.id]: true }));
+      saveState({ legacyPoints: legacyPoints - upgrade.cost, legacyUpgrades: { ...legacyUpgrades, [upgrade.id]: true } });
+    };
+
+    const isUltimateOwned = legacyUpgrades["ultimate-investor"];
+
+    return (
+      <SafeAreaView style={styles.safe} testID="legacy-screen">
+        <LinearGradient
+          colors={isUltimateOwned ? ["#FFD700", "#FFA500", "#FF8C00"] : ["#0B1220", "#16223A", "#1E2A44"]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.legacyHeader}>
+          <View style={styles.legacyHeaderRow}>
+            <Pressable
+              onPress={() => { sound.play("click"); setShowLegacy(false); }}
+              hitSlop={16}
+              testID="legacy-back"
+              style={styles.backBtn}
+            >
+              <Text style={styles.backBtnText}>← BACK</Text>
+            </Pressable>
+            <Text style={[styles.legacyTitle, isUltimateOwned && { color: "#FFD700" }]}>
+              {isUltimateOwned ? "THE ULTIMATE INVESTOR" : "LEGACY ENDGAME"}
+            </Text>
+            <View style={{ width: 60 }} />
+          </View>
+
+          <View style={styles.legacyStats}>
+            <View style={styles.legacyStatCell}>
+              <Text style={styles.legacyStatLabel}>LEGACY POINTS</Text>
+              <Text style={[styles.legacyStatValue, { color: C.gold }]}>{compact(legacyPoints)}</Text>
+            </View>
+            <View style={styles.legacyStatDivider} />
+            <View style={styles.legacyStatCell}>
+              <Text style={styles.legacyStatLabel}>TOTAL PRESTIGES</Text>
+              <Text style={styles.legacyStatValue}>{compact(totalPrestiges)}</Text>
+            </View>
+            <View style={styles.legacyStatDivider} />
+            <View style={styles.legacyStatCell}>
+              <Text style={styles.legacyStatLabel}>UPGRADES OWNED</Text>
+              <Text style={styles.legacyStatValue}>
+                {Object.values(legacyUpgrades).filter(Boolean).length}/{LEGACY_UPGRADES.length}
+              </Text>
+            </View>
+          </View>
+
+          {isUltimateOwned && (
+            <View style={styles.ultimateBanner}>
+              <Text style={styles.ultimateBannerText}>🏆 GAME COMPLETE 🏆</Text>
+              <Text style={styles.ultimateBannerSub}>You have achieved the Ultimate Investor rank</Text>
+            </View>
+          )}
+        </View>
+
+        <ScrollView
+          style={styles.legacyBody}
+          contentContainerStyle={styles.legacyBodyContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {LEGACY_UPGRADES.map((upgrade) => {
+            const owned = legacyUpgrades[upgrade.id];
+            const canAfford = legacyPoints >= upgrade.cost && !owned;
+            return (
+              <Pressable
+                key={upgrade.id}
+                onPress={() => buyLegacyUpgrade(upgrade)}
+                disabled={!canAfford}
+                style={({ pressed }) => [
+                  styles.legacyCard,
+                  owned && styles.legacyCardOwned,
+                  upgrade.isFinal && styles.legacyCardFinal,
+                  !owned && { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}15` },
+                  pressed && canAfford && { transform: [{ scale: 0.98 }] },
+                ]}
+                testID={`legacy-upgrade-${upgrade.id}`}
+              >
+                {owned && (
+                  <View style={[styles.legacyOwnedBadge, { backgroundColor: upgrade.tint }]}>
+                    <Text style={styles.legacyOwnedIcon}>✓</Text>
+                  </View>
+                )}
+                <View style={styles.legacyCardLeft}>
+                  <Text style={[styles.legacyCardName, owned && { color: upgrade.tint }]}>
+                    {upgrade.name}
+                  </Text>
+                  <Text style={styles.legacyCardDesc}>{upgrade.description}</Text>
+                  <Text style={styles.legacyCardEffect}>{upgrade.effect}</Text>
+                </View>
+                <View style={styles.legacyCardRight}>
+                  {owned ? (
+                    <Text style={[styles.legacyCardStatus, { color: upgrade.tint }]}>OWNED</Text>
+                  ) : (
+                    <View style={[styles.legacyCostBadge, { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}25` }]}>
+                      <Text style={[styles.legacyCostText, { color: upgrade.tint }]}>
+                        {compact(upgrade.cost)} LP
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -1315,7 +1582,7 @@ export default function Index() {
               const total = a.endsAt - a.startedAt;
               const remaining = Math.max(0, a.endsAt - now);
               const progress = total > 0 ? Math.min(1, 1 - remaining / total) : 1;
-              const effPct = computeProfitPct(pkg, levels.yield, prestige, treeEffects, actives.length);
+              const effPct = computeProfitPct(pkg, levels.yield, prestige, treeEffects, actives.length, null, prestigeUpgrades.foundation, legacyUpgrades);
               const projected = a.cost * effPct;
               return (
                 <View key={a.runId} style={styles.activeCard} testID={`active-${a.runId}`}>
@@ -1367,8 +1634,8 @@ export default function Index() {
           const affordable = balance >= pkg.cost;
           const isSelected = pkg.id === selectedId;
           const disabled = !affordable;
-          const effPct = computeProfitPct(pkg, levels.yield, prestige, treeEffects, Math.max(1, actives.length + 1));
-          const effDur = computeDuration(pkg, levels.turbo, treeEffects);
+          const effPct = computeProfitPct(pkg, levels.yield, prestige, treeEffects, Math.max(1, actives.length + 1), null, prestigeUpgrades.foundation, legacyUpgrades);
+          const effDur = computeDuration(pkg, levels.turbo, treeEffects, null, prestigeUpgrades.foundation, legacyUpgrades);
           const projectedProfit = pkg.cost * effPct;
           const roi = `+${(effPct * 100).toFixed(0)}%`;
           return (
@@ -1975,6 +2242,93 @@ const styles = StyleSheet.create({
   treeStatDivider: { width: 1, height: 28, backgroundColor: C.border },
   treeStatLabel: { color: C.textMuted, fontSize: 9, fontWeight: "700", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 3 },
   treeStatValue: { color: C.text, fontSize: 16, fontWeight: "900" },
+
+  upgradesSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: C.border },
+  upgradesSectionTitle: { color: C.text, fontSize: 12, fontWeight: "900", letterSpacing: 1.5, marginBottom: 10 },
+  prestigeUpgradeCard: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: C.panelElevated, borderRadius: 16,
+    borderWidth: 1, borderColor: C.border,
+    padding: 14, marginBottom: 10,
+  },
+  prestigeUpgradeCardOwned: {
+    backgroundColor: `${C.gold}10`,
+  },
+  prestigeUpgradeCardLeft: { flex: 1 },
+  prestigeUpgradeCardRight: { alignItems: "flex-end" },
+  prestigeUpgradeCardName: { color: C.text, fontSize: 15, fontWeight: "800" },
+  prestigeUpgradeCardDesc: { color: C.textMuted, fontSize: 11, fontWeight: "600", marginTop: 2 },
+  prestigeUpgradeCardStatus: { fontSize: 11, fontWeight: "900", letterSpacing: 1 },
+  prestigeUpgradeOwnedBadge: {
+    width: 24, height: 24, borderRadius: 12,
+    alignItems: "center", justifyContent: "center",
+    marginRight: 12,
+  },
+  prestigeUpgradeOwnedIcon: { color: "#001018", fontSize: 14, fontWeight: "900" },
+  prestigeUpgradeCostBadge: {
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
+    borderWidth: 1,
+  },
+  prestigeUpgradeCostText: { fontSize: 12, fontWeight: "900", letterSpacing: 0.5 },
+
+  // Legacy Endgame screen
+  legacyHeader: {
+    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16,
+    borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  legacyHeaderRow: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    marginBottom: 14,
+  },
+  legacyTitle: { color: C.text, fontSize: 18, fontWeight: "900", letterSpacing: 2 },
+  legacyStats: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: C.panelElevated, borderRadius: 16, padding: 12,
+    borderWidth: 1, borderColor: C.border,
+  },
+  legacyStatCell: { flex: 1, alignItems: "center" },
+  legacyStatDivider: { width: 1, height: 28, backgroundColor: C.border },
+  legacyStatLabel: { color: C.textMuted, fontSize: 9, fontWeight: "700", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 3 },
+  legacyStatValue: { color: C.text, fontSize: 16, fontWeight: "900" },
+  ultimateBanner: {
+    marginTop: 14, padding: 12, borderRadius: 12,
+    backgroundColor: "rgba(255,213,79,0.2)", borderWidth: 1, borderColor: C.gold,
+    alignItems: "center",
+  },
+  ultimateBannerText: { color: C.gold, fontSize: 14, fontWeight: "900", letterSpacing: 1 },
+  ultimateBannerSub: { color: C.text, fontSize: 11, fontWeight: "700", marginTop: 4 },
+  legacyBody: { flex: 1 },
+  legacyBodyContent: { padding: 20, paddingBottom: 40 },
+  legacyCard: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: C.panelElevated, borderRadius: 20,
+    borderWidth: 1, borderColor: C.border,
+    padding: 16, marginBottom: 12,
+  },
+  legacyCardOwned: {
+    backgroundColor: `${C.gold}10`,
+  },
+  legacyCardFinal: {
+    borderWidth: 2, borderColor: C.gold,
+    backgroundColor: "rgba(255,213,79,0.15)",
+  },
+  legacyCardLeft: { flex: 1 },
+  legacyCardRight: { alignItems: "flex-end" },
+  legacyCardName: { color: C.text, fontSize: 16, fontWeight: "800" },
+  legacyCardDesc: { color: C.textMuted, fontSize: 12, fontWeight: "600", marginTop: 3 },
+  legacyCardEffect: { color: C.accent, fontSize: 11, fontWeight: "700", marginTop: 4 },
+  legacyCardStatus: { fontSize: 12, fontWeight: "900", letterSpacing: 1 },
+  legacyOwnedBadge: {
+    width: 28, height: 28, borderRadius: 14,
+    alignItems: "center", justifyContent: "center",
+    marginRight: 14,
+  },
+  legacyOwnedIcon: { color: "#001018", fontSize: 16, fontWeight: "900" },
+  legacyCostBadge: {
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
+    borderWidth: 1,
+  },
+  legacyCostText: { fontSize: 13, fontWeight: "900", letterSpacing: 0.5 },
 
   cashOutBtn: {
     marginTop: 14, height: 56, borderRadius: 16,

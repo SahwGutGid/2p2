@@ -55,7 +55,7 @@ import {
   type ActiveMarketEvent,
   type Stats,
 } from "@/src/game/features";
-import { formatCurrency, formatNumber, formatDuration, formatSeconds } from "@/src/utils/format";
+import { formatCurrency, formatNumber, formatDuration, formatSeconds, formatPercent } from "@/src/utils/format";
 
 // ---------- Theme ----------
 const C = {
@@ -109,10 +109,10 @@ type Upgrade = {
   baseCost: number; costGrowth: number; maxLevel: number; tint: string;
 };
 const UPGRADES: Upgrade[] = [
-  { id: "yield",   name: "Yield Boost",     description: "+8% profit multiplier per level",       effect: (l) => `+${(l * 8).toFixed(0)}% profit`,               baseCost: 15,  costGrowth: 1.55, maxLevel: 15, tint: "#00FF88" },
-  { id: "turbo",   name: "Turbo Trades",    description: "-6% investment duration per level",     effect: (l) => `-${Math.min(72, l * 6).toFixed(0)}% time`,     baseCost: 25,  costGrowth: 1.6,  maxLevel: 12, tint: "#00E5FF" },
+  { id: "yield",   name: "Yield Boost",     description: "+8% profit multiplier per level",       effect: (l) => `+${fmtPct(l * 8)} profit`,               baseCost: 15,  costGrowth: 1.55, maxLevel: 15, tint: "#00FF88" },
+  { id: "turbo",   name: "Turbo Trades",    description: "-6% investment duration per level",     effect: (l) => `-${fmtPct(Math.min(72, l * 6))} time`,     baseCost: 25,  costGrowth: 1.6,  maxLevel: 12, tint: "#00E5FF" },
   { id: "passive", name: "Passive Yield",   description: "+$1.00/sec passive income per level",   effect: (l) => `+$${(l * 1.0).toFixed(2)}/sec`,                baseCost: 40,  costGrowth: 1.5,  maxLevel: 25, tint: "#FFB84D" },
-  { id: "lucky",   name: "Lucky Streak",    description: "+4% chance for 2× profit per level",    effect: (l) => `${Math.min(60, l * 4).toFixed(0)}% x2`,        baseCost: 100, costGrowth: 1.7,  maxLevel: 15, tint: "#FF6EC7" },
+  { id: "lucky",   name: "Lucky Streak",    description: "+4% chance for 2× profit per level",    effect: (l) => `${fmtPct(Math.min(60, l * 4))} x2`,        baseCost: 100, costGrowth: 1.7,  maxLevel: 15, tint: "#FF6EC7" },
   { id: "slots",   name: "Portfolio Slots", description: "+1 concurrent investment per level",    effect: (l) => `${l + 1} slot${l === 0 ? "" : "s"}`,           baseCost: 300, costGrowth: 2.5,  maxLevel: 4,  tint: "#00E5FF" },
 ];
 const upgradeCost = (u: Upgrade, level: number) =>
@@ -236,6 +236,7 @@ const money = formatCurrency;
 const compact = formatNumber;
 const fmtDuration = formatDuration;
 const fmtSecs = formatSeconds;
+const fmtPct = formatPercent;
 
 const computeProfitPct = (
   pkg: Pkg,
@@ -490,7 +491,7 @@ export default function Index() {
     if (balance >= PRESTIGE_MIN_BALANCE) {
       return {
         title: "Prestige",
-        description: `Cash out to earn Prestige Points. Each PP gives +5% permanent profit bonus.`,
+        description: `Cash out to earn Prestige Points. Each PP gives +${fmtPct(5)} permanent profit bonus.`,
         progress: `Ready to cash out`,
         color: C.gold,
       };
@@ -1365,7 +1366,7 @@ export default function Index() {
               <View style={styles.treeStatDivider} />
               <View style={styles.treeStatCell}>
                 <Text style={styles.treeStatLabel}>PROFIT BONUS</Text>
-                <Text style={[styles.treeStatValue, { color: C.gain }]}>+{currentBonusPct.toFixed(0)}%</Text>
+                <Text style={[styles.treeStatValue, { color: C.gain }]}>+{fmtPct(currentBonusPct)}</Text>
               </View>
               <View style={styles.treeStatDivider} />
               <View style={styles.treeStatCell}>
@@ -1414,7 +1415,7 @@ export default function Index() {
               </View>
               {showPrestigeInfo && (
                 <Text style={styles.prestigeExplanationText}>
-                  Cash out your run to earn Prestige Points (PP). Each PP gives +5% permanent profit bonus.
+                  Cash out your run to earn Prestige Points (PP). Each PP gives +{fmtPct(5)} permanent profit bonus.
                   Use PP to unlock skill tree nodes and prestige upgrades. Your balance resets but upgrades persist.
                 </Text>
               )}
@@ -1510,7 +1511,7 @@ export default function Index() {
               </Text>
               {canPrestige && !prestigeArmed && (
                 <Text style={styles.cashOutBtnSub}>
-                  Reset run · permanent +{(prestigeGainAvailable * PRESTIGE_BONUS_PER_POINT * 100).toFixed(0)}% profit
+                  Reset run · permanent +{fmtPct(prestigeGainAvailable * PRESTIGE_BONUS_PER_POINT * 100)} profit
                 </Text>
               )}
             </Pressable>
@@ -1968,7 +1969,7 @@ export default function Index() {
           {prestige > 0 && (
             <View style={[styles.pill, { borderColor: C.gold, backgroundColor: `${C.gold}22` }]} testID="prestige-pill">
               <Text style={[styles.pillText, { color: C.gold }]}>
-                ★ {prestige} PP · +{(currentBonusPct).toFixed(0)}%
+                ★ {prestige} PP · +{fmtPct(currentBonusPct)}
               </Text>
             </View>
           )}
@@ -1987,7 +1988,7 @@ export default function Index() {
           {treeEffects.savingsRatePerSec > 0 && (
             <View style={[styles.pill, { borderColor: C.gold, backgroundColor: `${C.gold}18` }]} testID="savings-pill">
               <Text style={[styles.pillText, { color: C.gold }]}>
-                Savings +{(treeEffects.savingsRatePerSec * 3600 * 100).toFixed(1)}%/h
+                Savings +{fmtPct(treeEffects.savingsRatePerSec * 3600 * 100)}/h
               </Text>
             </View>
           )}
@@ -2062,7 +2063,7 @@ export default function Index() {
                   <View style={styles.activeHeaderRow}>
                     <View style={[styles.activeIcon, { backgroundColor: `${pkg.tint}22`, borderColor: pkg.tint }]}>
                       <Text style={[styles.activeIconText, { color: pkg.tint }]}>
-                        +{(effPct * 100).toFixed(0)}%
+                        +{fmtPct(effPct * 100)}
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}>
@@ -2110,7 +2111,7 @@ export default function Index() {
           const effPct = computeProfitPct(pkg, levels.yield, prestige, treeEffects, Math.max(1, actives.length + 1), null, prestigeUpgrades.foundation, legacyUpgrades);
           const effDur = computeDuration(pkg, levels.turbo, treeEffects, null, prestigeUpgrades.foundation, legacyUpgrades);
           const projectedProfit = pkg.cost * effPct;
-          const roi = `+${(effPct * 100).toFixed(0)}%`;
+          const roi = `+${fmtPct(effPct * 100)}`;
           return (
             <Animated.View key={pkg.id} style={isSelected ? selectedPulseStyle : undefined}>
               <Pressable
@@ -2159,9 +2160,11 @@ export default function Index() {
                         <Text style={styles.metaLabel}>Duration</Text>
                         <Text style={styles.metaValue}>{fmtDuration(effDur)}</Text>
                       </View>
-                      <View style={styles.metaCell}>
-                        <Text style={styles.metaLabel}>Profit</Text>
-                        <Text style={[styles.metaValue, styles.metaGain]}>+{money(projectedProfit)}</Text>
+                    </View>
+                    <View style={styles.cardProfitSection}>
+                      <View style={styles.cardProfitRow}>
+                        <Text style={styles.cardProfitLabel}>Profit</Text>
+                        <Text style={styles.cardProfitValue}>+{money(projectedProfit)}</Text>
                       </View>
                     </View>
                   </View>
@@ -2233,7 +2236,7 @@ export default function Index() {
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.prestigeSummaryTitle}>{rankMeta.name}</Text>
               <Text style={styles.prestigeSummarySub}>
-                {prestige} PP · +{currentBonusPct.toFixed(0)}% profit · {totalPrestiges} cash-outs
+                {prestige} PP · +{fmtPct(currentBonusPct)} profit · {totalPrestiges} cash-outs
               </Text>
               {canPrestige && (
                 <Text style={[styles.prestigeSummarySub, { color: C.gold, marginTop: 4 }]}>
@@ -2586,19 +2589,20 @@ const styles = StyleSheet.create({
   activeCard: {
     backgroundColor: C.panelElevated, borderRadius: 20,
     borderWidth: 1, borderColor: C.accent,
-    padding: 14, marginBottom: 12, overflow: "hidden",
+    padding: 12, marginBottom: 12, overflow: "hidden",
     shadowColor: C.accent, shadowOpacity: 0.35, shadowRadius: 14,
     shadowOffset: { width: 0, height: 0 }, elevation: 6,
   },
-  activeHeaderRow: { flexDirection: "row", alignItems: "center" },
+  activeHeaderRow: { flexDirection: "row", alignItems: "flex-start" },
   activeIcon: {
-    width: 44, height: 44, borderRadius: 12, borderWidth: 1,
-    alignItems: "center", justifyContent: "center", marginRight: 12,
+    width: 40, height: 40, borderRadius: 10, borderWidth: 1,
+    alignItems: "center", justifyContent: "center", marginRight: 10,
+    flexShrink: 0,
   },
-  activeIconText: { fontSize: 12, fontWeight: "900" },
-  activeName: { color: C.text, fontSize: 15, fontWeight: "800" },
-  activeMeta: { color: C.gain, fontSize: 12, fontWeight: "700", marginTop: 2 },
-  activeCountdown: { color: C.accent, fontSize: 16, fontWeight: "900", letterSpacing: 0.3 },
+  activeIconText: { fontSize: 11, fontWeight: "900" },
+  activeName: { color: C.text, fontSize: 14, fontWeight: "800", flexShrink: 1 },
+  activeMeta: { color: C.gain, fontSize: 11, fontWeight: "700", marginTop: 2 },
+  activeCountdown: { color: C.accent, fontSize: 15, fontWeight: "900", letterSpacing: 0.3, flexShrink: 0, marginLeft: 8 },
   activeBarTrack: {
     height: 8, borderRadius: 999, backgroundColor: C.panel, marginTop: 12,
     overflow: "hidden", borderWidth: 1, borderColor: C.border,
@@ -2615,7 +2619,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: C.panel, borderRadius: 20,
     borderWidth: 1, borderColor: C.border,
-    padding: 16, marginBottom: 12, position: "relative", overflow: "hidden",
+    padding: 14, marginBottom: 12, position: "relative", overflow: "hidden",
   },
   cardSelected: {
     borderColor: C.accent, borderWidth: 2,
@@ -2624,15 +2628,16 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 }, elevation: 8,
   },
   cardLocked: { opacity: 0.55, borderColor: "rgba(255,77,77,0.25)" },
-  cardRow: { flexDirection: "row", alignItems: "center" },
+  cardRow: { flexDirection: "row", alignItems: "flex-start" },
   cardIcon: {
-    width: 56, height: 56, borderRadius: 16, borderWidth: 1,
-    alignItems: "center", justifyContent: "center", marginRight: 14,
+    width: 52, height: 52, borderRadius: 14, borderWidth: 1,
+    alignItems: "center", justifyContent: "center", marginRight: 12,
+    flexShrink: 0,
   },
-  cardIconText: { fontSize: 14, fontWeight: "900", letterSpacing: 0.5 },
-  cardMain: { flex: 1 },
-  cardTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
-  cardTitle: { color: C.text, fontSize: 16, fontWeight: "800", flexShrink: 1, marginRight: 8 },
+  cardIconText: { fontSize: 12, fontWeight: "900", letterSpacing: 0.5 },
+  cardMain: { flex: 1, minWidth: 0 },
+  cardTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  cardTitle: { color: C.text, fontSize: 15, fontWeight: "800", flexShrink: 1, marginRight: 6 },
   badgeTag: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
     backgroundColor: "rgba(0,229,255,0.08)", borderWidth: 1, borderColor: "rgba(0,229,255,0.25)",
@@ -2643,11 +2648,34 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,77,77,0.10)", borderWidth: 1, borderColor: "rgba(255,77,77,0.35)",
   },
   badgeLossText: { color: C.loss, fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
-  cardMetaRow: { flexDirection: "row" },
-  metaCell: { flex: 1 },
+  cardMetaRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 4 },
+  metaCell: { flex: 1, minWidth: 80, marginRight: 12, marginBottom: 4 },
   metaLabel: { color: C.textMuted, fontSize: 10, fontWeight: "700", letterSpacing: 0.5, marginBottom: 2, textTransform: "uppercase" },
-  metaValue: { color: C.text, fontSize: 14, fontWeight: "800" },
+  metaValue: { color: C.text, fontSize: 13, fontWeight: "800" },
   metaGain: { color: C.gain },
+  cardProfitSection: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+  },
+  cardProfitRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  cardProfitLabel: {
+    color: C.textMuted,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  cardProfitValue: {
+    color: C.gain,
+    fontSize: 14,
+    fontWeight: "900",
+  },
 
   upgradeCard: {
     backgroundColor: C.panel, borderRadius: 16,

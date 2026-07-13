@@ -20,17 +20,18 @@ export type CompletionStats = {
 };
 
 const C = {
-  bg: "#0B1220",
-  card: "#111B2E",
-  accent: "#00E5FF",
-  accentDeep: "#00B8D4",
-  success: "#00FF88",
+  bg: "#FFFFFF",
+  card: "#FFFFFF",
+  accent: "#006B5E",
+  accentDeep: "#005A4E",
+  success: "#00A67E",
   white: "#FFFFFF",
-  text: "#E6E6E6",
-  textMuted: "#8A96AD",
-  border: "#1E2A44",
+  text: "#111827",
+  textMuted: "#6B7280",
+  border: "#E5E7EB",
 };
 
+const COLORS = ["#006B5E", "#00A67E", "#005A4E", "#E5E7EB", "#6B7280", "#111827"];
 
 type Particle = {
   x: Animated.Value;
@@ -41,8 +42,6 @@ type Particle = {
   size: number;
   delay: number;
 };
-
-const COLORS = ["#00E5FF", "#00FF88", "#00B8D4", "#1E2A44", "#8A96AD", "#FFFFFF"];
 
 function Confetti() {
   const particlesRef = useRef<Particle[]>([]);
@@ -190,7 +189,7 @@ export function EndingScreen({
 }
 
 const EndingStyles = StyleSheet.create({
-  root: { flex: 1, alignItems: "center", justifyContent: "center" },
+  root: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: C.bg },
   gradient: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
   confettiLayer: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden" },
   content: { alignItems: "center", paddingHorizontal: 20, maxWidth: 440, width: "100%" },
@@ -203,26 +202,28 @@ const EndingStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
+    shadowColor: "#000000", shadowOpacity: 0.1, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   icon: {
     fontSize: 32,
     fontWeight: "700",
-    color: C.bg,
+    color: "#FFFFFF",
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     color: C.accent,
-    letterSpacing: 3,
+    letterSpacing: 2,
     marginBottom: 8,
     textTransform: "uppercase",
   },
   title: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: C.white,
+    fontSize: 28,
+    fontWeight: "700",
+    color: C.text,
     textAlign: "center",
-    lineHeight: 40,
+    lineHeight: 36,
     marginBottom: 12,
   },
   subtitle: {
@@ -235,19 +236,21 @@ const EndingStyles = StyleSheet.create({
   statsCard: {
     width: "100%",
     backgroundColor: C.card,
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 20,
     borderWidth: 1,
     borderColor: C.border,
     marginBottom: 24,
+    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   statsHeader: {
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "600",
     color: C.text,
     marginBottom: 16,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   statRow: {
     flexDirection: "row",
@@ -262,6 +265,6 @@ const EndingStyles = StyleSheet.create({
   buttonContainer: { alignItems: "center", width: "100%" },
   replayBtn: { borderRadius: 12, overflow: "hidden", width: "100%" },
   replayBtnGradient: { paddingVertical: 16, alignItems: "center" },
-  replayBtnText: { fontSize: 16, fontWeight: "700", color: C.bg, letterSpacing: 1 },
+  replayBtnText: { fontSize: 16, fontWeight: "600", color: "#FFFFFF", letterSpacing: 0.5 },
   replayHint: { fontSize: 12, color: C.textMuted, marginTop: 12, textAlign: "center", lineHeight: 18 },
 });

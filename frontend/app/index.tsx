@@ -55,6 +55,7 @@ import {
   type ActiveMarketEvent,
   type Stats,
 } from "@/src/game/features";
+import { formatCurrency, formatNumber, formatDuration, formatSeconds } from "@/src/utils/format";
 
 // ---------- Theme ----------
 const C = {
@@ -228,41 +229,13 @@ const defaultSave = (): SaveData => ({
   completionStats: null,
 });
 
-// ---------- Helpers ----------
-const UNITS: { v: number; s: string }[] = [
-  { v: 1e33, s: "D" }, { v: 1e30, s: "N" }, { v: 1e27, s: "Oc" },
-  { v: 1e24, s: "Sp" }, { v: 1e21, s: "Sx" }, { v: 1e18, s: "Qi" },
-  { v: 1e15, s: "Qa" }, { v: 1e12, s: "T" }, { v: 1e9, s: "B" },
-  { v: 1e6, s: "M" }, { v: 1e3, s: "K" },
-];
-const money = (n: number) => {
-  if (!isFinite(n)) return "$∞";
-  const sign = n < 0 ? "-" : "";
-  const abs = Math.abs(n);
-  if (abs < 10000) return `${sign}$${abs.toFixed(2)}`;
-  for (const u of UNITS) if (abs >= u.v) return `${sign}$${(abs / u.v).toFixed(2)}${u.s}`;
-  return `${sign}$${abs.toFixed(2)}`;
-};
-
-// Compact non-currency number formatter (K/M/B/T/…).
-const compact = (n: number) => {
-  if (!isFinite(n)) return "∞";
-  const sign = n < 0 ? "-" : "";
-  const abs = Math.abs(n);
-  if (abs < 1000) return `${sign}${Math.floor(abs)}`;
-  for (const u of UNITS) if (abs >= u.v) return `${sign}${(abs / u.v).toFixed(abs / u.v >= 100 ? 0 : abs / u.v >= 10 ? 1 : 2)}${u.s}`;
-  return `${sign}${Math.floor(abs)}`;
-};
-const fmtDuration = (ms: number) => {
-  const s = Math.max(0, Math.round(ms / 1000));
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60), r = s % 60;
-  return r === 0 ? `${m}m` : `${m}m ${r}s`;
-};
-const fmtSecs = (ms: number) =>
-  ms >= 60000 ? fmtDuration(ms) : `${(ms / 1000).toFixed(1)}s`;
-
 const prestigeBonus = (prestige: number) => 1 + PRESTIGE_BONUS_PER_POINT * prestige;
+
+// Local aliases for centralized formatting functions
+const money = formatCurrency;
+const compact = formatNumber;
+const fmtDuration = formatDuration;
+const fmtSecs = formatSeconds;
 
 const computeProfitPct = (
   pkg: Pkg,
@@ -1364,7 +1337,7 @@ export default function Index() {
                           styles.rankBarFill,
                           {
                             backgroundColor: nRankMeta.tint,
-                            width: `${Math.min(100, ((totalPrestiges - rankMeta.minPrestiges) / (nRankMeta.minPrestiges - rankMeta.minPrestiges)) * 100).toFixed(1)}%`,
+                            width: Math.min(100, ((totalPrestiges - rankMeta.minPrestiges) / (nRankMeta.minPrestiges - rankMeta.minPrestiges)) * 100).toFixed(1) + "%" as any,
                           },
                         ]}
                       />
@@ -1412,7 +1385,7 @@ export default function Index() {
                   style={[
                     styles.legacyProgressBarFill,
                     {
-                      width: `${Math.min(100, (stats.totalPPEarned / LEGACY_UNLOCK_THRESHOLD) * 100)}%` as any,
+                      width: Math.min(100, (stats.totalPPEarned / LEGACY_UNLOCK_THRESHOLD) * 100).toFixed(0) + "%" as any,
                       backgroundColor: stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD ? C.gold : C.gold,
                     },
                   ]}
@@ -2102,7 +2075,7 @@ export default function Index() {
                     <LinearGradient
                       colors={[C.accent, C.accentDeep]}
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                      style={[styles.activeBarFill, { width: `${progress * 100}%` }]}
+                      style={[styles.activeBarFill, { width: (progress * 100).toFixed(0) + "%" as any }]}
                     />
                   </View>
                   <Pressable

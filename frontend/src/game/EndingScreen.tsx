@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { formatCurrency, formatNumber, formatTimeDetailed } from "@/src/utils/format";
 
 const { width, height } = Dimensions.get("window");
 
@@ -19,37 +20,17 @@ export type CompletionStats = {
 };
 
 const C = {
-  gold: "#FFD700",
-  goldLight: "#FFE87C",
-  goldDim: "#B8860B",
+  bg: "#0B1220",
+  card: "#111B2E",
+  accent: "#00E5FF",
+  accentDeep: "#00B8D4",
+  success: "#00FF88",
   white: "#FFFFFF",
-  text: "#F5F5F5",
-  textDim: "#C0C0C0",
-  bg: "#0A0A1A",
+  text: "#E6E6E6",
+  textMuted: "#8A96AD",
+  border: "#1E2A44",
 };
 
-const fmtTime = (ms: number): string => {
-  const s = Math.floor(ms / 1000);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${h}h ${m}m ${sec}s`;
-  if (m > 0) return `${m}m ${sec}s`;
-  return `${sec}s`;
-};
-
-const fmtNum = (n: number): string => {
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
-  return `$${n.toFixed(0)}`;
-};
-
-const fmtPP = (n: number): string => {
-  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
-  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
-  return n.toLocaleString();
-};
 
 type Particle = {
   x: Animated.Value;
@@ -61,7 +42,7 @@ type Particle = {
   delay: number;
 };
 
-const COLORS = ["#FFD700", "#FF6EC7", "#00E5FF", "#00FF88", "#FFA500", "#FFFFFF"];
+const COLORS = ["#00E5FF", "#00FF88", "#00B8D4", "#1E2A44", "#8A96AD", "#FFFFFF"];
 
 function Confetti() {
   const particlesRef = useRef<Particle[]>([]);
@@ -134,79 +115,52 @@ export function EndingScreen({
   stats: CompletionStats;
   onReplay: () => void;
 }) {
-  const titleScale = useRef(new Animated.Value(0)).current;
   const titleOpacity = useRef(new Animated.Value(0)).current;
   const statsOpacity = useRef(new Animated.Value(0)).current;
-  const buttonScale = useRef(new Animated.Value(0)).current;
-  const glowRef = useRef(new Animated.Value(0)).current;
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(titleScale, { toValue: 1, friction: 4, tension: 40, useNativeDriver: true }),
-      Animated.timing(titleOpacity, { toValue: 1, duration: 800, useNativeDriver: true }),
-    ]).start();
+    Animated.timing(titleOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start();
     const t1 = setTimeout(() => {
       Animated.timing(statsOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start();
-    }, 600);
+    }, 400);
     const t2 = setTimeout(() => {
-      Animated.spring(buttonScale, { toValue: 1, friction: 5, tension: 50, useNativeDriver: true }).start();
-    }, 1200);
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowRef, { toValue: 1, duration: 1500, useNativeDriver: false }),
-        Animated.timing(glowRef, { toValue: 0, duration: 1500, useNativeDriver: false }),
-      ]),
-    ).start();
+      Animated.timing(buttonOpacity, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+    }, 1000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   const statRows: [string, string][] = [
-    ["Final Balance", fmtNum(stats.balance)],
-    ["Highest Balance", fmtNum(stats.highestBalance)],
-    ["Total Money Earned", fmtNum(stats.totalMoneyEarned)],
-    ["Total Prestige Points", fmtPP(stats.totalPPEarned)],
-    ["Times Prestiged", stats.totalPrestiges.toLocaleString()],
-    ["Investments Completed", stats.investmentsCompleted.toLocaleString()],
-    ["Upgrades Purchased", stats.upgradesPurchased.toLocaleString()],
-    ["Accelerate Uses", stats.accelerateUses.toLocaleString()],
+    ["Final Balance", formatCurrency(stats.balance)],
+    ["Highest Balance", formatCurrency(stats.highestBalance)],
+    ["Total Money Earned", formatCurrency(stats.totalMoneyEarned)],
+    ["Total Prestige Points", formatNumber(stats.totalPPEarned)],
+    ["Times Prestiged", formatNumber(stats.totalPrestiges)],
+    ["Investments Completed", formatNumber(stats.investmentsCompleted)],
+    ["Upgrades Purchased", formatNumber(stats.upgradesPurchased)],
+    ["Accelerate Uses", formatNumber(stats.accelerateUses)],
     ["Legacy Upgrades", `${stats.legacyUpgradesOwned} / 7`],
-    ["Total Play Time", fmtTime(stats.activePlayTimeMs)],
+    ["Total Play Time", formatTimeDetailed(stats.activePlayTimeMs)],
   ];
 
   return (
     <View style={EndingStyles.root}>
-      <LinearGradient colors={[C.bg, "#1a0a2e", C.bg]} style={EndingStyles.gradient} />
+      <LinearGradient colors={[C.bg, "#0F1830", C.bg]} style={EndingStyles.gradient} />
       <Confetti />
-      <Animated.View
-        style={[
-          EndingStyles.glowRing,
-          {
-            opacity: glowRef.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.5] }),
-            transform: [{ scale: glowRef.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] }) }],
-          },
-        ]}
-      />
       <View style={EndingStyles.content}>
-        <Animated.View
-          style={[
-            EndingStyles.titleWrap,
-            {
-              opacity: titleOpacity,
-              transform: [{ scale: titleScale }],
-            },
-          ]}
-        >
-          <Text style={EndingStyles.eyebrow}>YOU HAVE MASTERED THE MARKET</Text>
-          <Text style={EndingStyles.title}>THE ULTIMATE{"\n"}INVESTOR</Text>
-          <View style={EndingStyles.divider} />
+        <Animated.View style={[EndingStyles.titleWrap, { opacity: titleOpacity }]}>
+          <View style={EndingStyles.iconContainer}>
+            <Text style={EndingStyles.icon}>✓</Text>
+          </View>
+          <Text style={EndingStyles.eyebrow}>GAME COMPLETE</Text>
+          <Text style={EndingStyles.title}>Portfolio Mastered</Text>
           <Text style={EndingStyles.subtitle}>
-            You've reached the pinnacle of financial mastery.{"\n"}
-            Every investment, every prestige, every upgrade —{"\n"}
-            all led to this moment.
+            You've completed the investment journey. Your final stats show a successful career in the markets.
           </Text>
         </Animated.View>
 
         <Animated.View style={[EndingStyles.statsCard, { opacity: statsOpacity }]}>
+          <Text style={EndingStyles.statsHeader}>Final Statistics</Text>
           {statRows.map(([label, value]) => (
             <View key={label} style={EndingStyles.statRow}>
               <Text style={EndingStyles.statLabel}>{label}</Text>
@@ -215,19 +169,19 @@ export function EndingScreen({
           ))}
         </Animated.View>
 
-        <Animated.View style={{ transform: [{ scale: buttonScale }], opacity: buttonScale.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }) }}>
+        <Animated.View style={[EndingStyles.buttonContainer, { opacity: buttonOpacity }]}>
           <Pressable
             style={EndingStyles.replayBtn}
             onPress={onReplay}
             accessibilityRole="button"
-            accessibilityLabel="Replay the game"
+            accessibilityLabel="Start new game"
           >
-            <LinearGradient colors={[C.goldDim, C.gold, C.goldLight]} style={EndingStyles.replayBtnGradient}>
-              <Text style={EndingStyles.replayBtnText}>REPLAY</Text>
+            <LinearGradient colors={[C.accentDeep, C.accent]} style={EndingStyles.replayBtnGradient}>
+              <Text style={EndingStyles.replayBtnText}>START NEW GAME</Text>
             </LinearGradient>
           </Pressable>
           <Text style={EndingStyles.replayHint}>
-            Start a fresh save. Your completion record is preserved.
+            Your completion record is saved. Progress will reset.
           </Text>
         </Animated.View>
       </View>
@@ -239,65 +193,75 @@ const EndingStyles = StyleSheet.create({
   root: { flex: 1, alignItems: "center", justifyContent: "center" },
   gradient: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
   confettiLayer: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden" },
-  glowRing: {
-    position: "absolute",
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: C.gold,
-    opacity: 0.2,
+  content: { alignItems: "center", paddingHorizontal: 20, maxWidth: 440, width: "100%" },
+  titleWrap: { alignItems: "center", marginBottom: 32 },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: C.success,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
   },
-  content: { alignItems: "center", paddingHorizontal: 24, maxWidth: 480, width: "100%" },
-  titleWrap: { alignItems: "center", marginBottom: 28 },
-  eyebrow: {
-    fontSize: 12,
+  icon: {
+    fontSize: 32,
     fontWeight: "700",
-    color: C.gold,
-    letterSpacing: 4,
-    marginBottom: 12,
+    color: C.bg,
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: C.accent,
+    letterSpacing: 3,
+    marginBottom: 8,
+    textTransform: "uppercase",
   },
   title: {
-    fontSize: 38,
-    fontWeight: "900",
+    fontSize: 32,
+    fontWeight: "800",
     color: C.white,
     textAlign: "center",
-    lineHeight: 46,
-    letterSpacing: 2,
-  },
-  divider: {
-    width: 60,
-    height: 3,
-    backgroundColor: C.gold,
-    borderRadius: 2,
-    marginVertical: 16,
+    lineHeight: 40,
+    marginBottom: 12,
   },
   subtitle: {
-    fontSize: 14,
-    color: C.textDim,
+    fontSize: 15,
+    color: C.textMuted,
     textAlign: "center",
     lineHeight: 22,
+    maxWidth: 320,
   },
   statsCard: {
     width: "100%",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: C.card,
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(255,215,0,0.2)",
-    marginBottom: 28,
+    borderColor: C.border,
+    marginBottom: 24,
+  },
+  statsHeader: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: C.text,
+    marginBottom: 16,
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   statRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(255,255,255,0.08)",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
   },
-  statLabel: { fontSize: 13, color: C.textDim, fontWeight: "500" },
-  statValue: { fontSize: 14, color: C.gold, fontWeight: "700" },
-  replayBtn: { borderRadius: 16, overflow: "hidden" },
-  replayBtnGradient: { paddingVertical: 16, paddingHorizontal: 48, alignItems: "center" },
-  replayBtnText: { fontSize: 18, fontWeight: "900", color: "#1a0a2e", letterSpacing: 3 },
-  replayHint: { fontSize: 11, color: C.textDim, marginTop: 12, textAlign: "center" },
+  statLabel: { fontSize: 13, color: C.textMuted, fontWeight: "500" },
+  statValue: { fontSize: 14, color: C.accent, fontWeight: "600" },
+  buttonContainer: { alignItems: "center", width: "100%" },
+  replayBtn: { borderRadius: 12, overflow: "hidden", width: "100%" },
+  replayBtnGradient: { paddingVertical: 16, alignItems: "center" },
+  replayBtnText: { fontSize: 16, fontWeight: "700", color: C.bg, letterSpacing: 1 },
+  replayHint: { fontSize: 12, color: C.textMuted, marginTop: 12, textAlign: "center", lineHeight: 18 },
 });

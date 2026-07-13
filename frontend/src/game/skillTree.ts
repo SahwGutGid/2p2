@@ -2,6 +2,8 @@
 // Effects are resolved once via `deriveTreeEffects` and threaded into the
 // existing game systems in `app/index.tsx`. No gameplay logic lives here.
 
+import { formatCurrency, formatNumber, formatPercent } from "@/src/utils/format";
+
 export type SkillPath = "automation" | "bonus" | "money";
 export type Rank = "bronze" | "silver" | "gold" | "platinum" | "diamond" | "legend";
 
@@ -83,7 +85,7 @@ export const LEGACY_UPGRADES: LegacyUpgrade[] = [
   {
     id: "corporate-empire",
     name: "Corporate Empire",
-    description: "Generate +$1M/h passive income · +25% all profits · Unlock empire reputation bonuses",
+    description: `Generate ${formatCurrency(1000000)}/h passive income · +25% all profits · Unlock empire reputation bonuses`,
     cost: 400,
     effect: "+$1M/h passive, +25% profit",
     tint: "#FF6EC7",
@@ -250,7 +252,7 @@ export const SKILLS: SkillNode[] = [
     description: "Start each new run with more cash after prestige.",
     effect: (l) => {
       const values = [100, 500, 2000, 10000, 50000];
-      return `Start with +$${(values[l - 1] ?? 0).toLocaleString()}`;
+      return `Start with +${formatCurrency(values[l - 1] ?? 0)}`;
     },
     path: "bonus", row: 2,
     baseCost: 3, costGrowth: 1.9, maxLevel: 5,
@@ -305,7 +307,7 @@ export const SKILLS: SkillNode[] = [
     description: "Bankruptcy stimulus payout is dramatically increased.",
     effect: (l) => {
       const values = [50, 200, 1000];
-      return `$${(values[l - 1] ?? 15)} bailout`;
+      return `${formatCurrency(values[l - 1] ?? 15)} bailout`;
     },
     path: "money", row: 1,
     baseCost: 4, costGrowth: 2, maxLevel: 3,
@@ -325,7 +327,7 @@ export const SKILLS: SkillNode[] = [
     id: "contracts",
     name: "Long-Term Contract",
     short: "Contract",
-    description: "Unlock the Contract package — $10K stake, 5 min, +400% profit.",
+    description: `Unlock the Contract package — ${formatCurrency(10000)} stake, 5 min, +400% profit.`,
     effect: () => "New package: Contract",
     path: "money", row: 3,
     baseCost: 50, costGrowth: 1, maxLevel: 1,
@@ -335,7 +337,7 @@ export const SKILLS: SkillNode[] = [
     id: "super-contract",
     name: "Legendary Contract",
     short: "Legendary",
-    description: "Unlock the Legendary Contract — $100K stake, 15 min, +900% profit.",
+    description: `Unlock the Legendary Contract — ${formatCurrency(100000)} stake, 15 min, +900% profit.`,
     effect: () => "New package: Legendary",
     path: "money", row: 4,
     baseCost: 100, costGrowth: 1, maxLevel: 1,

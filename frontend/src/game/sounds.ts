@@ -11,7 +11,8 @@ export type SoundEvent =
   | "investStart"
   | "investComplete"
   | "upgrade"
-  | "error";
+  | "error"
+  | "victory";
 
 // Short, permissive CC0-ish preview clips from mixkit's public asset CDN.
 // Structure is what matters — swap URLs with bundled assets any time.
@@ -21,6 +22,7 @@ const SOURCES: Record<SoundEvent, AudioSource> = {
   investComplete: { uri: "https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" },
   upgrade: { uri: "https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3" },
   error: { uri: "https://assets.mixkit.co/active_storage/sfx/952/952-preview.mp3" },
+  victory: { uri: "https://assets.mixkit.co/active_storage/sfx/2008/2008-preview.mp3" },
 };
 
 // Rough per-event volume so effects don't overpower each other.
@@ -30,6 +32,7 @@ const VOLUMES: Record<SoundEvent, number> = {
   investComplete: 0.7,
   upgrade: 0.55,
   error: 0.5,
+  victory: 0.8,
 };
 
 export function useSoundEngine() {

@@ -23,6 +23,7 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useSoundEngine } from "@/src/game/sounds";
+import { EndingScreen } from "@/src/game/EndingScreen";
 import { useBackgroundMusic } from "@/src/game/music";
 import {
   computeRank,
@@ -145,6 +146,20 @@ const defaultSettings = (): Settings => ({
   music: true, sfx: true, haptics: true, notifications: true,
 });
 
+type CompletionStats = {
+  balance: number;
+  totalPrestiges: number;
+  totalPPEarned: number;
+  investmentsCompleted: number;
+  upgradesPurchased: number;
+  accelerateUses: number;
+  activePlayTimeMs: number;
+  highestBalance: number;
+  totalMoneyEarned: number;
+  legacyUpgradesOwned: number;
+  completedAt: number;
+};
+
 type SaveData = {
   v: 6;
   balance: number;
@@ -165,6 +180,9 @@ type SaveData = {
   legacyPoints: number;
   legacyUpgrades: Record<LegacyUpgradeId, boolean>;
   onboardingComplete: boolean;
+  gameComplete: boolean;
+  endingPending: boolean;
+  completionStats: CompletionStats | null;
 };
 const SAVE_KEY = "investmentIdle:v6";
 const LEGACY_KEYS = ["investmentIdle:v5", "investmentIdle:v4", "investmentIdle:v3", "investmentIdle:v2"];
@@ -205,6 +223,9 @@ const defaultSave = (): SaveData => ({
     "ultimate-investor": false,
   },
   onboardingComplete: false,
+  gameComplete: false,
+  endingPending: false,
+  completionStats: null,
 });
 
 // ---------- Helpers ----------
@@ -269,8 +290,12 @@ const computeProfitPct = (
     const ev = MARKET_EVENTS.find((e) => e.id === market.id);
     if (ev) {
       let marketMult = ev.profitMult ?? 1;
+      if (legacyUpgrades["global-market"] && marketMult > 1) marketMult *= 1.3;
       if (legacyUpgrades["market-dominance"] && marketMult > 1) {
         marketMult *= 1.5; // Positive events +50% stronger
+      }
+      if (legacyUpgrades["market-dominance"] && marketMult < 1) {
+        marketMult = 1 + (marketMult - 1) * 0.25; // Negative events reduced by 75%
       }
       m *= marketMult;
       const pkgBoost = ev.pkgBoost?.[pkg.id];
@@ -297,8 +322,11 @@ const computeDuration = (pkg: Pkg, turbo: number, t: TreeEffects, market: Active
   return Math.max(200, Math.round(d));
 };
 
-const computePassiveRate = (passiveLvl: number, t: TreeEffects) =>
-  1.0 * passiveLvl * t.passiveMult * t.endgamePassiveMult;
+const computePassiveRate = (passiveLvl: number, t: TreeEffects, legacyUpgrades: Record<LegacyUpgradeId, boolean> = {} as Record<LegacyUpgradeId, boolean>) => {
+  let rate = 1.0 * passiveLvl * t.passiveMult * t.endgamePassiveMult;
+  if (legacyUpgrades["corporate-empire"]) rate += 277.78; // +$1M/h
+  return rate;
+};
 
 const luckyChance = (level: number) => Math.min(0.6, 0.03 * level);
 const slotCount = (level: number) => 1 + level;
@@ -339,6 +367,11 @@ export default function Index() {
   const [prestigeCelebrate, setPrestigeCelebrate] = useState<number>(0);
   const [rankUpBanner, setRankUpBanner] = useState<Rank | null>(null);
   const [showLegacy, setShowLegacy] = useState(false);
+
+  // Game completion state
+  const [gameComplete, setGameComplete] = useState(false);
+  const [endingPending, setEndingPending] = useState(false);
+  const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
 
   // Celebration banners for early game milestones
   const [celebrationBanner, setCelebrationBanner] = useState<string | null>(null);
@@ -479,11 +512,11 @@ export default function Index() {
 
   // Live access to volatile values from stable callbacks (avoids stale closures).
   const stateRef = useRef({
-    balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete,
+    balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats,
   });
   useEffect(() => {
-    stateRef.current = { balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete };
-  }, [balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete]);
+    stateRef.current = { balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats };
+  }, [balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats]);
 
   // -------- Persistence --------
   const saveState = useCallback(async (data: Partial<SaveData>) => {
@@ -493,12 +526,13 @@ export default function Index() {
         prestige, totalPrestiges, skills,
         stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings,
         prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete,
+        gameComplete, endingPending, completionStats,
         lastSeenAt: Date.now(),
         ...data,
       };
       await AsyncStorage.setItem(SAVE_KEY, JSON.stringify(merged));
     } catch {}
-  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete]);
+  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats]);
 
   // Load (migrate v2/v3/v4 → v5)
   useEffect(() => {
@@ -554,6 +588,9 @@ export default function Index() {
               "ultimate-investor": false,
             },
             onboardingComplete: parsed.onboardingComplete ?? false,
+            gameComplete: parsed.gameComplete ?? false,
+            endingPending: parsed.endingPending ?? false,
+            completionStats: parsed.completionStats ?? null,
           };
         }
 
@@ -561,9 +598,10 @@ export default function Index() {
         const savedPkgs = getPackages(savedTree);
 
         // Passive + savings offline earnings
-        const elapsed = Math.min(OFFLINE_CAP_MS, Math.max(0, nowMs - (saved.lastSeenAt ?? nowMs)));
+        const offlineCapMs = saved.legacyUpgrades?.["financial-automation"] ? OFFLINE_CAP_MS * 2 : OFFLINE_CAP_MS;
+        const elapsed = Math.min(offlineCapMs, Math.max(0, nowMs - (saved.lastSeenAt ?? nowMs)));
         const secs = elapsed / 1000;
-        const passiveEarned = secs * computePassiveRate(saved.levels.passive ?? 0, savedTree);
+        const passiveEarned = secs * computePassiveRate(saved.levels.passive ?? 0, savedTree, saved.legacyUpgrades ?? {});
         // Simple discrete savings compounding (avoid overflow)
         let simBal = saved.balance;
         if (savedTree.savingsRatePerSec > 0 && secs > 0) {
@@ -666,6 +704,9 @@ export default function Index() {
         });
         setOnboardingComplete(saved.onboardingComplete ?? false);
         setShowOnboarding(!(saved.onboardingComplete ?? false));
+        setGameComplete(saved.gameComplete ?? false);
+        setEndingPending(saved.endingPending ?? false);
+        setCompletionStats(saved.completionStats ?? null);
         if (passiveEarned > 0.01 || (savedTree.savingsRatePerSec > 0 && elapsed > 1000)) {
           setOfflineGain(simBal - (saved.balance ?? 100));
         }
@@ -697,7 +738,7 @@ export default function Index() {
   // Passive + savings tick
   useEffect(() => {
     if (passiveRef.current) { clearInterval(passiveRef.current); passiveRef.current = null; }
-    const rate = computePassiveRate(levels.passive, treeEffects);
+    const rate = computePassiveRate(levels.passive, treeEffects, legacyUpgrades);
     const savRate = treeEffects.savingsRatePerSec;
     if (rate <= 0 && savRate <= 0) return;
     passiveRef.current = setInterval(() => {
@@ -710,6 +751,22 @@ export default function Index() {
       if (passiveRef.current) { clearInterval(passiveRef.current); passiveRef.current = null; }
     };
   }, [levels.passive, treeEffects]);
+
+  // Active play time tracker — accumulates real time spent in app
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStats((s) => ({ ...s, activePlayTimeMs: s.activePlayTimeMs + 1000 }));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Play victory sound when ending screen first appears
+  useEffect(() => {
+    if (endingPending && completionStats) {
+      sound.play("victory");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    }
+  }, [endingPending]);
 
   // Global ticker for progress + countdown display
   useEffect(() => {
@@ -725,7 +782,7 @@ export default function Index() {
   useEffect(() => {
     if (!ready) return;
     if (actives.length > 0) return;
-    if (computePassiveRate(levels.passive, treeEffects) > 0) return;
+    if (computePassiveRate(levels.passive, treeEffects, legacyUpgrades) > 0) return;
     if (treeEffects.savingsRatePerSec > 0 && balance > 0.01) return;
     if (balance >= cheapestCost(treeEffects)) return;
     const bail = treeEffects.bailoutAmount;
@@ -781,6 +838,15 @@ export default function Index() {
       setBalance((b) => b + totalReturn);
       setLastProfit(profit + dividend);
       setWasLucky(lucky);
+
+      // Track stats
+      setStats((s) => ({
+        ...s,
+        totalMoneyEarned: s.totalMoneyEarned + profit + dividend,
+        investmentsCompleted: s.investmentsCompleted + 1,
+        biggestSingleProfit: Math.max(s.biggestSingleProfit, profit + dividend),
+        highestBalance: Math.max(s.highestBalance, balance + totalReturn),
+      }));
 
       sound.play("investComplete");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -891,6 +957,7 @@ export default function Index() {
     if (!opts.silent) {
       sound.play("click");
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      setStats((s) => ({ ...s, accelerateUses: s.accelerateUses + 1 }));
     }
   };
 
@@ -919,7 +986,8 @@ export default function Index() {
     const slots = slotCount(state.levels.slots);
     if (state.actives.length >= slots) return;
     const nowMs = Date.now();
-    if (nowMs - lastAutoInvestRef.current < 250) return;
+    if (nowMs - lastAutoInvestRef.current < (legacyUpgrades["financial-automation"] ? 125 : 250)) return;
+    void legacyUpgrades;
     // If autoFill: try to fill all empty; else just refill one (post-completion behavior)
     const attempts = treeEffects.autoFill ? slots - state.actives.length : 1;
     for (let i = 0; i < attempts; i++) {
@@ -929,7 +997,7 @@ export default function Index() {
       if (!investPkg(pkg)) break;
       lastAutoInvestRef.current = Date.now();
     }
-  }, [ready, actives.length, balance, treeEffects.autoReinvest, treeEffects.autoFill, treeEffects.smartSelect, pickAutoPackage, investPkg, levels.slots]);
+  }, [ready, actives.length, balance, treeEffects.autoReinvest, treeEffects.autoFill, treeEffects.smartSelect, pickAutoPackage, investPkg, levels.slots, legacyUpgrades]);
 
   const buyUpgrade = (u: Upgrade) => {
     kickMusicOnce();
@@ -946,6 +1014,7 @@ export default function Index() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setBalance((b) => b - cost);
     setLevels((l) => ({ ...l, [u.id]: l[u.id] + 1 }));
+    setStats((s) => ({ ...s, upgradesPurchased: s.upgradesPurchased + 1 }));
 
     // Early game milestone: First upgrade
     if (level === 0 && !onboardingComplete) {
@@ -1076,6 +1145,12 @@ export default function Index() {
     setLevels({ yield: 0, turbo: 0, passive: 0, lucky: 0, slots: 0 });
     setPrestige((p) => p + gain);
     setTotalPrestiges((t) => t + 1);
+    const newStats: Stats = {
+      ...stats,
+      totalPrestiges: totalPrestiges + 1,
+      totalPPEarned: stats.totalPPEarned + gain,
+    };
+    setStats(newStats);
     setPrestigeArmed(false);
     setPrestigeCelebrate(gain);
     setTimeout(() => setPrestigeCelebrate(0), 4500);
@@ -1083,13 +1158,13 @@ export default function Index() {
     // Award Legacy Points after threshold is reached
     // Earn 1 LP per 100 PP gained (slow progression)
     const newTotalPrestiges = totalPrestiges + 1;
-    if (newTotalPrestiges >= LEGACY_UNLOCK_THRESHOLD) {
+    if (newStats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD) {
       const legacyGain = Math.max(1, Math.floor(gain / 100));
       setLegacyPoints((lp: number) => lp + legacyGain);
       // Persist Legacy Points immediately to ensure they're saved
       setTimeout(() => {
         setLegacyPoints((currentLp) => {
-          saveState({ legacyPoints: currentLp });
+          saveState({ legacyPoints: currentLp, stats: newStats });
           return currentLp;
         });
       }, 100);
@@ -1124,6 +1199,50 @@ export default function Index() {
         <View style={styles.loaderWrap}>
           <Text style={styles.loaderText}>Loading portfolio...</Text>
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Game completion ending screen
+  if (endingPending && completionStats) {
+    const handleReplay = () => {
+      const comp = completionStats;
+      // Wipe save but preserve completion data
+      const freshSave: SaveData = {
+        ...defaultSave(),
+        gameComplete: true,
+        endingPending: false,
+        completionStats: comp,
+        lastSeenAt: Date.now(),
+      };
+      AsyncStorage.setItem(SAVE_KEY, JSON.stringify(freshSave)).then(() => {
+        // Reset all state to defaults
+        setBalance(100);
+        setSelectedId("starter-bond");
+        setLevels({ yield: 0, turbo: 0, passive: 0, lucky: 0, slots: 0 });
+        setActives([]);
+        setPrestige(0);
+        setTotalPrestiges(0);
+        setSkills({});
+        setStats(defaultStats());
+        setUnlockedAchievements([]);
+        setActiveMarket(null);
+        setLastMarketRollAt(Date.now());
+        setPrestigeUpgrades({} as Record<PrestigeUpgradeId, boolean>);
+        setLegacyPoints(0);
+        setLegacyUpgrades({} as Record<LegacyUpgradeId, boolean>);
+        setGameComplete(true);
+        setEndingPending(false);
+        setCompletionStats(comp);
+        setShowLegacy(false);
+        setShowTree(false);
+        setShowOnboarding(false);
+        setOnboardingComplete(true);
+      });
+    };
+    return (
+      <SafeAreaView style={styles.safe} testID="ending-screen">
+        <EndingScreen stats={completionStats} onReplay={handleReplay} />
       </SafeAreaView>
     );
   }
@@ -1171,7 +1290,7 @@ export default function Index() {
                 <Text style={styles.backBtnText}>← BACK</Text>
               </Pressable>
               <Text style={styles.treeTitle}>PRESTIGE TREE</Text>
-              {totalPrestiges >= LEGACY_UNLOCK_THRESHOLD && (
+              {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
                 <Pressable
                   onPress={() => { sound.play("click"); setShowLegacy(true); }}
                   hitSlop={12}
@@ -1403,7 +1522,37 @@ export default function Index() {
       const newLegacyUpgrades = { ...legacyUpgrades, [upgrade.id]: true };
       setLegacyPoints(newLegacyPoints);
       setLegacyUpgrades(newLegacyUpgrades);
-      saveState({ legacyPoints: newLegacyPoints, legacyUpgrades: newLegacyUpgrades });
+
+      // Detect game completion when ultimate-investor is purchased
+      if (upgrade.isFinal) {
+        const compStats: CompletionStats = {
+          balance,
+          totalPrestiges: totalPrestiges,
+          totalPPEarned: stats.totalPPEarned,
+          investmentsCompleted: stats.investmentsCompleted,
+          upgradesPurchased: stats.upgradesPurchased,
+          accelerateUses: stats.accelerateUses,
+          activePlayTimeMs: stats.activePlayTimeMs,
+          highestBalance: stats.highestBalance,
+          totalMoneyEarned: stats.totalMoneyEarned,
+          legacyUpgradesOwned: Object.values(newLegacyUpgrades).filter(Boolean).length,
+          completedAt: Date.now(),
+        };
+        setGameComplete(true);
+        setEndingPending(true);
+        setCompletionStats(compStats);
+        sound.play("victory");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        saveState({
+          legacyPoints: newLegacyPoints,
+          legacyUpgrades: newLegacyUpgrades,
+          gameComplete: true,
+          endingPending: true,
+          completionStats: compStats,
+        });
+      } else {
+        saveState({ legacyPoints: newLegacyPoints, legacyUpgrades: newLegacyUpgrades });
+      }
     };
 
     const isUltimateOwned = legacyUpgrades["ultimate-investor"];
@@ -1454,6 +1603,20 @@ export default function Index() {
             <View style={styles.ultimateBanner}>
               <Text style={styles.ultimateBannerText}>🏆 GAME COMPLETE 🏆</Text>
               <Text style={styles.ultimateBannerSub}>You have achieved the Ultimate Investor rank</Text>
+              <Pressable
+                onPress={() => {
+                  if (completionStats) {
+                    setEndingPending(true);
+                  }
+                }}
+                style={({ pressed }) => [
+                  styles.viewEndingBtn,
+                  pressed && { transform: [{ scale: 0.97 }] },
+                ]}
+                testID="view-ending-btn"
+              >
+                <Text style={styles.viewEndingBtnText}>VIEW ENDING</Text>
+              </Pressable>
             </View>
           )}
         </View>
@@ -1518,7 +1681,7 @@ export default function Index() {
     return (
       <SafeAreaView style={styles.loadingContainer} testID="loading-screen">
         <LinearGradient
-          colors={[C.bg, C.bgSoft, C.bg]}
+          colors={legacyUpgrades["ultimate-investor"] ? ["#0B1220", "#11110a", "#0B1220"] : [C.bg, C.bgSoft, C.bg]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
@@ -1587,7 +1750,7 @@ export default function Index() {
     return (
       <SafeAreaView style={styles.onboardingContainer} testID="onboarding-screen">
         <LinearGradient
-          colors={[C.bg, C.bgSoft, C.bg]}
+          colors={legacyUpgrades["ultimate-investor"] ? ["#0B1220", "#11110a", "#0B1220"] : [C.bg, C.bgSoft, C.bg]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
@@ -1672,7 +1835,7 @@ export default function Index() {
 
       {/* HEADER */}
       <LinearGradient
-        colors={[C.bgSoft, C.bg]}
+        colors={legacyUpgrades["ultimate-investor"] ? ["#1a1a0e", "#0B1220"] : [C.bgSoft, C.bg]}
         start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}
         style={styles.header}
       >
@@ -1736,10 +1899,10 @@ export default function Index() {
               <Text style={styles.availText}>Available to invest</Text>
             </View>
           )}
-          {computePassiveRate(levels.passive, treeEffects) > 0 && (
+          {computePassiveRate(levels.passive, treeEffects, legacyUpgrades) > 0 && (
             <View style={styles.passivePill} testID="passive-pill">
               <Text style={styles.passiveText}>
-                +${computePassiveRate(levels.passive, treeEffects).toFixed(2)}/s
+                +${computePassiveRate(levels.passive, treeEffects, legacyUpgrades).toFixed(2)}/s
               </Text>
             </View>
           )}
@@ -1994,6 +2157,33 @@ export default function Index() {
             <Text style={styles.prestigeSummaryChevron}>▶</Text>
           </View>
         </Pressable>
+
+        {/* Legacy endgame button — visible when totalPPEarned >= threshold */}
+        {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
+          <Pressable
+            onPress={() => { sound.play("click"); setShowLegacy(true); }}
+            style={({ pressed }) => [styles.prestigeSummary, { marginTop: 12, borderColor: "rgba(255,215,0,0.3)" }, pressed && { transform: [{ scale: 0.99 }] }]}
+            testID="legacy-summary"
+          >
+            <LinearGradient
+              colors={["rgba(255,215,0,0.12)", "rgba(255,107,53,0.08)"]}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.prestigeSummaryRow}>
+              <View style={[styles.rankBadge, { borderColor: C.gold, backgroundColor: "rgba(255,215,0,0.15)" }]}>
+                <Text style={[styles.rankBadgeIcon, { color: C.gold }]}>★</Text>
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={[styles.prestigeSummaryTitle, { color: C.gold }]}>LEGACY</Text>
+                <Text style={styles.prestigeSummarySub}>
+                  {legacyPoints} LP · {Object.values(legacyUpgrades).filter(Boolean).length}/7 upgrades
+                </Text>
+              </View>
+              <Text style={[styles.prestigeSummaryChevron, { color: C.gold }]}>▶</Text>
+            </View>
+          </Pressable>
+        )}
 
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -2520,6 +2710,21 @@ const styles = StyleSheet.create({
   },
   ultimateBannerText: { color: C.gold, fontSize: 14, fontWeight: "900", letterSpacing: 1 },
   ultimateBannerSub: { color: C.text, fontSize: 11, fontWeight: "700", marginTop: 4 },
+  viewEndingBtn: {
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: C.gold,
+    backgroundColor: "rgba(255,215,0,0.12)",
+  },
+  viewEndingBtnText: {
+    color: C.gold,
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
   legacyBody: { flex: 1 },
   legacyBodyContent: { padding: 20, paddingBottom: 40 },
   legacyCard: {

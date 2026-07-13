@@ -73,6 +73,7 @@ export type Stats = {
   upgradesPurchased: number;
   marketEventsSeen: number;
   accelerateUses: number;
+  totalPPEarned: number;
 };
 
 export const defaultStats = (): Stats => ({
@@ -86,6 +87,7 @@ export const defaultStats = (): Stats => ({
   upgradesPurchased: 0,
   marketEventsSeen: 0,
   accelerateUses: 0,
+  totalPPEarned: 0,
 });
 
 // ==================== ACHIEVEMENTS ====================

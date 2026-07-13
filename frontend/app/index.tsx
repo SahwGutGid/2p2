@@ -1489,7 +1489,7 @@ export default function Index() {
             >
               {canPrestige && !prestigeArmed && (
                 <LinearGradient
-                  colors={[C.gold, "#F9A825"]}
+                  colors={[C.gold, "#F59E0B", "#F9A825"]}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFill}
                 />
@@ -2085,7 +2085,7 @@ export default function Index() {
                     testID={`accelerate-${a.runId}`}
                   >
                     <LinearGradient
-                      colors={["rgba(0,229,255,0.20)", "rgba(0,229,255,0.05)"]}
+                      colors={[C.accent, C.accentDeep]}
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                       style={StyleSheet.absoluteFill}
                     />
@@ -2208,7 +2208,16 @@ export default function Index() {
                   ) : (
                     <>
                       <Text style={[styles.upgradeCost, !affordable && { color: C.textMuted }]} testID={`upgrade-cost-${u.id}`}>{money(cost)}</Text>
-                      <Text style={[styles.upgradeBuy, !affordable && { color: C.textMuted }]}>BUY</Text>
+                      <View style={styles.upgradeBuyBtn}>
+                        {affordable && (
+                          <LinearGradient
+                            colors={[C.accent, C.accentDeep]}
+                            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                            style={StyleSheet.absoluteFill} pointerEvents="none"
+                          />
+                        )}
+                        <Text style={[styles.upgradeBuy, !affordable && { color: C.textMuted }]}>BUY</Text>
+                      </View>
                     </>
                   )}
                 </View>
@@ -2291,7 +2300,7 @@ export default function Index() {
           >
             {canInvest && (
               <LinearGradient
-                colors={[C.accent, C.accentDeep]}
+                colors={[C.accent, C.accentDeep, C.accent]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={StyleSheet.absoluteFill} pointerEvents="none"
               />
@@ -2590,8 +2599,8 @@ const styles = StyleSheet.create({
     backgroundColor: C.panel, borderRadius: 12,
     borderWidth: 1, borderColor: C.border,
     padding: 12, marginBottom: 10, overflow: "hidden",
-    shadowColor: "#000000", shadowOpacity: 0.05, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    shadowColor: "#000000", shadowOpacity: 0.08, shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
   activeHeaderRow: { flexDirection: "row", alignItems: "flex-start" },
   activeIcon: {
@@ -2620,14 +2629,14 @@ const styles = StyleSheet.create({
     backgroundColor: C.panel, borderRadius: 12,
     borderWidth: 1, borderColor: C.border,
     padding: 14, marginBottom: 10, position: "relative", overflow: "hidden",
-    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    shadowColor: "#000000", shadowOpacity: 0.06, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   cardSelected: {
     borderColor: C.accent, borderWidth: 2,
     backgroundColor: C.panel,
-    shadowColor: C.accent, shadowOpacity: 0.15, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 }, elevation: 3,
+    shadowColor: C.accent, shadowOpacity: 0.2, shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 }, elevation: 4,
   },
   cardLocked: { opacity: 0.6, borderColor: "rgba(220,38,38,0.3)" },
   cardRow: { flexDirection: "row", alignItems: "flex-start" },
@@ -2683,8 +2692,8 @@ const styles = StyleSheet.create({
     backgroundColor: C.panel, borderRadius: 12,
     borderWidth: 1, borderColor: C.border,
     padding: 14, marginBottom: 10,
-    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    shadowColor: "#000000", shadowOpacity: 0.06, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   upgradeCardDim: { opacity: 0.6 },
   upgradeRow: { flexDirection: "row", alignItems: "center" },
@@ -2699,7 +2708,11 @@ const styles = StyleSheet.create({
   upgradeEffect: { fontSize: 11, fontWeight: "600", marginTop: 4 },
   upgradeCta: { alignItems: "flex-end" },
   upgradeCost: { color: C.text, fontSize: 14, fontWeight: "700" },
-  upgradeBuy: { color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5, marginTop: 4 },
+  upgradeBuyBtn: {
+    paddingHorizontal: 16, paddingVertical: 6, borderRadius: 6,
+    overflow: "hidden", marginTop: 4,
+  },
+  upgradeBuy: { color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
   maxedPill: {
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
     backgroundColor: "rgba(0,107,94,0.08)", borderWidth: 1, borderColor: "rgba(0,107,94,0.2)",
@@ -2722,10 +2735,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bgSoft,
   },
   investBtn: {
-    height: 56, borderRadius: 12, backgroundColor: C.accent,
+    height: 56, borderRadius: 12,
     overflow: "hidden", justifyContent: "center", alignItems: "center",
-    shadowColor: "#000000", shadowOpacity: 0.1, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 }, elevation: 3,
+    shadowColor: "#000000", shadowOpacity: 0.15, shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 }, elevation: 4,
+  },
+  investBtnGradient: {
+    position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
   },
   investBtnDisabled: {
     backgroundColor: C.bgSoft, borderWidth: 1, borderColor: "rgba(220,38,38,0.3)", shadowOpacity: 0,
@@ -3143,6 +3159,9 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     borderWidth: 1, borderColor: C.gold, overflow: "hidden",
     backgroundColor: "rgba(245,158,11,0.08)",
+  },
+  cashOutBtnGradient: {
+    position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
   },
   cashOutBtnDim: { borderColor: C.border, backgroundColor: C.bgSoft },
   cashOutBtnArmed: { backgroundColor: C.gold, borderColor: C.gold },

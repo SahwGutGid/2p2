@@ -504,6 +504,40 @@ export default function Index() {
     });
   }, [showTree, treeSlide]);
 
+  // Calculate next goal (must be called before early returns)
+  const nextGoal = useMemo(() => {
+    if (stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD) {
+      return {
+        title: "Legacy Endgame",
+        description: `You've unlocked the Legacy system! Spend your Legacy Points on permanent upgrades.`,
+        progress: "UNLOCKED",
+        color: C.gold,
+      };
+    }
+    if (balance >= PRESTIGE_MIN_BALANCE) {
+      return {
+        title: "Prestige",
+        description: `Cash out to earn Prestige Points. Each PP gives +5% permanent profit bonus.`,
+        progress: `Ready to cash out`,
+        color: C.gold,
+      };
+    }
+    if (prestige > 0) {
+      return {
+        title: "Build Wealth",
+        description: `Reach ${money(PRESTIGE_MIN_BALANCE)} to prestige and earn more PP.`,
+        progress: `${money(balance)} / ${money(PRESTIGE_MIN_BALANCE)}`,
+        color: C.gain,
+      };
+    }
+    return {
+      title: "First Investment",
+      description: `Start investing to build your portfolio and unlock Prestige.`,
+      progress: actives.length > 0 ? "In progress" : "Not started",
+      color: C.accent,
+    };
+  }, [balance, prestige, stats.totalPPEarned, actives.length]);
+
   // Refs
   const finishRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const nowTickerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1268,40 +1302,6 @@ export default function Index() {
     : !canAffordSelected
     ? `Need ${money(selected.cost)} for ${selected.name}`
     : `${selected.name} · +${money(selectedEffProfit)} in ${fmtDuration(selectedEffDur)}`;
-
-  // Calculate next goal
-  const nextGoal = useMemo(() => {
-    if (stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD) {
-      return {
-        title: "Legacy Endgame",
-        description: `You've unlocked the Legacy system! Spend your Legacy Points on permanent upgrades.`,
-        progress: "UNLOCKED",
-        color: C.gold,
-      };
-    }
-    if (balance >= PRESTIGE_MIN_BALANCE) {
-      return {
-        title: "Prestige",
-        description: `Cash out to earn Prestige Points. Each PP gives +5% permanent profit bonus.`,
-        progress: `Ready to cash out`,
-        color: C.gold,
-      };
-    }
-    if (prestige > 0) {
-      return {
-        title: "Build Wealth",
-        description: `Reach ${money(PRESTIGE_MIN_BALANCE)} to prestige and earn more PP.`,
-        progress: `${money(balance)} / ${money(PRESTIGE_MIN_BALANCE)}`,
-        color: C.gain,
-      };
-    }
-    return {
-      title: "First Investment",
-      description: `Start investing to build your portfolio and unlock Prestige.`,
-      progress: actives.length > 0 ? "In progress" : "Not started",
-      color: C.accent,
-    };
-  }, [balance, prestige, stats.totalPPEarned, actives.length]);
 
   // ============================================================
   // Skill Tree Screen (overlay)

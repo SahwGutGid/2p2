@@ -1310,9 +1310,9 @@ export default function Index() {
                 testID="tree-back"
                 style={styles.backBtn}
               >
-                <Text style={styles.backBtnText}>← BACK</Text>
+                <Text style={[styles.backBtnText, { color: theme.accent }]}>← BACK</Text>
               </Pressable>
-              <Text style={styles.treeTitle}>PRESTIGE TREE</Text>
+              <Text style={[styles.treeTitle, { color: theme.text }]}>PRESTIGE TREE</Text>
               {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
                 <Pressable
                   onPress={() => { sound.play("click"); setShowLegacy(true); }}
@@ -1327,7 +1327,7 @@ export default function Index() {
               )}
             </View>
 
-            <View style={styles.rankCard}>
+            <View style={[styles.rankCard, { backgroundColor: theme.panel, borderColor: theme.border }]}>
               <View
                 style={[
                   styles.rankBadge,
@@ -1339,13 +1339,13 @@ export default function Index() {
                 </Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.rankLabel}>CURRENT RANK</Text>
+                <Text style={[styles.rankLabel, { color: theme.textMuted }]}>CURRENT RANK</Text>
                 <Text style={[styles.rankName, { color: rankMeta.tint }]}>
                   {rankMeta.name}
                 </Text>
                 {nRankMeta ? (
                   <>
-                    <View style={styles.rankBar}>
+                    <View style={[styles.rankBar, { backgroundColor: theme.bgSoft }]}>
                       <View
                         style={[
                           styles.rankBarFill,
@@ -1356,45 +1356,45 @@ export default function Index() {
                         ]}
                       />
                     </View>
-                    <Text style={styles.rankProgress}>
+                    <Text style={[styles.rankProgress, { color: theme.textMuted }]}>
                       {totalPrestiges - rankMeta.minPrestiges} / {nRankMeta.minPrestiges - rankMeta.minPrestiges} to {nRankMeta.short}
                     </Text>
                   </>
                 ) : (
-                  <Text style={styles.rankProgress}>Maximum rank achieved</Text>
+                  <Text style={[styles.rankProgress, { color: theme.textMuted }]}>Maximum rank achieved</Text>
                 )}
               </View>
             </View>
 
-            <View style={styles.treeStats}>
+            <View style={[styles.treeStats, { backgroundColor: theme.panel, borderColor: theme.border }]}>
               <View style={styles.treeStatCell}>
-                <Text style={styles.treeStatLabel}>PP AVAILABLE</Text>
+                <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>PP AVAILABLE</Text>
                 <Text style={[styles.treeStatValue, { color: theme.gold }]} testID="tree-pp-available">{prestige}</Text>
               </View>
-              <View style={styles.treeStatDivider} />
+              <View style={[styles.treeStatDivider, { backgroundColor: theme.border }]} />
               <View style={styles.treeStatCell}>
-                <Text style={styles.treeStatLabel}>PP SPENT</Text>
-                <Text style={styles.treeStatValue}>{totalSpentPP(skills)}</Text>
+                <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>PP SPENT</Text>
+                <Text style={[styles.treeStatValue, { color: theme.text }]}>{totalSpentPP(skills)}</Text>
               </View>
-              <View style={styles.treeStatDivider} />
+              <View style={[styles.treeStatDivider, { backgroundColor: theme.border }]} />
               <View style={styles.treeStatCell}>
-                <Text style={styles.treeStatLabel}>PROFIT BONUS</Text>
+                <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>PROFIT BONUS</Text>
                 <Text style={[styles.treeStatValue, { color: theme.gain }]}>+{fmtPct(currentBonusPct)}</Text>
               </View>
-              <View style={styles.treeStatDivider} />
+              <View style={[styles.treeStatDivider, { backgroundColor: theme.border }]} />
               <View style={styles.treeStatCell}>
-                <Text style={styles.treeStatLabel}>CASH-OUTS</Text>
-                <Text style={styles.treeStatValue}>{totalPrestiges}</Text>
+                <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>CASH-OUTS</Text>
+                <Text style={[styles.treeStatValue, { color: theme.text }]}>{totalPrestiges}</Text>
               </View>
             </View>
 
             {/* Legacy Progress */}
-            <View style={styles.legacyProgressSection}>
+            <View style={[styles.legacyProgressSection, { borderTopColor: theme.border }]}>
               <View style={styles.legacyProgressHeader}>
-                <Text style={styles.legacyProgressTitle}>LEGACY PROGRESS</Text>
-                <Text style={styles.legacyProgressSubtitle}>Unlock at 10,000 total PP</Text>
+                <Text style={[styles.legacyProgressTitle, { color: theme.text }]}>LEGACY PROGRESS</Text>
+                <Text style={[styles.legacyProgressSubtitle, { color: theme.textMuted }]}>Unlock at 10,000 total PP</Text>
               </View>
-              <View style={styles.legacyProgressBar}>
+              <View style={[styles.legacyProgressBar, { backgroundColor: theme.bgSoft }]}>
                 <View
                   style={[
                     styles.legacyProgressBarFill,
@@ -1405,29 +1405,29 @@ export default function Index() {
                   ]}
                 />
               </View>
-              <Text style={styles.legacyProgressText}>
+              <Text style={[styles.legacyProgressText, { color: theme.textMuted }]}>
                 {compact(stats.totalPPEarned)} / {compact(LEGACY_UNLOCK_THRESHOLD)} PP
                 {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && " · UNLOCKED"}
               </Text>
             </View>
 
             {/* Prestige Explanation */}
-            <View style={styles.prestigeExplanationSection}>
+            <View style={[styles.prestigeExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.gold}08` }]}>
               <View style={styles.prestigeExplanationHeader}>
-                <Text style={styles.prestigeExplanationTitle}>WHAT IS PRESTIGE?</Text>
+                <Text style={[styles.prestigeExplanationTitle, { color: theme.gold }]}>WHAT IS PRESTIGE?</Text>
                 <Pressable
                   onPress={() => {
                     sound.play("click");
                     setShowPrestigeInfo(!showPrestigeInfo);
                   }}
                   hitSlop={8}
-                  style={styles.infoButton}
+                  style={[styles.infoButton, { backgroundColor: `${theme.gold}18` }]}
                 >
-                  <Text style={styles.infoButtonText}>ⓘ</Text>
+                  <Text style={[styles.infoButtonText, { color: theme.gold }]}>ⓘ</Text>
                 </Pressable>
               </View>
               {showPrestigeInfo && (
-                <Text style={styles.prestigeExplanationText}>
+                <Text style={[styles.prestigeExplanationText, { color: theme.textMuted }]}>
                   Cash out your run to earn Prestige Points (PP). Each PP gives +{fmtPct(5)} permanent profit bonus.
                   Use PP to unlock skill tree nodes and prestige upgrades. Your balance resets but upgrades persist.
                 </Text>
@@ -1435,8 +1435,8 @@ export default function Index() {
             </View>
 
             {/* Prestige Upgrades */}
-            <View style={styles.upgradesSection}>
-              <Text style={styles.upgradesSectionTitle}>PRESTIGE UPGRADES</Text>
+            <View style={[styles.upgradesSection, { borderTopColor: theme.border }]}>
+              <Text style={[styles.upgradesSectionTitle, { color: theme.text }]}>PRESTIGE UPGRADES</Text>
               {PRESTIGE_UPGRADES.map((upgrade) => {
                 const owned = prestigeUpgrades[upgrade.id];
                 const canAfford = prestige >= upgrade.cost && !owned;
@@ -1456,7 +1456,8 @@ export default function Index() {
                     disabled={!canAfford}
                     style={({ pressed }) => [
                       styles.prestigeUpgradeCard,
-                      owned && styles.prestigeUpgradeCardOwned,
+                      { backgroundColor: theme.panel, borderColor: theme.border },
+                      owned && [styles.prestigeUpgradeCardOwned, { backgroundColor: `${upgrade.tint}12` }],
                       !owned && { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}15` },
                       pressed && canAfford && { transform: [{ scale: 0.98 }] },
                     ]}
@@ -1464,14 +1465,14 @@ export default function Index() {
                   >
                     {owned && (
                       <View style={[styles.prestigeUpgradeOwnedBadge, { backgroundColor: upgrade.tint }]}>
-                        <Text style={styles.prestigeUpgradeOwnedIcon}>✓</Text>
+                        <Text style={[styles.prestigeUpgradeOwnedIcon, { color: '#FFFFFF' }]}>✓</Text>
                       </View>
                     )}
                     <View style={styles.prestigeUpgradeCardLeft}>
-                      <Text style={[styles.prestigeUpgradeCardName, owned && { color: upgrade.tint }]}>
+                      <Text style={[styles.prestigeUpgradeCardName, { color: theme.text }, owned && { color: upgrade.tint }]}>
                         {upgrade.name}
                       </Text>
-                      <Text style={styles.prestigeUpgradeCardDesc}>{upgrade.description}</Text>
+                      <Text style={[styles.prestigeUpgradeCardDesc, { color: theme.textMuted }]}>{upgrade.description}</Text>
                     </View>
                     <View style={styles.prestigeUpgradeCardRight}>
                       {owned ? (
@@ -1494,8 +1495,9 @@ export default function Index() {
               onPress={doPrestige}
               style={({ pressed }) => [
                 styles.cashOutBtn,
-                !canPrestige && styles.cashOutBtnDim,
-                prestigeArmed && styles.cashOutBtnArmed,
+                { borderColor: theme.gold, backgroundColor: `${theme.gold}12` },
+                !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
+                prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.gold, borderColor: theme.gold }],
                 canPrestige && !prestigeArmed && { backgroundColor: theme.gold },
                 pressed && canPrestige && { transform: [{ scale: 0.98 }] },
               ]}
@@ -1504,6 +1506,7 @@ export default function Index() {
               <Text
                 style={[
                   styles.cashOutBtnText,
+                  { color: theme.gold },
                   !canPrestige && { color: theme.textMuted },
                   prestigeArmed && { color: "#001018" },
                   canPrestige && !prestigeArmed && { color: "#001018" },
@@ -1517,7 +1520,7 @@ export default function Index() {
                   : `CASH OUT · +${prestigeGainAvailable} PP`}
               </Text>
               {canPrestige && !prestigeArmed && (
-                <Text style={styles.cashOutBtnSub}>
+                <Text style={[styles.cashOutBtnSub, { color: "#001018" }]}>
                   Reset run · permanent +{fmtPct(prestigeGainAvailable * PRESTIGE_BONUS_PER_POINT * 100)} profit
                 </Text>
               )}
@@ -1630,7 +1633,7 @@ export default function Index() {
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        <View style={styles.legacyHeader}>
+        <View style={[styles.legacyHeader, { borderBottomColor: theme.border }]}>
           <View style={styles.legacyHeaderRow}>
             <Pressable
               onPress={() => { sound.play("click"); setShowLegacy(false); }}
@@ -1638,50 +1641,50 @@ export default function Index() {
               testID="legacy-back"
               style={styles.backBtn}
             >
-              <Text style={styles.backBtnText}>← BACK</Text>
+              <Text style={[styles.backBtnText, { color: theme.accent }]}>← BACK</Text>
             </Pressable>
-            <Text style={[styles.legacyTitle, isUltimateOwned && { color: "#FFD700" }]}>
+            <Text style={[styles.legacyTitle, { color: theme.text }, isUltimateOwned && { color: theme.gold }]}>
               {isUltimateOwned ? "THE ULTIMATE INVESTOR" : "LEGACY ENDGAME"}
             </Text>
             <View style={{ width: 60 }} />
           </View>
 
-          <View style={styles.legacyStats}>
+          <View style={[styles.legacyStats, { backgroundColor: theme.panel, borderColor: theme.border }]}>
             <View style={styles.legacyStatCell}>
-              <Text style={styles.legacyStatLabel}>LEGACY POINTS</Text>
+              <Text style={[styles.legacyStatLabel, { color: theme.textMuted }]}>LEGACY POINTS</Text>
               <Text style={[styles.legacyStatValue, { color: theme.gold }]}>{compact(legacyPoints)}</Text>
             </View>
-            <View style={styles.legacyStatDivider} />
+            <View style={[styles.legacyStatDivider, { backgroundColor: theme.border }]} />
             <View style={styles.legacyStatCell}>
-              <Text style={styles.legacyStatLabel}>TOTAL PRESTIGES</Text>
-              <Text style={styles.legacyStatValue}>{compact(totalPrestiges)}</Text>
+              <Text style={[styles.legacyStatLabel, { color: theme.textMuted }]}>TOTAL PRESTIGES</Text>
+              <Text style={[styles.legacyStatValue, { color: theme.text }]}>{compact(totalPrestiges)}</Text>
             </View>
-            <View style={styles.legacyStatDivider} />
+            <View style={[styles.legacyStatDivider, { backgroundColor: theme.border }]} />
             <View style={styles.legacyStatCell}>
-              <Text style={styles.legacyStatLabel}>UPGRADES OWNED</Text>
-              <Text style={styles.legacyStatValue}>
+              <Text style={[styles.legacyStatLabel, { color: theme.textMuted }]}>UPGRADES OWNED</Text>
+              <Text style={[styles.legacyStatValue, { color: theme.text }]}>
                 {Object.values(legacyUpgrades).filter(Boolean).length}/{LEGACY_UPGRADES.length}
               </Text>
             </View>
           </View>
 
           {/* Legacy Explanation */}
-          <View style={styles.legacyExplanationSection}>
+          <View style={[styles.legacyExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.gold}08` }]}>
             <View style={styles.legacyExplanationHeader}>
-              <Text style={styles.legacyExplanationTitle}>WHAT ARE LEGACY POINTS?</Text>
+              <Text style={[styles.legacyExplanationTitle, { color: theme.gold }]}>WHAT ARE LEGACY POINTS?</Text>
               <Pressable
                 onPress={() => {
                   sound.play("click");
                   setShowLegacyInfo(!showLegacyInfo);
                 }}
                 hitSlop={8}
-                style={styles.infoButton}
+                style={[styles.infoButton, { backgroundColor: `${theme.gold}18` }]}
               >
-                <Text style={styles.infoButtonText}>ⓘ</Text>
+                <Text style={[styles.infoButtonText, { color: theme.gold }]}>ⓘ</Text>
               </Pressable>
             </View>
             {showLegacyInfo && (
-              <Text style={styles.legacyExplanationText}>
+              <Text style={[styles.legacyExplanationText, { color: theme.textMuted }]}>
                 Earn 1 Legacy Point per 100 Prestige Points gained after reaching 10,000 total PP.
                 Spend Legacy Points on permanent endgame upgrades that dramatically boost your investment power.
               </Text>
@@ -1689,9 +1692,9 @@ export default function Index() {
           </View>
 
           {isUltimateOwned && (
-            <View style={styles.ultimateBanner}>
-              <Text style={styles.ultimateBannerText}>🏆 GAME COMPLETE 🏆</Text>
-              <Text style={styles.ultimateBannerSub}>You have achieved the Ultimate Investor rank</Text>
+            <View style={[styles.ultimateBanner, { borderColor: theme.gold, backgroundColor: `${theme.gold}12` }]}>
+              <Text style={[styles.ultimateBannerText, { color: theme.gold }]}>🏆 GAME COMPLETE 🏆</Text>
+              <Text style={[styles.ultimateBannerSub, { color: theme.text }]}>You have achieved the Ultimate Investor rank</Text>
               <Pressable
                 onPress={() => {
                   if (completionStats) {
@@ -1700,11 +1703,12 @@ export default function Index() {
                 }}
                 style={({ pressed }) => [
                   styles.viewEndingBtn,
+                  { borderColor: theme.gold, backgroundColor: `${theme.gold}12` },
                   pressed && { transform: [{ scale: 0.97 }] },
                 ]}
                 testID="view-ending-btn"
               >
-                <Text style={styles.viewEndingBtnText}>VIEW ENDING</Text>
+                <Text style={[styles.viewEndingBtnText, { color: theme.gold }]}>VIEW ENDING</Text>
               </Pressable>
             </View>
           )}
@@ -1725,8 +1729,9 @@ export default function Index() {
                 disabled={!canAfford}
                 style={({ pressed }) => [
                   styles.legacyCard,
-                  owned && styles.legacyCardOwned,
-                  upgrade.isFinal && styles.legacyCardFinal,
+                  { backgroundColor: theme.panel, borderColor: theme.border },
+                  owned && [styles.legacyCardOwned, { backgroundColor: `${upgrade.tint}12` }],
+                  upgrade.isFinal && [styles.legacyCardFinal, { borderColor: theme.gold, backgroundColor: `${theme.gold}12` }],
                   !owned && { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}15` },
                   pressed && canAfford && { transform: [{ scale: 0.98 }] },
                 ]}
@@ -1734,15 +1739,15 @@ export default function Index() {
               >
                 {owned && (
                   <View style={[styles.legacyOwnedBadge, { backgroundColor: upgrade.tint }]}>
-                    <Text style={styles.legacyOwnedIcon}>✓</Text>
+                    <Text style={[styles.legacyOwnedIcon, { color: '#FFFFFF' }]}>✓</Text>
                   </View>
                 )}
                 <View style={styles.legacyCardLeft}>
-                  <Text style={[styles.legacyCardName, owned && { color: upgrade.tint }]}>
+                  <Text style={[styles.legacyCardName, { color: theme.text }, owned && { color: upgrade.tint }]}>
                     {upgrade.name}
                   </Text>
-                  <Text style={styles.legacyCardDesc}>{upgrade.description}</Text>
-                  <Text style={styles.legacyCardEffect}>{upgrade.effect}</Text>
+                  <Text style={[styles.legacyCardDesc, { color: theme.textMuted }]}>{upgrade.description}</Text>
+                  <Text style={[styles.legacyCardEffect, { color: upgrade.tint }]}>{upgrade.effect}</Text>
                 </View>
                 <View style={styles.legacyCardRight}>
                   {owned ? (
@@ -1935,26 +1940,26 @@ export default function Index() {
             testID="secret-tap-target"
             accessibilityLabel="Portfolio Balance"
           >
-            <Text style={styles.balanceLabel}>PORTFOLIO BALANCE</Text>
+            <Text style={[styles.balanceLabel, { color: theme.textMuted }]}>PORTFOLIO BALANCE</Text>
           </Pressable>
           <View style={styles.headerRightRow}>
             <Pressable
               onPress={toggleTheme}
               hitSlop={12}
-              style={styles.iconChip}
+              style={[styles.iconChip, { borderColor: theme.border, backgroundColor: theme.bgSoft }]}
               testID="theme-toggle"
             >
-              <Text style={styles.iconChipText}>
+              <Text style={[styles.iconChipText, { color: theme.text }]}>
                 {settings.theme === 'light' ? '☀ LIGHT' : '☾ DARK'}
               </Text>
             </Pressable>
             <Pressable
               onPress={toggleMusic}
               hitSlop={12}
-              style={[styles.iconChip, { marginLeft: 6 }]}
+              style={[styles.iconChip, { borderColor: theme.border, backgroundColor: theme.bgSoft, marginLeft: 6 }]}
               testID="music-toggle"
             >
-              <Text style={styles.iconChipText}>
+              <Text style={[styles.iconChipText, { color: theme.text }]}>
                 {musicEnabled ? "MUSIC ON" : "MUSIC OFF"}
               </Text>
             </Pressable>
@@ -1977,9 +1982,9 @@ export default function Index() {
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
           />
-          <Text style={styles.balance} testID="balance-value">{money(displayBalance)}</Text>
+          <Text style={[styles.balance, { color: theme.text }]} testID="balance-value">{money(displayBalance)}</Text>
           <Animated.Text
-            style={[styles.floatingProfit, floatStyle]}
+            style={[styles.floatingProfit, floatStyle, { color: theme.gain }]}
             pointerEvents="none"
             testID="floating-profit"
           >
@@ -1988,8 +1993,8 @@ export default function Index() {
         </Animated.View>
 
         <View style={styles.pillRow}>
-          <View style={styles.slotPill} testID="slot-pill">
-            <Text style={styles.slotPillText}>Slots {actives.length}/{slots}</Text>
+          <View style={[styles.slotPill, { borderColor: theme.accent, backgroundColor: `${theme.accent}08` }]} testID="slot-pill">
+            <Text style={[styles.slotPillText, { color: theme.accent }]}>Slots {actives.length}/{slots}</Text>
           </View>
           {prestige > 0 && (
             <View style={[styles.pill, { borderColor: theme.gold, backgroundColor: `${theme.gold}22` }]} testID="prestige-pill">
@@ -1999,13 +2004,13 @@ export default function Index() {
             </View>
           )}
           {actives.length === 0 && (
-            <View style={styles.availPill}>
-              <Text style={styles.availText}>Available to invest</Text>
+            <View style={[styles.availPill, { borderColor: theme.accent, backgroundColor: `${theme.accent}06` }]}>
+              <Text style={[styles.availText, { color: theme.accent }]}>Available to invest</Text>
             </View>
           )}
           {computePassiveRate(levels.passive, treeEffects, legacyUpgrades) > 0 && (
-            <View style={styles.passivePill} testID="passive-pill">
-              <Text style={styles.passiveText}>
+            <View style={[styles.passivePill, { borderColor: theme.gain, backgroundColor: `${theme.gain}08` }]} testID="passive-pill">
+              <Text style={[styles.passiveText, { color: theme.gain }]}>
                 +${computePassiveRate(levels.passive, treeEffects, legacyUpgrades).toFixed(2)}/s
               </Text>
             </View>
@@ -2020,12 +2025,12 @@ export default function Index() {
         </View>
 
         {offlineGain > 0.01 && (
-          <View style={styles.banner} testID="offline-banner">
-            <Text style={styles.bannerText}>
+          <View style={[styles.banner, { borderColor: theme.gain, backgroundColor: `${theme.gain}08` }]} testID="offline-banner">
+            <Text style={[styles.bannerText, { color: theme.gain }]}>
               Welcome back — earned {money(offlineGain)} while away
             </Text>
             <Pressable onPress={() => setOfflineGain(0)} hitSlop={12}>
-              <Text style={styles.bannerDismiss}>OK</Text>
+              <Text style={[styles.bannerDismiss, { color: theme.gain }]}>OK</Text>
             </Pressable>
           </View>
         )}
@@ -2068,7 +2073,7 @@ export default function Index() {
             <Text style={[styles.nextGoalTitle, { color: nextGoal.color }]}>NEXT GOAL</Text>
             <Text style={[styles.nextGoalProgress, { color: nextGoal.color }]}>{nextGoal.progress}</Text>
           </View>
-          <Text style={styles.nextGoalDescription}>{nextGoal.description}</Text>
+          <Text style={[styles.nextGoalDescription, { color: theme.textMuted }]}>{nextGoal.description}</Text>
         </View>
       </LinearGradient>
 
@@ -2079,7 +2084,7 @@ export default function Index() {
       >
         {actives.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>ACTIVE INVESTMENTS</Text>
+            <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>ACTIVE INVESTMENTS</Text>
             {actives.map((a) => {
               const pkg = packages.find((p) => p.id === a.pkgId);
               if (!pkg) return null;
@@ -2089,7 +2094,7 @@ export default function Index() {
               const effPct = computeProfitPct(pkg, levels.yield, prestige, treeEffects, actives.length, null, prestigeUpgrades.foundation, legacyUpgrades);
               const projected = a.cost * effPct;
               return (
-                <View key={a.runId} style={styles.activeCard} testID={`active-${a.runId}`}>
+                <View key={a.runId} style={[styles.activeCard, { backgroundColor: theme.panel, borderColor: theme.border }]} testID={`active-${a.runId}`}>
                   <View style={styles.activeHeaderRow}>
                     <View style={[styles.activeIcon, { backgroundColor: `${pkg.tint}22`, borderColor: pkg.tint }]}>
                       <Text style={[styles.activeIconText, { color: pkg.tint }]}>
@@ -2097,12 +2102,12 @@ export default function Index() {
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.activeName}>{pkg.name}</Text>
-                      <Text style={styles.activeMeta}>{money(a.cost)} → +{money(projected)}</Text>
+                      <Text style={[styles.activeName, { color: theme.text }]}>{pkg.name}</Text>
+                      <Text style={[styles.activeMeta, { color: theme.gain }]}>{money(a.cost)} → +{money(projected)}</Text>
                     </View>
-                    <Text style={styles.activeCountdown}>{fmtSecs(remaining)}</Text>
+                    <Text style={[styles.activeCountdown, { color: theme.accent }]}>{fmtSecs(remaining)}</Text>
                   </View>
-                  <View style={styles.activeBarTrack}>
+                  <View style={[styles.activeBarTrack, { backgroundColor: theme.bgSoft }]}>
                     <LinearGradient
                       colors={[theme.accent, theme.accentDeep]}
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
@@ -2111,11 +2116,11 @@ export default function Index() {
                   </View>
                   <Pressable
                     onPress={() => accelerate(a.runId)}
-                    style={({ pressed }) => [styles.accelerateBtn, pressed && { transform: [{ scale: 0.97 }] }]}
+                    style={({ pressed }) => [styles.accelerateBtn, { borderColor: theme.accent }, pressed && { transform: [{ scale: 0.97 }] }]}
                     testID={`accelerate-${a.runId}`}
                   >
-                    <Text style={styles.accelerateText}>ACCELERATE</Text>
-                    <Text style={styles.accelerateHint}>
+                    <Text style={[styles.accelerateText, { color: theme.accent }]}>ACCELERATE</Text>
+                    <Text style={[styles.accelerateHint, { color: theme.textMuted }]}>
                       {treeEffects.autoAccelStrength > 0 ? "Auto-tap active · manual for burst" : "Tap to shave time"}
                     </Text>
                   </Pressable>
@@ -2125,7 +2130,7 @@ export default function Index() {
           </>
         )}
 
-        <Text style={[styles.sectionTitle, actives.length > 0 && { marginTop: 20 }]}>
+        <Text style={[styles.sectionTitle, actives.length > 0 && { marginTop: 20 }, { color: theme.textMuted }]}>
           INVESTMENT PACKAGES
         </Text>
 
@@ -2149,7 +2154,8 @@ export default function Index() {
                 }}
                 style={({ pressed }) => [
                   styles.card,
-                  isSelected && styles.cardSelected,
+                  { backgroundColor: theme.panel, borderColor: theme.border },
+                  isSelected && [styles.cardSelected, { borderColor: theme.accent, shadowColor: theme.accent }],
                   !affordable && styles.cardLocked,
                   pressed && !disabled && { transform: [{ scale: 0.99 }] },
                 ]}
@@ -2169,27 +2175,27 @@ export default function Index() {
                   </View>
                   <View style={styles.cardMain}>
                     <View style={styles.cardTitleRow}>
-                      <Text style={styles.cardTitle}>{pkg.name}</Text>
+                      <Text style={[styles.cardTitle, { color: theme.text }]}>{pkg.name}</Text>
                       {!affordable ? (
-                        <View style={styles.badgeLoss}><Text style={styles.badgeLossText}>LOCKED</Text></View>
+                        <View style={[styles.badgeLoss, { borderColor: theme.loss, backgroundColor: `${theme.loss}08` }]}><Text style={[styles.badgeLossText, { color: theme.loss }]}>LOCKED</Text></View>
                       ) : (
-                        <View style={styles.badgeTag}><Text style={styles.badgeTagText}>{pkg.tag}</Text></View>
+                        <View style={[styles.badgeTag, { borderColor: theme.accent, backgroundColor: `${theme.accent}08` }]}><Text style={[styles.badgeTagText, { color: theme.accent }]}>{pkg.tag}</Text></View>
                       )}
                     </View>
                     <View style={styles.cardMetaRow}>
                       <View style={styles.metaCell}>
-                        <Text style={styles.metaLabel}>Cost</Text>
-                        <Text style={styles.metaValue}>{money(pkg.cost)}</Text>
+                        <Text style={[styles.metaLabel, { color: theme.textMuted }]}>Cost</Text>
+                        <Text style={[styles.metaValue, { color: theme.text }]}>{money(pkg.cost)}</Text>
                       </View>
                       <View style={styles.metaCell}>
-                        <Text style={styles.metaLabel}>Duration</Text>
-                        <Text style={styles.metaValue}>{fmtDuration(effDur)}</Text>
+                        <Text style={[styles.metaLabel, { color: theme.textMuted }]}>Duration</Text>
+                        <Text style={[styles.metaValue, { color: theme.text }]}>{fmtDuration(effDur)}</Text>
                       </View>
                     </View>
-                    <View style={styles.cardProfitSection}>
+                    <View style={[styles.cardProfitSection, { borderTopColor: theme.border }]}>
                       <View style={styles.cardProfitRow}>
-                        <Text style={styles.cardProfitLabel}>Profit</Text>
-                        <Text style={styles.cardProfitValue}>+{money(projectedProfit)}</Text>
+                        <Text style={[styles.cardProfitLabel, { color: theme.textMuted }]}>Profit</Text>
+                        <Text style={[styles.cardProfitValue, { color: theme.gain }]}>+{money(projectedProfit)}</Text>
                       </View>
                     </View>
                   </View>
@@ -2199,7 +2205,7 @@ export default function Index() {
           );
         })}
 
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>UPGRADES</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 24 }, { color: theme.textMuted }]}>UPGRADES</Text>
 
         {UPGRADES.map((u) => {
           const level = levels[u.id];
@@ -2212,6 +2218,7 @@ export default function Index() {
               onPress={() => buyUpgrade(u)}
               style={({ pressed }) => [
                 styles.upgradeCard,
+                { backgroundColor: theme.panel, borderColor: theme.border },
                 !affordable && !maxed && styles.upgradeCardDim,
                 pressed && affordable && { transform: [{ scale: 0.99 }] },
                 maxed && { borderColor: theme.accent, backgroundColor: theme.panelElevated },
@@ -2223,17 +2230,17 @@ export default function Index() {
                   <Text style={[styles.upgradeBadgeLevel, { color: u.tint }]}>Lv {level}</Text>
                 </View>
                 <View style={styles.upgradeMain}>
-                  <Text style={styles.upgradeName}>{u.name}</Text>
-                  <Text style={styles.upgradeDesc}>{u.description}</Text>
+                  <Text style={[styles.upgradeName, { color: theme.text }]}>{u.name}</Text>
+                  <Text style={[styles.upgradeDesc, { color: theme.textMuted }]}>{u.description}</Text>
                   <Text style={[styles.upgradeEffect, { color: u.tint }]}>Current: {u.effect(level)}</Text>
                 </View>
                 <View style={styles.upgradeCta}>
                   {maxed ? (
-                    <View style={styles.maxedPill}><Text style={styles.maxedText}>MAX</Text></View>
+                    <View style={[styles.maxedPill, { borderColor: theme.accent, backgroundColor: `${theme.accent}08` }]}><Text style={[styles.maxedText, { color: theme.accent }]}>MAX</Text></View>
                   ) : (
                     <>
-                      <Text style={[styles.upgradeCost, !affordable && { color: theme.textMuted }]} testID={`upgrade-cost-${u.id}`}>{money(cost)}</Text>
-                      <Text style={[styles.upgradeBuy, !affordable && { color: theme.textMuted }]}>BUY</Text>
+                      <Text style={[styles.upgradeCost, { color: theme.text }, !affordable && { color: theme.textMuted }]} testID={`upgrade-cost-${u.id}`}>{money(cost)}</Text>
+                      <Text style={[styles.upgradeBuy, { color: theme.accent }, !affordable && { color: theme.textMuted }]}>BUY</Text>
                     </>
                   )}
                 </View>
@@ -2243,10 +2250,10 @@ export default function Index() {
         })}
 
         {/* Prestige summary */}
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>PRESTIGE</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 24 }, { color: theme.textMuted }]}>PRESTIGE</Text>
         <Pressable
           onPress={() => { sound.play("click"); setShowTree(true); }}
-          style={({ pressed }) => [styles.prestigeSummary, pressed && { transform: [{ scale: 0.99 }] }]}
+          style={({ pressed }) => [styles.prestigeSummary, { backgroundColor: theme.panel, borderColor: theme.gold }, pressed && { transform: [{ scale: 0.99 }] }]}
           testID="prestige-summary"
         >
           <LinearGradient
@@ -2259,8 +2266,8 @@ export default function Index() {
               <Text style={[styles.rankBadgeIcon, { color: rankMeta.tint }]}>{rankMeta.icon}</Text>
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.prestigeSummaryTitle}>{rankMeta.name}</Text>
-              <Text style={styles.prestigeSummarySub}>
+              <Text style={[styles.prestigeSummaryTitle, { color: theme.text }]}>{rankMeta.name}</Text>
+              <Text style={[styles.prestigeSummarySub, { color: theme.textMuted }]}>
                 {prestige} PP · +{fmtPct(currentBonusPct)} profit · {totalPrestiges} cash-outs
               </Text>
               {canPrestige && (
@@ -2269,7 +2276,7 @@ export default function Index() {
                 </Text>
               )}
             </View>
-            <Text style={styles.prestigeSummaryChevron}>▶</Text>
+            <Text style={[styles.prestigeSummaryChevron, { color: theme.gold }]}>▶</Text>
           </View>
         </Pressable>
 
@@ -2277,11 +2284,11 @@ export default function Index() {
         {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
           <Pressable
             onPress={() => { sound.play("click"); setShowLegacy(true); }}
-            style={({ pressed }) => [styles.prestigeSummary, { marginTop: 12, borderColor: "rgba(255,215,0,0.3)" }, pressed && { transform: [{ scale: 0.99 }] }]}
+            style={({ pressed }) => [styles.prestigeSummary, { marginTop: 12, backgroundColor: theme.panel, borderColor: `${theme.gold}55` }, pressed && { transform: [{ scale: 0.99 }] }]}
             testID="legacy-summary"
           >
             <LinearGradient
-              colors={["rgba(255,215,0,0.12)", "rgba(255,107,53,0.08)"]}
+              colors={[`${theme.gold}22`, `${theme.gold}12`]}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
@@ -2291,7 +2298,7 @@ export default function Index() {
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={[styles.prestigeSummaryTitle, { color: theme.gold }]}>LEGACY</Text>
-                <Text style={styles.prestigeSummarySub}>
+                <Text style={[styles.prestigeSummarySub, { color: theme.textMuted }]}>
                   {legacyPoints} LP · {Object.values(legacyUpgrades).filter(Boolean).length}/7 upgrades
                 </Text>
               </View>
@@ -2303,7 +2310,7 @@ export default function Index() {
         <View style={{ height: 32 }} />
       </ScrollView>
 
-      <View style={styles.ctaBar}>
+      <View style={[styles.ctaBar, { backgroundColor: theme.bgSoft, borderTopColor: theme.border }]}>
         <Animated.View style={ctaShakeStyle}>
           <Pressable
             onPress={invest}
@@ -2316,10 +2323,10 @@ export default function Index() {
             testID="invest-button"
           >
             <View style={styles.investContent}>
-              <Text style={[styles.investLabel, !canInvest && { color: theme.loss }]} testID="invest-label">
+              <Text style={[styles.investLabel, { color: canInvest ? '#FFFFFF' : theme.loss }, !canInvest && { color: theme.loss }]} testID="invest-label">
                 {ctaLabel}
               </Text>
-              <Text style={[styles.investSub, !canInvest && { color: theme.textMuted, opacity: 1 }]}>
+              <Text style={[styles.investSub, { color: canInvest ? '#FFFFFF' : theme.textMuted }, !canInvest && { color: theme.textMuted, opacity: 1 }]}>
                 {ctaSub}
               </Text>
             </View>
@@ -2330,22 +2337,22 @@ export default function Index() {
       {/* Developer menu overlay (hidden gesture: 7 taps on "PORTFOLIO BALANCE" within 3s) */}
       {showDebug && (
         <View style={styles.debugOverlay} testID="debug-overlay">
-          <View style={styles.debugCard}>
-            <View style={styles.debugHeader}>
-              <Text style={styles.debugTitle}>DEVELOPER MENU</Text>
+          <View style={[styles.debugCard, { backgroundColor: theme.panel, borderColor: theme.accent }]}>
+            <View style={[styles.debugHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.debugTitle, { color: theme.accent }]}>DEVELOPER MENU</Text>
               <Pressable
                 onPress={closeDebug}
                 hitSlop={12}
                 testID="debug-close"
-                style={styles.debugCloseBtn}
+                style={[styles.debugCloseBtn, { backgroundColor: theme.bgSoft, borderColor: theme.border }]}
               >
-                <Text style={styles.debugCloseText}>✕</Text>
+                <Text style={[styles.debugCloseText, { color: theme.textMuted }]}>✕</Text>
               </Pressable>
             </View>
 
             {!debugAuthed ? (
               <View>
-                <Text style={styles.debugLabel}>Password required</Text>
+                <Text style={[styles.debugLabel, { color: theme.textMuted }]}>Password required</Text>
                 <TextInput
                   value={debugPassword}
                   onChangeText={(v) => { setDebugPassword(v); setDebugPwError(false); }}
@@ -2355,11 +2362,11 @@ export default function Index() {
                   secureTextEntry
                   keyboardType="numeric"
                   autoFocus
-                  style={[styles.debugInput, debugPwError && styles.debugInputError]}
+                  style={[styles.debugInput, { backgroundColor: theme.bgSoft, color: theme.text, borderColor: theme.border }, debugPwError && [styles.debugInputError, { borderColor: theme.loss }]]}
                   testID="debug-password-input"
                 />
                 {debugPwError && (
-                  <Text style={styles.debugErrorText} testID="debug-password-error">
+                  <Text style={[styles.debugErrorText, { color: theme.loss }]} testID="debug-password-error">
                     Incorrect password
                   </Text>
                 )}
@@ -2367,18 +2374,18 @@ export default function Index() {
                   onPress={submitDebugPassword}
                   style={({ pressed }) => [
                     styles.debugActionBtn,
-                    styles.debugActionPrimary,
+                    { backgroundColor: theme.accent },
                     pressed && { opacity: 0.85 },
                   ]}
                   testID="debug-password-submit"
                 >
-                  <Text style={styles.debugActionText}>UNLOCK</Text>
+                  <Text style={[styles.debugActionText, { color: '#001018' }]}>UNLOCK</Text>
                 </Pressable>
               </View>
             ) : (
               <View>
                 <View style={styles.debugSection}>
-                  <Text style={styles.debugLabel}>Add money</Text>
+                  <Text style={[styles.debugLabel, { color: theme.textMuted }]}>Add money</Text>
                   <View style={styles.debugRow}>
                     <TextInput
                       value={debugMoneyInput}
@@ -2386,26 +2393,26 @@ export default function Index() {
                       placeholder="Amount"
                       placeholderTextColor={theme.textMuted}
                       keyboardType="numeric"
-                      style={[styles.debugInput, { flex: 1, marginBottom: 0 }]}
+                      style={[styles.debugInput, { backgroundColor: theme.bgSoft, color: theme.text, borderColor: theme.border, flex: 1, marginBottom: 0 }]}
                       testID="debug-money-input"
                     />
                     <Pressable
                       onPress={devAddMoney}
                       style={({ pressed }) => [
                         styles.debugActionBtn,
-                        styles.debugActionSecondary,
+                        { backgroundColor: theme.accent },
                         { marginLeft: 8, marginTop: 0, flex: 0 },
                         pressed && { opacity: 0.85 },
                       ]}
                       testID="debug-add-money"
                     >
-                      <Text style={styles.debugActionText}>ADD</Text>
+                      <Text style={[styles.debugActionText, { color: '#001018' }]}>ADD</Text>
                     </Pressable>
                   </View>
                 </View>
 
                 <View style={styles.debugSection}>
-                  <Text style={styles.debugLabel}>Add prestige points</Text>
+                  <Text style={[styles.debugLabel, { color: theme.textMuted }]}>Add prestige points</Text>
                   <View style={styles.debugRow}>
                     <TextInput
                       value={debugPPInput}
@@ -2413,20 +2420,20 @@ export default function Index() {
                       placeholder="Amount"
                       placeholderTextColor={theme.textMuted}
                       keyboardType="numeric"
-                      style={[styles.debugInput, { flex: 1, marginBottom: 0 }]}
+                      style={[styles.debugInput, { backgroundColor: theme.bgSoft, color: theme.text, borderColor: theme.border, flex: 1, marginBottom: 0 }]}
                       testID="debug-pp-input"
                     />
                     <Pressable
                       onPress={devAddPP}
                       style={({ pressed }) => [
                         styles.debugActionBtn,
-                        styles.debugActionSecondary,
+                        { backgroundColor: theme.accent },
                         { marginLeft: 8, marginTop: 0, flex: 0 },
                         pressed && { opacity: 0.85 },
                       ]}
                       testID="debug-add-pp"
                     >
-                      <Text style={styles.debugActionText}>ADD</Text>
+                      <Text style={[styles.debugActionText, { color: '#001018' }]}>ADD</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -2435,7 +2442,7 @@ export default function Index() {
                   onPress={closeDebug}
                   style={({ pressed }) => [
                     styles.debugActionBtn,
-                    styles.debugActionClose,
+                    { backgroundColor: theme.panel, borderColor: theme.border },
                     pressed && { opacity: 0.85 },
                   ]}
                   testID="debug-close-btn"
@@ -2471,7 +2478,7 @@ function TreeColumn({
       <View style={[styles.treeColHeader, { borderColor: tint, backgroundColor: `${tint}18` }]}>
         <Text style={[styles.treeColIcon, { color: tint }]}>{icon}</Text>
         <Text style={[styles.treeColTitle, { color: tint }]}>{title}</Text>
-        <Text style={styles.treeColSub}>{subtitle}</Text>
+        <Text style={[styles.treeColSub, { color: theme.textMuted }]}>{subtitle}</Text>
       </View>
 
       {nodes.map((n, i) => {
@@ -2501,7 +2508,7 @@ function TreeColumn({
               disabled={locked || maxed || !affordable}
               style={({ pressed }) => [
                 styles.skillNode,
-                { borderColor: level > 0 ? tint : theme.border },
+                { backgroundColor: theme.panel, borderColor: level > 0 ? tint : theme.border },
                 level > 0 && { backgroundColor: `${tint}15` },
                 maxed && { borderColor: tint, backgroundColor: `${tint}28` },
                 locked && styles.skillNodeLocked,
@@ -2513,15 +2520,15 @@ function TreeColumn({
               <Text style={[styles.skillName, { color: level > 0 ? tint : theme.text }]}>
                 {n.short}
               </Text>
-              <Text style={styles.skillLvl}>
+              <Text style={[styles.skillLvl, { color: theme.textMuted }]}>
                 {maxed ? "MAX" : `Lv ${level}/${n.maxLevel}`}
               </Text>
               <Text style={[styles.skillEffect, { color: level > 0 ? tint : theme.textMuted }]} numberOfLines={2}>
                 {n.effect(level)}
               </Text>
               {locked ? (
-                <View style={styles.skillLockBox}>
-                  <Text style={styles.skillLockText}>
+                <View style={[styles.skillLockBox, { borderColor: theme.loss, backgroundColor: `${theme.loss}08` }]}>
+                  <Text style={[styles.skillLockText, { color: theme.loss }]}>
                     {!rankOk ? `${RANK_META[n.requiredRank].short} rank` : missing[0]}
                   </Text>
                 </View>
@@ -2548,46 +2555,46 @@ function TreeColumn({
 // Styles
 // ============================================================
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: C.bg },
-  flashOverlay: { backgroundColor: C.accent, zIndex: 1 },
+  safe: { flex: 1 },
+  flashOverlay: { zIndex: 1 },
   loaderWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
-  loaderText: { color: C.textMuted, fontSize: 14, fontWeight: "700" },
+  loaderText: { fontSize: 14, fontWeight: "700" },
 
   header: {
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: C.border,
+    borderBottomWidth: 1,
   },
   headerTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   headerRightRow: { flexDirection: "row", alignItems: "center" },
-  balanceLabel: { color: C.textMuted, fontSize: 12, fontWeight: "600", letterSpacing: 1 },
+  balanceLabel: { fontSize: 12, fontWeight: "600", letterSpacing: 1 },
   iconChip: {
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
-    borderWidth: 1, borderColor: C.border, backgroundColor: C.bgSoft,
+    borderWidth: 1,
   },
-  iconChipText: { color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
+  iconChipText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
 
   balanceRow: { position: "relative", marginTop: 8 },
-  balance: { color: C.text, fontSize: 36, fontWeight: "700", letterSpacing: -0.5, flexShrink: 1 },
+  balance: { fontSize: 36, fontWeight: "700", letterSpacing: -0.5, flexShrink: 1 },
   floatingProfit: {
     position: "absolute", right: 0, top: 0,
-    color: C.gain, fontSize: 16, fontWeight: "700",
+    fontSize: 16, fontWeight: "700",
   },
   pillRow: { flexDirection: "row", alignItems: "center", marginTop: 12, gap: 8, flexWrap: "wrap" },
   slotPill: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
-    backgroundColor: "rgba(0,107,94,0.08)", borderWidth: 1, borderColor: "rgba(0,107,94,0.2)",
+    borderWidth: 1,
   },
-  slotPillText: { color: C.accent, fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
+  slotPillText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
   availPill: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
-    backgroundColor: "rgba(0,107,94,0.06)", borderWidth: 1, borderColor: "rgba(0,107,94,0.15)",
+    borderWidth: 1,
   },
-  availText: { color: C.accent, fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
+  availText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
   passivePill: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
-    backgroundColor: "rgba(0,166,126,0.08)", borderWidth: 1, borderColor: "rgba(0,166,126,0.2)",
+    borderWidth: 1,
   },
-  passiveText: { color: C.gain, fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
+  passiveText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
   pill: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
     borderWidth: 1,
@@ -2597,20 +2604,20 @@ const styles = StyleSheet.create({
   banner: {
     marginTop: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8,
-    backgroundColor: "rgba(0,166,126,0.08)", borderWidth: 1, borderColor: "rgba(0,166,126,0.2)",
+    borderWidth: 1,
   },
-  bannerText: { color: C.gain, fontSize: 13, fontWeight: "600", flex: 1 },
-  bannerDismiss: { color: C.gain, fontSize: 13, fontWeight: "700", letterSpacing: 0.5, marginLeft: 12 },
+  bannerText: { fontSize: 13, fontWeight: "600", flex: 1 },
+  bannerDismiss: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5, marginLeft: 12 },
 
   list: { flex: 1 },
   listContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 8 },
-  sectionTitle: { color: C.textMuted, fontSize: 13, fontWeight: "600", letterSpacing: 0.5, marginBottom: 12, marginLeft: 2 },
+  sectionTitle: { fontSize: 13, fontWeight: "600", letterSpacing: 0.5, marginBottom: 12, marginLeft: 2 },
 
   activeCard: {
-    backgroundColor: C.panel, borderRadius: 12,
-    borderWidth: 1, borderColor: C.border,
+    borderRadius: 12,
+    borderWidth: 1,
     padding: 12, marginBottom: 10, overflow: "hidden",
-    shadowColor: "#000000", shadowOpacity: 0.08, shadowRadius: 10,
+    shadowOpacity: 0.08, shadowRadius: 10,
     shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
   activeHeaderRow: { flexDirection: "row", alignItems: "flex-start" },
@@ -2620,36 +2627,35 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   activeIconText: { fontSize: 11, fontWeight: "700" },
-  activeName: { color: C.text, fontSize: 14, fontWeight: "600", flexShrink: 1 },
-  activeMeta: { color: C.gain, fontSize: 11, fontWeight: "600", marginTop: 2 },
-  activeCountdown: { color: C.accent, fontSize: 14, fontWeight: "700", letterSpacing: 0.2, flexShrink: 0, marginLeft: 8 },
+  activeName: { fontSize: 14, fontWeight: "600", flexShrink: 1 },
+  activeMeta: { fontSize: 11, fontWeight: "600", marginTop: 2 },
+  activeCountdown: { fontSize: 14, fontWeight: "700", letterSpacing: 0.2, flexShrink: 0, marginLeft: 8 },
   activeBarTrack: {
-    height: 6, borderRadius: 3, backgroundColor: C.bgSoft, marginTop: 10,
+    height: 6, borderRadius: 3, marginTop: 10,
     overflow: "hidden", borderWidth: 0,
   },
   activeBarFill: { height: "100%", borderRadius: 3 },
   accelerateBtn: {
     marginTop: 10, height: 40, borderRadius: 8,
-    borderWidth: 1, borderColor: C.accent, overflow: "hidden",
+    borderWidth: 1, overflow: "hidden",
     alignItems: "center", justifyContent: "center",
   },
-  accelerateText: { color: C.accent, fontSize: 13, fontWeight: "600", letterSpacing: 0.5 },
-  accelerateHint: { color: C.textMuted, fontSize: 10, fontWeight: "600", marginTop: 1 },
+  accelerateText: { fontSize: 13, fontWeight: "600", letterSpacing: 0.5 },
+  accelerateHint: { fontSize: 10, fontWeight: "600", marginTop: 1 },
 
   card: {
-    backgroundColor: C.panel, borderRadius: 12,
-    borderWidth: 1, borderColor: C.border,
+    borderRadius: 12,
+    borderWidth: 1,
     padding: 14, marginBottom: 10, position: "relative", overflow: "hidden",
-    shadowColor: "#000000", shadowOpacity: 0.06, shadowRadius: 8,
+    shadowOpacity: 0.06, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   cardSelected: {
-    borderColor: C.accent, borderWidth: 2,
-    backgroundColor: C.panel,
-    shadowColor: C.accent, shadowOpacity: 0.2, shadowRadius: 12,
+    borderWidth: 2,
+    shadowOpacity: 0.2, shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 }, elevation: 4,
   },
-  cardLocked: { opacity: 0.6, borderColor: "rgba(220,38,38,0.3)" },
+  cardLocked: { opacity: 0.6 },
   cardRow: { flexDirection: "row", alignItems: "flex-start" },
   cardIcon: {
     width: 52, height: 52, borderRadius: 10, borderWidth: 1,
@@ -2659,27 +2665,26 @@ const styles = StyleSheet.create({
   cardIconText: { fontSize: 12, fontWeight: "700", letterSpacing: 0.3 },
   cardMain: { flex: 1, minWidth: 0 },
   cardTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
-  cardTitle: { color: C.text, fontSize: 15, fontWeight: "600", flexShrink: 1, marginRight: 6 },
+  cardTitle: { fontSize: 15, fontWeight: "600", flexShrink: 1, marginRight: 6 },
   badgeTag: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
-    backgroundColor: "rgba(0,107,94,0.08)", borderWidth: 1, borderColor: "rgba(0,107,94,0.2)",
+    borderWidth: 1,
   },
-  badgeTagText: { color: C.accent, fontSize: 10, fontWeight: "600", letterSpacing: 0.3 },
+  badgeTagText: { fontSize: 10, fontWeight: "600", letterSpacing: 0.3 },
   badgeLoss: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
-    backgroundColor: "rgba(220,38,38,0.08)", borderWidth: 1, borderColor: "rgba(220,38,38,0.2)",
+    borderWidth: 1,
   },
-  badgeLossText: { color: C.loss, fontSize: 10, fontWeight: "600", letterSpacing: 0.3 },
+  badgeLossText: { fontSize: 10, fontWeight: "600", letterSpacing: 0.3 },
   cardMetaRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 4 },
   metaCell: { flex: 1, minWidth: 80, marginRight: 12, marginBottom: 4 },
-  metaLabel: { color: C.textMuted, fontSize: 10, fontWeight: "600", letterSpacing: 0.3, marginBottom: 2, textTransform: "uppercase" },
-  metaValue: { color: C.text, fontSize: 13, fontWeight: "600" },
-  metaGain: { color: C.gain },
+  metaLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.3, marginBottom: 2, textTransform: "uppercase" },
+  metaValue: { fontSize: 13, fontWeight: "600" },
+  metaGain: {},
   cardProfitSection: {
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: C.border,
   },
   cardProfitRow: {
     flexDirection: "row",
@@ -2687,23 +2692,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cardProfitLabel: {
-    color: C.textMuted,
     fontSize: 10,
     fontWeight: "600",
     letterSpacing: 0.3,
     textTransform: "uppercase",
   },
   cardProfitValue: {
-    color: C.gain,
     fontSize: 14,
     fontWeight: "700",
   },
 
   upgradeCard: {
-    backgroundColor: C.panel, borderRadius: 12,
-    borderWidth: 1, borderColor: C.border,
+    borderRadius: 12,
+    borderWidth: 1,
     padding: 14, marginBottom: 10,
-    shadowColor: "#000000", shadowOpacity: 0.06, shadowRadius: 8,
+    shadowOpacity: 0.06, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   upgradeCardDim: { opacity: 0.6 },
@@ -2714,64 +2717,64 @@ const styles = StyleSheet.create({
   },
   upgradeBadgeLevel: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3 },
   upgradeMain: { flex: 1, marginRight: 8 },
-  upgradeName: { color: C.text, fontSize: 15, fontWeight: "600" },
-  upgradeDesc: { color: C.textMuted, fontSize: 12, fontWeight: "500", marginTop: 2 },
+  upgradeName: { fontSize: 15, fontWeight: "600" },
+  upgradeDesc: { fontSize: 12, fontWeight: "500", marginTop: 2 },
   upgradeEffect: { fontSize: 11, fontWeight: "600", marginTop: 4 },
   upgradeCta: { alignItems: "flex-end" },
-  upgradeCost: { color: C.text, fontSize: 14, fontWeight: "700" },
-  upgradeBuy: { color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5, marginTop: 4 },
+  upgradeCost: { fontSize: 14, fontWeight: "700" },
+  upgradeBuy: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5, marginTop: 4 },
   maxedPill: {
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
-    backgroundColor: "rgba(0,107,94,0.08)", borderWidth: 1, borderColor: "rgba(0,107,94,0.2)",
+    borderWidth: 1,
   },
-  maxedText: { color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.3 },
+  maxedText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.3 },
 
   prestigeSummary: {
-    borderRadius: 12, borderWidth: 1, borderColor: C.gold,
-    padding: 14, overflow: "hidden", backgroundColor: C.panel,
-    shadowColor: "#000000", shadowOpacity: 0.06, shadowRadius: 8,
+    borderRadius: 12, borderWidth: 1,
+    padding: 14, overflow: "hidden",
+    shadowOpacity: 0.06, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   prestigeSummaryRow: { flexDirection: "row", alignItems: "center" },
-  prestigeSummaryTitle: { color: C.text, fontSize: 16, fontWeight: "600" },
-  prestigeSummarySub: { color: C.textMuted, fontSize: 12, fontWeight: "500", marginTop: 2 },
-  prestigeSummaryChevron: { color: C.gold, fontSize: 16, fontWeight: "600", marginLeft: 8 },
+  prestigeSummaryTitle: { fontSize: 16, fontWeight: "600" },
+  prestigeSummarySub: { fontSize: 12, fontWeight: "500", marginTop: 2 },
+  prestigeSummaryChevron: { fontSize: 16, fontWeight: "600", marginLeft: 8 },
 
   ctaBar: {
     paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16,
-    borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bgSoft,
+    borderTopWidth: 1,
   },
   investBtn: {
     height: 56, borderRadius: 12,
     justifyContent: "center", alignItems: "center",
-    shadowColor: "#000000", shadowOpacity: 0.08, shadowRadius: 8,
+    shadowOpacity: 0.08, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   investBtnDisabled: {
-    backgroundColor: C.bgSoft, borderWidth: 1, borderColor: "rgba(220,38,38,0.3)", shadowOpacity: 0,
+    borderWidth: 1, shadowOpacity: 0,
   },
   investContent: { alignItems: "center", justifyContent: "center" },
-  investLabel: { color: "#FFFFFF", fontSize: 18, fontWeight: "600", letterSpacing: 0.3 },
-  investSub: { color: "#FFFFFF", fontSize: 12, fontWeight: "500", marginTop: 2, opacity: 0.9 },
+  investLabel: { fontSize: 18, fontWeight: "600", letterSpacing: 0.3 },
+  investSub: { fontSize: 12, fontWeight: "500", marginTop: 2, opacity: 0.9 },
 
   // Prestige tree screen
   treeHeader: {
     paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: C.border,
+    borderBottomWidth: 1,
   },
   treeHeaderRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     marginBottom: 14,
   },
   backBtn: { paddingVertical: 4, paddingRight: 8 },
-  backBtnText: { color: C.accent, fontSize: 13, fontWeight: "600", letterSpacing: 0.3 },
-  treeTitle: { color: C.text, fontSize: 18, fontWeight: "600", letterSpacing: 0.5 },
+  backBtnText: { fontSize: 13, fontWeight: "600", letterSpacing: 0.3 },
+  treeTitle: { fontSize: 18, fontWeight: "600", letterSpacing: 0.5 },
 
   rankCard: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: C.panel, borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: C.border,
-    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
+    borderRadius: 12, padding: 14,
+    borderWidth: 1,
+    shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   rankBadge: {
@@ -2779,61 +2782,59 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", marginRight: 14,
   },
   rankBadgeIcon: { fontSize: 20, fontWeight: "700", letterSpacing: 0.5 },
-  rankLabel: { color: C.textMuted, fontSize: 10, fontWeight: "600", letterSpacing: 1 },
+  rankLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 1 },
   rankName: { fontSize: 16, fontWeight: "600", letterSpacing: 0.3, marginTop: 2 },
   rankBar: {
-    height: 6, borderRadius: 3, backgroundColor: C.bgSoft,
+    height: 6, borderRadius: 3,
     marginTop: 8, overflow: "hidden", borderWidth: 0,
   },
   rankBarFill: { height: "100%", borderRadius: 3 },
-  rankProgress: { color: C.textMuted, fontSize: 11, fontWeight: "500", marginTop: 4 },
+  rankProgress: { fontSize: 11, fontWeight: "500", marginTop: 4 },
 
   treeStats: {
     flexDirection: "row", alignItems: "center",
-    marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: C.border,
+    marginTop: 14, paddingTop: 14, borderTopWidth: 1,
   },
   treeStatCell: { flex: 1, alignItems: "center" },
-  treeStatDivider: { width: 1, height: 28, backgroundColor: C.border },
-  treeStatLabel: { color: C.textMuted, fontSize: 10, fontWeight: "600", letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 3 },
-  treeStatValue: { color: C.text, fontSize: 16, fontWeight: "700" },
+  treeStatDivider: { width: 1, height: 28 },
+  treeStatLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 3 },
+  treeStatValue: { fontSize: 16, fontWeight: "700" },
 
   legacyProgressSection: {
-    marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: C.border,
+    marginTop: 16, paddingTop: 16, borderTopWidth: 1,
   },
   legacyProgressHeader: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     marginBottom: 8,
   },
-  legacyProgressTitle: { color: C.text, fontSize: 13, fontWeight: "600", letterSpacing: 0.3 },
-  legacyProgressSubtitle: { color: C.textMuted, fontSize: 11, fontWeight: "500" },
+  legacyProgressTitle: { fontSize: 13, fontWeight: "600", letterSpacing: 0.3 },
+  legacyProgressSubtitle: { fontSize: 11, fontWeight: "500" },
   legacyProgressBar: {
-    height: 8, borderRadius: 4, backgroundColor: C.bgSoft,
+    height: 8, borderRadius: 4,
     overflow: "hidden", borderWidth: 0,
   },
   legacyProgressBarFill: { height: "100%", borderRadius: 4 },
-  legacyProgressText: { color: C.textMuted, fontSize: 11, fontWeight: "500", marginTop: 4 },
+  legacyProgressText: { fontSize: 11, fontWeight: "500", marginTop: 4 },
 
   prestigeExplanationSection: {
-    marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: C.border,
-    backgroundColor: "rgba(245,158,11,0.06)", borderRadius: 12, padding: 12,
+    marginTop: 16, paddingTop: 16, borderTopWidth: 1,
+    borderRadius: 12, padding: 12,
   },
   prestigeExplanationHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  prestigeExplanationTitle: { color: C.gold, fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
-  prestigeExplanationText: { color: C.textMuted, fontSize: 12, fontWeight: "500", lineHeight: 16, marginTop: 8 },
+  prestigeExplanationTitle: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
+  prestigeExplanationText: { fontSize: 12, fontWeight: "500", lineHeight: 16, marginTop: 8 },
   infoButton: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "rgba(245,158,11,0.12)",
     alignItems: "center",
     justifyContent: "center",
   },
   infoButtonText: {
-    color: C.gold,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -2842,8 +2843,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: C.border,
-    backgroundColor: "rgba(245,158,11,0.06)",
     borderRadius: 12,
     padding: 12,
   },
@@ -2852,33 +2851,31 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  legacyExplanationTitle: { color: C.gold, fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
-  legacyExplanationText: { color: C.textMuted, fontSize: 12, fontWeight: "500", lineHeight: 16, marginTop: 8 },
+  legacyExplanationTitle: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
+  legacyExplanationText: { fontSize: 12, fontWeight: "500", lineHeight: 16, marginTop: 8 },
 
-  upgradesSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: C.border },
-  upgradesSectionTitle: { color: C.text, fontSize: 13, fontWeight: "600", letterSpacing: 0.5, marginBottom: 10 },
+  upgradesSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1 },
+  upgradesSectionTitle: { fontSize: 13, fontWeight: "600", letterSpacing: 0.5, marginBottom: 10 },
   prestigeUpgradeCard: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: C.panel, borderRadius: 12,
-    borderWidth: 1, borderColor: C.border,
+    borderRadius: 12,
+    borderWidth: 1,
     padding: 14, marginBottom: 10,
-    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
+    shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
-  prestigeUpgradeCardOwned: {
-    backgroundColor: "rgba(245,158,11,0.06)",
-  },
+  prestigeUpgradeCardOwned: {},
   prestigeUpgradeCardLeft: { flex: 1 },
   prestigeUpgradeCardRight: { alignItems: "flex-end" },
-  prestigeUpgradeCardName: { color: C.text, fontSize: 15, fontWeight: "600" },
-  prestigeUpgradeCardDesc: { color: C.textMuted, fontSize: 12, fontWeight: "500", marginTop: 2 },
+  prestigeUpgradeCardName: { fontSize: 15, fontWeight: "600" },
+  prestigeUpgradeCardDesc: { fontSize: 12, fontWeight: "500", marginTop: 2 },
   prestigeUpgradeCardStatus: { fontSize: 11, fontWeight: "600", letterSpacing: 0.3 },
   prestigeUpgradeOwnedBadge: {
     width: 24, height: 24, borderRadius: 12,
     alignItems: "center", justifyContent: "center",
     marginRight: 12,
   },
-  prestigeUpgradeOwnedIcon: { color: C.gold, fontSize: 14, fontWeight: "700" },
+  prestigeUpgradeOwnedIcon: { fontSize: 14, fontWeight: "700" },
   prestigeUpgradeCostBadge: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
     borderWidth: 1,
@@ -2888,42 +2885,39 @@ const styles = StyleSheet.create({
   // Legacy Endgame screen
   legacyHeader: {
     paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: C.border,
+    borderBottomWidth: 1,
   },
   legacyHeaderRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     marginBottom: 14,
   },
-  legacyTitle: { color: C.text, fontSize: 18, fontWeight: "600", letterSpacing: 0.5 },
+  legacyTitle: { fontSize: 18, fontWeight: "600", letterSpacing: 0.5 },
   legacyStats: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: C.panel, borderRadius: 12, padding: 12,
-    borderWidth: 1, borderColor: C.border,
-    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
+    borderRadius: 12, padding: 12,
+    borderWidth: 1,
+    shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   legacyStatCell: { flex: 1, alignItems: "center" },
-  legacyStatDivider: { width: 1, height: 28, backgroundColor: C.border },
-  legacyStatLabel: { color: C.textMuted, fontSize: 10, fontWeight: "600", letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 3 },
-  legacyStatValue: { color: C.text, fontSize: 16, fontWeight: "700" },
+  legacyStatDivider: { width: 1, height: 28 },
+  legacyStatLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 3 },
+  legacyStatValue: { fontSize: 16, fontWeight: "700" },
   ultimateBanner: {
     marginTop: 14, padding: 12, borderRadius: 12,
-    backgroundColor: "rgba(245,158,11,0.08)", borderWidth: 1, borderColor: C.gold,
+    borderWidth: 1,
     alignItems: "center",
   },
-  ultimateBannerText: { color: C.gold, fontSize: 14, fontWeight: "600", letterSpacing: 0.5 },
-  ultimateBannerSub: { color: C.text, fontSize: 11, fontWeight: "500", marginTop: 4 },
+  ultimateBannerText: { fontSize: 14, fontWeight: "600", letterSpacing: 0.5 },
+  ultimateBannerSub: { fontSize: 11, fontWeight: "500", marginTop: 4 },
   viewEndingBtn: {
     marginTop: 12,
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: C.gold,
-    backgroundColor: "rgba(245,158,11,0.08)",
   },
   viewEndingBtnText: {
-    color: C.gold,
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.5,
@@ -2932,29 +2926,26 @@ const styles = StyleSheet.create({
   legacyBodyContent: { padding: 16, paddingBottom: 40 },
   legacyCard: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: C.panel, borderRadius: 12,
-    borderWidth: 1, borderColor: C.border,
+    borderRadius: 12,
+    borderWidth: 1,
     padding: 16, marginBottom: 12,
   },
-  legacyCardOwned: {
-    backgroundColor: "rgba(245,158,11,0.06)",
-  },
+  legacyCardOwned: {},
   legacyCardFinal: {
-    borderWidth: 2, borderColor: C.gold,
-    backgroundColor: "rgba(245,158,11,0.08)",
+    borderWidth: 2,
   },
   legacyCardLeft: { flex: 1 },
   legacyCardRight: { alignItems: "flex-end" },
-  legacyCardName: { color: C.text, fontSize: 16, fontWeight: "600" },
-  legacyCardDesc: { color: C.textMuted, fontSize: 12, fontWeight: "500", marginTop: 3 },
-  legacyCardEffect: { color: C.accent, fontSize: 11, fontWeight: "600", marginTop: 4 },
+  legacyCardName: { fontSize: 16, fontWeight: "600" },
+  legacyCardDesc: { fontSize: 12, fontWeight: "500", marginTop: 3 },
+  legacyCardEffect: { fontSize: 11, fontWeight: "600", marginTop: 4 },
   legacyCardStatus: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
   legacyOwnedBadge: {
     width: 28, height: 28, borderRadius: 14,
     alignItems: "center", justifyContent: "center",
     marginRight: 14,
   },
-  legacyOwnedIcon: { color: C.gold, fontSize: 16, fontWeight: "700" },
+  legacyOwnedIcon: { fontSize: 16, fontWeight: "700" },
   legacyCostBadge: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8,
     borderWidth: 1,
@@ -2964,7 +2955,6 @@ const styles = StyleSheet.create({
   // Loading screen
   loadingContainer: {
     flex: 1,
-    backgroundColor: C.bg,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -2978,8 +2968,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: C.panel,
-    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
+    shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   loadingLogoText: {
@@ -2992,14 +2981,12 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   loadingTitle: {
-    color: C.text,
     fontSize: 24,
     fontWeight: "600",
     letterSpacing: 0.5,
     marginBottom: 8,
   },
   loadingSubtitle: {
-    color: C.textMuted,
     fontSize: 14,
     fontWeight: "500",
     letterSpacing: 0.3,
@@ -3018,7 +3005,6 @@ const styles = StyleSheet.create({
   // Onboarding screen
   onboardingContainer: {
     flex: 1,
-    backgroundColor: C.bg,
   },
   onboardingContent: {
     flex: 1,
@@ -3037,60 +3023,50 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: C.border,
   },
   onboardingCard: {
-    backgroundColor: C.panel,
     borderRadius: 12,
     padding: 24,
     borderWidth: 1,
-    borderColor: C.border,
     width: "100%",
     marginBottom: 40,
-    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
+    shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   onboardingTitle: {
-    color: C.text,
     fontSize: 22,
     fontWeight: "600",
     letterSpacing: 0.3,
     marginBottom: 12,
   },
   onboardingDescription: {
-    color: C.textMuted,
     fontSize: 15,
     fontWeight: "500",
     lineHeight: 22,
     marginBottom: 16,
   },
   onboardingHighlight: {
-    backgroundColor: "rgba(0,107,94,0.08)",
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: "rgba(0,107,94,0.2)",
   },
   onboardingHighlightText: {
-    color: C.accent,
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.3,
   },
   onboardingButton: {
-    backgroundColor: C.accent,
     paddingHorizontal: 48,
     paddingVertical: 16,
     borderRadius: 12,
     marginBottom: 16,
-    shadowColor: "#000000", shadowOpacity: 0.1, shadowRadius: 8,
+    shadowOpacity: 0.1, shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 }, elevation: 3,
   },
   onboardingButtonPressed: {
     opacity: 0.8,
   },
   onboardingButtonText: {
-    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
     letterSpacing: 0.5,
@@ -3099,7 +3075,6 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   onboardingSkipText: {
-    color: C.textMuted,
     fontSize: 14,
     fontWeight: "500",
   },
@@ -3110,7 +3085,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     padding: 14,
-    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
+    shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   nextGoalHeader: {
@@ -3129,7 +3104,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   nextGoalDescription: {
-    color: C.textMuted,
     fontSize: 12,
     fontWeight: "600",
     lineHeight: 16,
@@ -3142,16 +3116,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   celebrationContent: {
-    backgroundColor: C.panel,
     borderRadius: 12,
     padding: 20,
     borderWidth: 2,
-    borderColor: C.accent,
-    shadowColor: "#000000", shadowOpacity: 0.1, shadowRadius: 8,
+    shadowOpacity: 0.1, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
   celebrationText: {
-    color: C.accent,
     fontSize: 20,
     fontWeight: "600",
     letterSpacing: 0.3,
@@ -3161,16 +3132,15 @@ const styles = StyleSheet.create({
   cashOutBtn: {
     marginTop: 14, height: 56, borderRadius: 12,
     alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: C.gold, overflow: "hidden",
-    backgroundColor: "rgba(245,158,11,0.08)",
+    borderWidth: 1, overflow: "hidden",
   },
   cashOutBtnGradient: {
     position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
   },
-  cashOutBtnDim: { borderColor: C.border, backgroundColor: C.bgSoft },
-  cashOutBtnArmed: { backgroundColor: C.gold, borderColor: C.gold },
-  cashOutBtnText: { color: C.gold, fontSize: 14, fontWeight: "600", letterSpacing: 0.3 },
-  cashOutBtnSub: { color: C.text, fontSize: 11, fontWeight: "500", marginTop: 2 },
+  cashOutBtnDim: {},
+  cashOutBtnArmed: {},
+  cashOutBtnText: { fontSize: 14, fontWeight: "600", letterSpacing: 0.3 },
+  cashOutBtnSub: { fontSize: 11, fontWeight: "500", marginTop: 2 },
 
   treeBody: { flex: 1 },
   treeBodyContent: { paddingHorizontal: 8, paddingTop: 12 },
@@ -3183,7 +3153,7 @@ const styles = StyleSheet.create({
   },
   treeColIcon: { fontSize: 14, fontWeight: "600" },
   treeColTitle: { fontSize: 11, fontWeight: "600", letterSpacing: 0.3, marginTop: 2 },
-  treeColSub: { color: C.textMuted, fontSize: 9, fontWeight: "500", letterSpacing: 0.3, marginTop: 1 },
+  treeColSub: { fontSize: 9, fontWeight: "500", letterSpacing: 0.3, marginTop: 1 },
 
   treeConnector: {
     width: 3, height: 18, borderRadius: 2,
@@ -3191,20 +3161,20 @@ const styles = StyleSheet.create({
 
   skillNode: {
     width: "100%", minHeight: 116, borderRadius: 12, borderWidth: 1,
-    backgroundColor: C.panel, padding: 8, alignItems: "center",
-    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
+    padding: 8, alignItems: "center",
+    shadowOpacity: 0.04, shadowRadius: 6,
     shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   skillNodeLocked: { opacity: 0.6, borderStyle: "dashed" },
   skillNodeDim: { opacity: 0.75 },
   skillName: { fontSize: 11, fontWeight: "600", letterSpacing: 0.3, textAlign: "center" },
-  skillLvl: { color: C.textMuted, fontSize: 9, fontWeight: "500", letterSpacing: 0.3, marginTop: 2 },
+  skillLvl: { fontSize: 9, fontWeight: "500", letterSpacing: 0.3, marginTop: 2 },
   skillEffect: { fontSize: 10, fontWeight: "500", textAlign: "center", marginTop: 4, lineHeight: 12 },
   skillLockBox: {
     marginTop: "auto", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6,
-    backgroundColor: "rgba(220,38,38,0.08)", borderWidth: 1, borderColor: "rgba(220,38,38,0.2)",
+    borderWidth: 1,
   },
-  skillLockText: { color: C.loss, fontSize: 9, fontWeight: "600", letterSpacing: 0.3 },
+  skillLockText: { fontSize: 9, fontWeight: "600", letterSpacing: 0.3 },
   skillCostBox: {
     marginTop: "auto", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
     borderWidth: 1,
@@ -3220,56 +3190,54 @@ const styles = StyleSheet.create({
   },
   debugCard: {
     width: "100%", maxWidth: 360,
-    backgroundColor: C.panel,
-    borderRadius: 12, borderWidth: 1, borderColor: C.accent,
+    borderRadius: 12, borderWidth: 1,
     padding: 20,
-    shadowColor: "#000000", shadowOpacity: 0.1, shadowRadius: 8,
+    shadowOpacity: 0.1, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
   debugHeader: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     marginBottom: 16, paddingBottom: 12,
-    borderBottomWidth: 1, borderBottomColor: C.border,
+    borderBottomWidth: 1,
   },
   debugTitle: {
-    color: C.accent, fontSize: 14, fontWeight: "600", letterSpacing: 0.5,
+    fontSize: 14, fontWeight: "600", letterSpacing: 0.5,
   },
   debugCloseBtn: {
     width: 32, height: 32, borderRadius: 8,
     alignItems: "center", justifyContent: "center",
-    backgroundColor: C.bgSoft, borderWidth: 1, borderColor: C.border,
+    borderWidth: 1,
   },
-  debugCloseText: { color: C.textMuted, fontSize: 16, fontWeight: "600" },
+  debugCloseText: { fontSize: 16, fontWeight: "600" },
   debugSection: { marginBottom: 14 },
   debugLabel: {
-    color: C.textMuted, fontSize: 10, fontWeight: "600",
+    fontSize: 10, fontWeight: "600",
     letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8,
   },
   debugRow: { flexDirection: "row", alignItems: "center" },
   debugInput: {
-    backgroundColor: C.bgSoft, color: C.text,
     fontSize: 15, fontWeight: "500",
     paddingHorizontal: 12, paddingVertical: 10,
-    borderRadius: 8, borderWidth: 1, borderColor: C.border,
+    borderRadius: 8, borderWidth: 1,
     marginBottom: 8,
   },
-  debugInputError: { borderColor: C.loss },
+  debugInputError: {},
   debugErrorText: {
-    color: C.loss, fontSize: 11, fontWeight: "600", marginBottom: 8,
+    fontSize: 11, fontWeight: "600", marginBottom: 8,
   },
   debugActionBtn: {
     marginTop: 8, height: 40, borderRadius: 8,
     alignItems: "center", justifyContent: "center",
     paddingHorizontal: 16,
   },
-  debugActionPrimary: { backgroundColor: C.accent },
+  debugActionPrimary: {},
   debugActionSecondary: {
-    backgroundColor: C.accent, height: 40,
+    height: 40,
   },
   debugActionClose: {
-    backgroundColor: C.panel, borderWidth: 1, borderColor: C.border, marginTop: 4,
+    borderWidth: 1, marginTop: 4,
   },
   debugActionText: {
-    color: "#001018", fontSize: 12, fontWeight: "900", letterSpacing: 1,
+    fontSize: 12, fontWeight: "900", letterSpacing: 1,
   },
 });

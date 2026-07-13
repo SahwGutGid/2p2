@@ -342,6 +342,8 @@ const baseAccelReductionMs = (remaining: number) =>
 export default function Index() {
   const sound = useSoundEngine();
   const [showTree, setShowTree] = useState(false);
+  const [showPrestigeInfo, setShowPrestigeInfo] = useState(false);
+  const [showLegacyInfo, setShowLegacyInfo] = useState(false);
 
   // Core state
   const [ready, setReady] = useState(false);
@@ -1267,6 +1269,40 @@ export default function Index() {
     ? `Need ${money(selected.cost)} for ${selected.name}`
     : `${selected.name} · +${money(selectedEffProfit)} in ${fmtDuration(selectedEffDur)}`;
 
+  // Calculate next goal
+  const nextGoal = useMemo(() => {
+    if (stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD) {
+      return {
+        title: "Legacy Endgame",
+        description: `You've unlocked the Legacy system! Spend your Legacy Points on permanent upgrades.`,
+        progress: "UNLOCKED",
+        color: C.gold,
+      };
+    }
+    if (balance >= PRESTIGE_MIN_BALANCE) {
+      return {
+        title: "Prestige",
+        description: `Cash out to earn Prestige Points. Each PP gives +5% permanent profit bonus.`,
+        progress: `Ready to cash out`,
+        color: C.gold,
+      };
+    }
+    if (prestige > 0) {
+      return {
+        title: "Build Wealth",
+        description: `Reach ${money(PRESTIGE_MIN_BALANCE)} to prestige and earn more PP.`,
+        progress: `${money(balance)} / ${money(PRESTIGE_MIN_BALANCE)}`,
+        color: C.gain,
+      };
+    }
+    return {
+      title: "First Investment",
+      description: `Start investing to build your portfolio and unlock Prestige.`,
+      progress: actives.length > 0 ? "In progress" : "Not started",
+      color: C.accent,
+    };
+  }, [balance, prestige, stats.totalPPEarned, actives.length]);
+
   // ============================================================
   // Skill Tree Screen (overlay)
   // ============================================================
@@ -1363,6 +1399,52 @@ export default function Index() {
                 <Text style={styles.treeStatLabel}>CASH-OUTS</Text>
                 <Text style={styles.treeStatValue}>{totalPrestiges}</Text>
               </View>
+            </View>
+
+            {/* Legacy Progress */}
+            <View style={styles.legacyProgressSection}>
+              <View style={styles.legacyProgressHeader}>
+                <Text style={styles.legacyProgressTitle}>LEGACY PROGRESS</Text>
+                <Text style={styles.legacyProgressSubtitle}>Unlock at 10,000 total PP</Text>
+              </View>
+              <View style={styles.legacyProgressBar}>
+                <View
+                  style={[
+                    styles.legacyProgressBarFill,
+                    {
+                      width: `${Math.min(100, (stats.totalPPEarned / LEGACY_UNLOCK_THRESHOLD) * 100)}%` as any,
+                      backgroundColor: stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD ? C.gold : C.gold,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.legacyProgressText}>
+                {compact(stats.totalPPEarned)} / {compact(LEGACY_UNLOCK_THRESHOLD)} PP
+                {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && " · UNLOCKED"}
+              </Text>
+            </View>
+
+            {/* Prestige Explanation */}
+            <View style={styles.prestigeExplanationSection}>
+              <View style={styles.prestigeExplanationHeader}>
+                <Text style={styles.prestigeExplanationTitle}>WHAT IS PRESTIGE?</Text>
+                <Pressable
+                  onPress={() => {
+                    sound.play("click");
+                    setShowPrestigeInfo(!showPrestigeInfo);
+                  }}
+                  hitSlop={8}
+                  style={styles.infoButton}
+                >
+                  <Text style={styles.infoButtonText}>ⓘ</Text>
+                </Pressable>
+              </View>
+              {showPrestigeInfo && (
+                <Text style={styles.prestigeExplanationText}>
+                  Cash out your run to earn Prestige Points (PP). Each PP gives +5% permanent profit bonus.
+                  Use PP to unlock skill tree nodes and prestige upgrades. Your balance resets but upgrades persist.
+                </Text>
+              )}
             </View>
 
             {/* Prestige Upgrades */}
@@ -1597,6 +1679,29 @@ export default function Index() {
                 {Object.values(legacyUpgrades).filter(Boolean).length}/{LEGACY_UPGRADES.length}
               </Text>
             </View>
+          </View>
+
+          {/* Legacy Explanation */}
+          <View style={styles.legacyExplanationSection}>
+            <View style={styles.legacyExplanationHeader}>
+              <Text style={styles.legacyExplanationTitle}>WHAT ARE LEGACY POINTS?</Text>
+              <Pressable
+                onPress={() => {
+                  sound.play("click");
+                  setShowLegacyInfo(!showLegacyInfo);
+                }}
+                hitSlop={8}
+                style={styles.infoButton}
+              >
+                <Text style={styles.infoButtonText}>ⓘ</Text>
+              </Pressable>
+            </View>
+            {showLegacyInfo && (
+              <Text style={styles.legacyExplanationText}>
+                Earn 1 Legacy Point per 100 Prestige Points gained after reaching 10,000 total PP.
+                Spend Legacy Points on permanent endgame upgrades that dramatically boost your investment power.
+              </Text>
+            )}
           </View>
 
           {isUltimateOwned && (
@@ -1952,6 +2057,15 @@ export default function Index() {
             </Text>
           </View>
         )}
+
+        {/* Next Goal */}
+        <View style={[styles.nextGoalCard, { borderColor: nextGoal.color, backgroundColor: `${nextGoal.color}08` }]}>
+          <View style={styles.nextGoalHeader}>
+            <Text style={[styles.nextGoalTitle, { color: nextGoal.color }]}>NEXT GOAL</Text>
+            <Text style={[styles.nextGoalProgress, { color: nextGoal.color }]}>{nextGoal.progress}</Text>
+          </View>
+          <Text style={styles.nextGoalDescription}>{nextGoal.description}</Text>
+        </View>
       </LinearGradient>
 
       <ScrollView
@@ -2457,7 +2571,7 @@ const styles = StyleSheet.create({
   iconChipText: { color: C.accent, fontSize: 11, fontWeight: "900", letterSpacing: 0.6 },
 
   balanceRow: { position: "relative", marginTop: 6 },
-  balance: { color: C.text, fontSize: 40, fontWeight: "800", letterSpacing: -1 },
+  balance: { color: C.text, fontSize: 40, fontWeight: "800", letterSpacing: -1, flexShrink: 1 },
   floatingProfit: {
     position: "absolute", right: 0, top: 0,
     color: C.gain, fontSize: 20, fontWeight: "900",
@@ -2655,6 +2769,64 @@ const styles = StyleSheet.create({
   treeStatDivider: { width: 1, height: 28, backgroundColor: C.border },
   treeStatLabel: { color: C.textMuted, fontSize: 9, fontWeight: "700", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 3 },
   treeStatValue: { color: C.text, fontSize: 16, fontWeight: "900" },
+
+  legacyProgressSection: {
+    marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: C.border,
+  },
+  legacyProgressHeader: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    marginBottom: 8,
+  },
+  legacyProgressTitle: { color: C.text, fontSize: 12, fontWeight: "900", letterSpacing: 1 },
+  legacyProgressSubtitle: { color: C.textMuted, fontSize: 10, fontWeight: "600" },
+  legacyProgressBar: {
+    height: 8, borderRadius: 999, backgroundColor: C.panel,
+    overflow: "hidden", borderWidth: 1, borderColor: C.border,
+  },
+  legacyProgressBarFill: { height: "100%", borderRadius: 999 },
+  legacyProgressText: { color: C.textMuted, fontSize: 11, fontWeight: "700", marginTop: 4 },
+
+  prestigeExplanationSection: {
+    marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: C.border,
+    backgroundColor: `${C.gold}08`, borderRadius: 12, padding: 12,
+  },
+  prestigeExplanationHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  prestigeExplanationTitle: { color: C.gold, fontSize: 11, fontWeight: "900", letterSpacing: 1 },
+  prestigeExplanationText: { color: C.textMuted, fontSize: 11, fontWeight: "600", lineHeight: 16, marginTop: 8 },
+  infoButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: `${C.gold}20`,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  infoButtonText: {
+    color: C.gold,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+
+  legacyExplanationSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+    backgroundColor: `${C.gold}08`,
+    borderRadius: 12,
+    padding: 12,
+  },
+  legacyExplanationHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  legacyExplanationTitle: { color: C.gold, fontSize: 11, fontWeight: "900", letterSpacing: 1 },
+  legacyExplanationText: { color: C.textMuted, fontSize: 11, fontWeight: "600", lineHeight: 16, marginTop: 8 },
 
   upgradesSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: C.border },
   upgradesSectionTitle: { color: C.text, fontSize: 12, fontWeight: "900", letterSpacing: 1.5, marginBottom: 10 },
@@ -2893,6 +3065,35 @@ const styles = StyleSheet.create({
     color: C.textMuted,
     fontSize: 14,
     fontWeight: "700",
+  },
+
+  // Next Goal card
+  nextGoalCard: {
+    marginTop: 12,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    padding: 14,
+  },
+  nextGoalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  nextGoalTitle: {
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+  },
+  nextGoalProgress: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  nextGoalDescription: {
+    color: C.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 16,
   },
 
   // Celebration banner

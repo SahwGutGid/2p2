@@ -22,7 +22,7 @@ export const PRESTIGE_UPGRADES: PrestigeUpgrade[] = [
   {
     id: "foundation",
     name: "Prestige Foundation",
-    description: "2x investment profits · 1.5x investment speed · Unlocks prestige upgrade paths",
+    description: "2x investment profits · 1.5x investment speed · Unlocks prestige upgrade paths. Essential for long-term growth.",
     cost: 1,
     effect: "2x profit, 1.5x speed",
     tint: "#FFD700",

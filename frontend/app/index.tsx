@@ -56,6 +56,7 @@ import {
   type Stats,
 } from "@/src/game/features";
 import { formatCurrency, formatNumber, formatDuration, formatSeconds, formatPercent } from "@/src/utils/format";
+import { getTheme, type ThemeMode, type ThemeColors } from "@/src/utils/theme";
 
 // ---------- Theme ----------
 const C = {
@@ -142,9 +143,10 @@ type Settings = {
   sfx: boolean;
   haptics: boolean;
   notifications: boolean;
+  theme: ThemeMode;
 };
 const defaultSettings = (): Settings => ({
-  music: true, sfx: true, haptics: true, notifications: true,
+  music: true, sfx: true, haptics: true, notifications: true, theme: 'light',
 });
 
 type CompletionStats = {
@@ -423,6 +425,9 @@ export default function Index() {
   const packages = useMemo(() => getPackages(treeEffects), [treeEffects]);
   const rank = useMemo(() => computeRank(totalPrestiges), [totalPrestiges]);
 
+  // Theme - dynamic based on settings
+  const theme = getTheme(settings.theme);
+
   // Balance counter animation (RAF)
   const [displayBalance, setDisplayBalance] = useState(100);
   const rafRef = useRef<number | null>(null);
@@ -485,7 +490,7 @@ export default function Index() {
         title: "Legacy Endgame",
         description: `You've unlocked the Legacy system! Spend your Legacy Points on permanent upgrades.`,
         progress: "UNLOCKED",
-        color: C.gold,
+        color: theme.gold,
       };
     }
     if (balance >= PRESTIGE_MIN_BALANCE) {
@@ -493,7 +498,7 @@ export default function Index() {
         title: "Prestige",
         description: `Cash out to earn Prestige Points. Each PP gives +${fmtPct(5)} permanent profit bonus.`,
         progress: `Ready to cash out`,
-        color: C.gold,
+        color: theme.gold,
       };
     }
     if (prestige > 0) {
@@ -501,14 +506,14 @@ export default function Index() {
         title: "Build Wealth",
         description: `Reach ${money(PRESTIGE_MIN_BALANCE)} to prestige and earn more PP.`,
         progress: `${money(balance)} / ${money(PRESTIGE_MIN_BALANCE)}`,
-        color: C.gain,
+        color: theme.gain,
       };
     }
     return {
       title: "First Investment",
       description: `Start investing to build your portfolio and unlock Prestige.`,
       progress: actives.length > 0 ? "In progress" : "Not started",
-      color: C.accent,
+      color: theme.accent,
     };
   }, [balance, prestige, stats.totalPPEarned, actives.length]);
 
@@ -1062,6 +1067,14 @@ export default function Index() {
     Haptics.selectionAsync().catch(() => {});
   };
 
+  const toggleTheme = () => {
+    setSettings((prev) => {
+      const newTheme: ThemeMode = prev.theme === 'light' ? 'dark' : 'light';
+      return { ...prev, theme: newTheme };
+    });
+    Haptics.selectionAsync().catch(() => {});
+  };
+
   // ---------- Developer menu (hidden gesture) ----------
   const DEBUG_PASSWORD = "1337";
   const DEBUG_TAP_COUNT = 7;
@@ -1282,10 +1295,10 @@ export default function Index() {
   // ============================================================
   if (showTree) {
     return (
-      <SafeAreaView style={styles.safe} testID="prestige-screen">
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]} testID="prestige-screen">
         <Animated.View style={[{ flex: 1 }, treeSlideStyle]}>
           <LinearGradient
-            colors={[C.bgSoft, C.bg]}
+            colors={[theme.bgSoft, theme.bg]}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
             style={styles.treeHeader}
@@ -1304,10 +1317,10 @@ export default function Index() {
                 <Pressable
                   onPress={() => { sound.play("click"); setShowLegacy(true); }}
                   hitSlop={12}
-                  style={[styles.iconChip, { borderColor: C.gold, backgroundColor: `${C.gold}25`, marginLeft: 6, borderWidth: 1.5 }]}
+                  style={[styles.iconChip, { borderColor: theme.gold, backgroundColor: `${theme.gold}25`, marginLeft: 6, borderWidth: 1.5 }]}
                   testID="open-legacy"
                 >
-                  <Text style={[styles.iconChipText, { color: C.gold }]}>
+                  <Text style={[styles.iconChipText, { color: theme.gold }]}>
                     LEGACY · {compact(legacyPoints)}
                   </Text>
                 </Pressable>
@@ -1356,7 +1369,7 @@ export default function Index() {
             <View style={styles.treeStats}>
               <View style={styles.treeStatCell}>
                 <Text style={styles.treeStatLabel}>PP AVAILABLE</Text>
-                <Text style={[styles.treeStatValue, { color: C.gold }]} testID="tree-pp-available">{prestige}</Text>
+                <Text style={[styles.treeStatValue, { color: theme.gold }]} testID="tree-pp-available">{prestige}</Text>
               </View>
               <View style={styles.treeStatDivider} />
               <View style={styles.treeStatCell}>
@@ -1366,7 +1379,7 @@ export default function Index() {
               <View style={styles.treeStatDivider} />
               <View style={styles.treeStatCell}>
                 <Text style={styles.treeStatLabel}>PROFIT BONUS</Text>
-                <Text style={[styles.treeStatValue, { color: C.gain }]}>+{fmtPct(currentBonusPct)}</Text>
+                <Text style={[styles.treeStatValue, { color: theme.gain }]}>+{fmtPct(currentBonusPct)}</Text>
               </View>
               <View style={styles.treeStatDivider} />
               <View style={styles.treeStatCell}>
@@ -1387,7 +1400,7 @@ export default function Index() {
                     styles.legacyProgressBarFill,
                     {
                       width: Math.min(100, (stats.totalPPEarned / LEGACY_UNLOCK_THRESHOLD) * 100).toFixed(0) + "%" as any,
-                      backgroundColor: stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD ? C.gold : C.gold,
+                      backgroundColor: stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD ? theme.gold : theme.gold,
                     },
                   ]}
                 />
@@ -1483,21 +1496,15 @@ export default function Index() {
                 styles.cashOutBtn,
                 !canPrestige && styles.cashOutBtnDim,
                 prestigeArmed && styles.cashOutBtnArmed,
+                canPrestige && !prestigeArmed && { backgroundColor: theme.gold },
                 pressed && canPrestige && { transform: [{ scale: 0.98 }] },
               ]}
               testID="prestige-button"
             >
-              {canPrestige && !prestigeArmed && (
-                <LinearGradient
-                  colors={[C.gold, "#F59E0B", "#F9A825"]}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-              )}
               <Text
                 style={[
                   styles.cashOutBtnText,
-                  !canPrestige && { color: C.textMuted },
+                  !canPrestige && { color: theme.textMuted },
                   prestigeArmed && { color: "#001018" },
                   canPrestige && !prestigeArmed && { color: "#001018" },
                 ]}
@@ -1528,34 +1535,37 @@ export default function Index() {
                 title="AUTOMATION"
                 subtitle="Idle strength"
                 icon="A"
-                tint={C.accent}
+                tint={theme.accent}
                 path="automation"
                 skills={skills}
                 prestige={prestige}
                 rank={rank}
                 onBuy={buySkill}
+                theme={theme}
               />
               <TreeColumn
                 title="BONUS"
                 subtitle="Steady growth"
                 icon="B"
-                tint={C.gain}
+                tint={theme.gain}
                 path="bonus"
                 skills={skills}
                 prestige={prestige}
                 rank={rank}
                 onBuy={buySkill}
+                theme={theme}
               />
               <TreeColumn
                 title="METHODS"
                 subtitle="New income"
                 icon="M"
-                tint={C.gold}
+                tint={theme.gold}
                 path="money"
                 skills={skills}
                 prestige={prestige}
                 rank={rank}
                 onBuy={buySkill}
+                theme={theme}
               />
             </View>
 
@@ -1614,9 +1624,9 @@ export default function Index() {
     const isUltimateOwned = legacyUpgrades["ultimate-investor"];
 
     return (
-      <SafeAreaView style={styles.safe} testID="legacy-screen">
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]} testID="legacy-screen">
         <LinearGradient
-          colors={isUltimateOwned ? ["#FFD700", "#FFA500", "#FF8C00"] : ["#0B1220", "#16223A", "#1E2A44"]}
+          colors={isUltimateOwned ? ["#FFD700", "#FFA500", "#FF8C00"] : [theme.bg, theme.bgSoft, theme.panel]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
@@ -1639,7 +1649,7 @@ export default function Index() {
           <View style={styles.legacyStats}>
             <View style={styles.legacyStatCell}>
               <Text style={styles.legacyStatLabel}>LEGACY POINTS</Text>
-              <Text style={[styles.legacyStatValue, { color: C.gold }]}>{compact(legacyPoints)}</Text>
+              <Text style={[styles.legacyStatValue, { color: theme.gold }]}>{compact(legacyPoints)}</Text>
             </View>
             <View style={styles.legacyStatDivider} />
             <View style={styles.legacyStatCell}>
@@ -1758,15 +1768,15 @@ export default function Index() {
   // ============================================================
   if (!loadingComplete) {
     return (
-      <SafeAreaView style={styles.loadingContainer} testID="loading-screen">
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.bg }]} testID="loading-screen">
         <LinearGradient
-          colors={legacyUpgrades["ultimate-investor"] ? ["#0B1220", "#11110a", "#0B1220"] : [C.bg, C.bgSoft, C.bg]}
+          colors={legacyUpgrades["ultimate-investor"] ? ["#0B1220", "#11110a", "#0B1220"] : [theme.bg, theme.bgSoft, theme.bg]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
         <Animated.View style={[styles.loadingLogo, logoStyle]}>
-          <View style={[styles.loadingLogoInner, { borderColor: C.accent }]}>
-            <Text style={[styles.loadingLogoText, { color: C.accent }]}>P2P</Text>
+          <View style={[styles.loadingLogoInner, { borderColor: theme.accent }]}>
+            <Text style={[styles.loadingLogoText, { color: theme.accent }]}>P2P</Text>
           </View>
         </Animated.View>
         <Animated.View style={[styles.loadingTextContainer, textStyle]}>
@@ -1774,9 +1784,9 @@ export default function Index() {
           <Text style={styles.loadingSubtitle}>Build Your Financial Empire</Text>
         </Animated.View>
         <View style={styles.loadingSpinner}>
-          <View style={[styles.spinnerDot, { backgroundColor: C.accent }]} />
-          <View style={[styles.spinnerDot, { backgroundColor: C.accent, opacity: 0.6 }]} />
-          <View style={[styles.spinnerDot, { backgroundColor: C.accent, opacity: 0.3 }]} />
+          <View style={[styles.spinnerDot, { backgroundColor: theme.accent }]} />
+          <View style={[styles.spinnerDot, { backgroundColor: theme.accent, opacity: 0.6 }]} />
+          <View style={[styles.spinnerDot, { backgroundColor: theme.accent, opacity: 0.3 }]} />
         </View>
       </SafeAreaView>
     );
@@ -1827,9 +1837,9 @@ export default function Index() {
     const current = onboardingSteps[onboardingStep];
 
     return (
-      <SafeAreaView style={styles.onboardingContainer} testID="onboarding-screen">
+      <SafeAreaView style={[styles.onboardingContainer, { backgroundColor: theme.bg }]} testID="onboarding-screen">
         <LinearGradient
-          colors={legacyUpgrades["ultimate-investor"] ? ["#0B1220", "#11110a", "#0B1220"] : [C.bg, C.bgSoft, C.bg]}
+          colors={legacyUpgrades["ultimate-investor"] ? ["#0B1220", "#11110a", "#0B1220"] : [theme.bg, theme.bgSoft, theme.bg]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
@@ -1840,8 +1850,8 @@ export default function Index() {
                 key={i}
                 style={[
                   styles.progressDot,
-                  i <= onboardingStep && { backgroundColor: C.accent },
-                  i < onboardingStep && { backgroundColor: C.accentDeep },
+                  i <= onboardingStep && { backgroundColor: theme.accent },
+                  i < onboardingStep && { backgroundColor: theme.accentDeep },
                 ]}
               />
             ))}
@@ -1888,7 +1898,7 @@ export default function Index() {
   // Main Game Screen
   // ============================================================
   return (
-    <SafeAreaView style={styles.safe} testID="game-screen">
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]} testID="game-screen">
       <Animated.View
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, styles.flashOverlay, flashStyle]}
@@ -1903,7 +1913,7 @@ export default function Index() {
           ]}
         >
           <LinearGradient
-            colors={[`${C.accent}30`, `${C.accent}10`, `${C.accent}30`]}
+            colors={[`${theme.accent}30`, `${theme.accent}10`, `${theme.accent}30`]}
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.celebrationContent}>
@@ -1914,7 +1924,7 @@ export default function Index() {
 
       {/* HEADER */}
       <LinearGradient
-        colors={legacyUpgrades["ultimate-investor"] ? ["#1a1a0e", "#0B1220"] : [C.bgSoft, C.bg]}
+        colors={legacyUpgrades["ultimate-investor"] ? ["#1a1a0e", "#0B1220"] : [theme.bgSoft, theme.bg]}
         start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}
         style={styles.header}
       >
@@ -1929,9 +1939,19 @@ export default function Index() {
           </Pressable>
           <View style={styles.headerRightRow}>
             <Pressable
-              onPress={toggleMusic}
+              onPress={toggleTheme}
               hitSlop={12}
               style={styles.iconChip}
+              testID="theme-toggle"
+            >
+              <Text style={styles.iconChipText}>
+                {settings.theme === 'light' ? '☀ LIGHT' : '☾ DARK'}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={toggleMusic}
+              hitSlop={12}
+              style={[styles.iconChip, { marginLeft: 6 }]}
               testID="music-toggle"
             >
               <Text style={styles.iconChipText}>
@@ -1952,6 +1972,11 @@ export default function Index() {
         </View>
 
         <Animated.View style={[styles.balanceRow, balanceStyle]}>
+          <LinearGradient
+            colors={[`${theme.accent}08`, `${theme.accent}04`, 'transparent']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
           <Text style={styles.balance} testID="balance-value">{money(displayBalance)}</Text>
           <Animated.Text
             style={[styles.floatingProfit, floatStyle]}
@@ -1967,8 +1992,8 @@ export default function Index() {
             <Text style={styles.slotPillText}>Slots {actives.length}/{slots}</Text>
           </View>
           {prestige > 0 && (
-            <View style={[styles.pill, { borderColor: C.gold, backgroundColor: `${C.gold}22` }]} testID="prestige-pill">
-              <Text style={[styles.pillText, { color: C.gold }]}>
+            <View style={[styles.pill, { borderColor: theme.gold, backgroundColor: `${theme.gold}22` }]} testID="prestige-pill">
+              <Text style={[styles.pillText, { color: theme.gold }]}>
                 ★ {prestige} PP · +{fmtPct(currentBonusPct)}
               </Text>
             </View>
@@ -1986,8 +2011,8 @@ export default function Index() {
             </View>
           )}
           {treeEffects.savingsRatePerSec > 0 && (
-            <View style={[styles.pill, { borderColor: C.gold, backgroundColor: `${C.gold}18` }]} testID="savings-pill">
-              <Text style={[styles.pillText, { color: C.gold }]}>
+            <View style={[styles.pill, { borderColor: theme.gold, backgroundColor: `${theme.gold}18` }]} testID="savings-pill">
+              <Text style={[styles.pillText, { color: theme.gold }]}>
                 Savings +{fmtPct(treeEffects.savingsRatePerSec * 3600 * 100)}/h
               </Text>
             </View>
@@ -2005,12 +2030,12 @@ export default function Index() {
           </View>
         )}
         {bailoutNotice && (
-          <View style={[styles.banner, { backgroundColor: `${C.accent}18`, borderColor: `${C.accent}55` }]} testID="bailout-banner">
-            <Text style={[styles.bannerText, { color: C.accent }]}>
+          <View style={[styles.banner, { backgroundColor: `${theme.accent}18`, borderColor: `${theme.accent}55` }]} testID="bailout-banner">
+            <Text style={[styles.bannerText, { color: theme.accent }]}>
               Stimulus received — {money(treeEffects.bailoutAmount)} added
             </Text>
             <Pressable onPress={() => setBailoutNotice(false)} hitSlop={12}>
-              <Text style={[styles.bannerDismiss, { color: C.accent }]}>OK</Text>
+              <Text style={[styles.bannerDismiss, { color: theme.accent }]}>OK</Text>
             </Pressable>
           </View>
         )}
@@ -2025,15 +2050,20 @@ export default function Index() {
           </View>
         )}
         {prestigeCelebrate > 0 && (
-          <View style={[styles.banner, { backgroundColor: `${C.gold}22`, borderColor: C.gold }]} testID="prestige-celebrate">
-            <Text style={[styles.bannerText, { color: C.gold }]}>
+          <View style={[styles.banner, { backgroundColor: `${theme.gold}22`, borderColor: theme.gold }]} testID="prestige-celebrate">
+            <Text style={[styles.bannerText, { color: theme.gold }]}>
               +{prestigeCelebrate} PP earned — run #{totalPrestiges}
             </Text>
           </View>
         )}
 
         {/* Next Goal */}
-        <View style={[styles.nextGoalCard, { borderColor: nextGoal.color, backgroundColor: `${nextGoal.color}08` }]}>
+        <View style={[styles.nextGoalCard, { borderColor: nextGoal.color, backgroundColor: `${nextGoal.color}08` }]} testID="next-goal">
+          <LinearGradient
+            colors={[`${nextGoal.color}12`, `${nextGoal.color}04`]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
           <View style={styles.nextGoalHeader}>
             <Text style={[styles.nextGoalTitle, { color: nextGoal.color }]}>NEXT GOAL</Text>
             <Text style={[styles.nextGoalProgress, { color: nextGoal.color }]}>{nextGoal.progress}</Text>
@@ -2074,7 +2104,7 @@ export default function Index() {
                   </View>
                   <View style={styles.activeBarTrack}>
                     <LinearGradient
-                      colors={[C.accent, C.accentDeep]}
+                      colors={[theme.accent, theme.accentDeep]}
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                       style={[styles.activeBarFill, { width: (progress * 100).toFixed(0) + "%" as any }]}
                     />
@@ -2084,11 +2114,6 @@ export default function Index() {
                     style={({ pressed }) => [styles.accelerateBtn, pressed && { transform: [{ scale: 0.97 }] }]}
                     testID={`accelerate-${a.runId}`}
                   >
-                    <LinearGradient
-                      colors={[C.accent, C.accentDeep]}
-                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
                     <Text style={styles.accelerateText}>ACCELERATE</Text>
                     <Text style={styles.accelerateHint}>
                       {treeEffects.autoAccelStrength > 0 ? "Auto-tap active · manual for burst" : "Tap to shave time"}
@@ -2132,7 +2157,7 @@ export default function Index() {
               >
                 {isSelected && !disabled && (
                   <LinearGradient
-                    colors={["rgba(0,229,255,0.14)", "rgba(0,229,255,0)"]}
+                    colors={[`${theme.accent}14`, `${theme.accent}04`]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFill}
                     pointerEvents="none"
@@ -2189,7 +2214,7 @@ export default function Index() {
                 styles.upgradeCard,
                 !affordable && !maxed && styles.upgradeCardDim,
                 pressed && affordable && { transform: [{ scale: 0.99 }] },
-                maxed && { borderColor: C.accent, backgroundColor: C.panelElevated },
+                maxed && { borderColor: theme.accent, backgroundColor: theme.panelElevated },
               ]}
               testID={`upgrade-${u.id}`}
             >
@@ -2207,17 +2232,8 @@ export default function Index() {
                     <View style={styles.maxedPill}><Text style={styles.maxedText}>MAX</Text></View>
                   ) : (
                     <>
-                      <Text style={[styles.upgradeCost, !affordable && { color: C.textMuted }]} testID={`upgrade-cost-${u.id}`}>{money(cost)}</Text>
-                      <View style={styles.upgradeBuyBtn}>
-                        {affordable && (
-                          <LinearGradient
-                            colors={[C.accent, C.accentDeep]}
-                            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                            style={StyleSheet.absoluteFill} pointerEvents="none"
-                          />
-                        )}
-                        <Text style={[styles.upgradeBuy, !affordable && { color: C.textMuted }]}>BUY</Text>
-                      </View>
+                      <Text style={[styles.upgradeCost, !affordable && { color: theme.textMuted }]} testID={`upgrade-cost-${u.id}`}>{money(cost)}</Text>
+                      <Text style={[styles.upgradeBuy, !affordable && { color: theme.textMuted }]}>BUY</Text>
                     </>
                   )}
                 </View>
@@ -2234,7 +2250,7 @@ export default function Index() {
           testID="prestige-summary"
         >
           <LinearGradient
-            colors={[`${C.gold}22`, `${C.accent}18`]}
+            colors={[`${theme.gold}22`, `${theme.accent}18`]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
@@ -2248,7 +2264,7 @@ export default function Index() {
                 {prestige} PP · +{fmtPct(currentBonusPct)} profit · {totalPrestiges} cash-outs
               </Text>
               {canPrestige && (
-                <Text style={[styles.prestigeSummarySub, { color: C.gold, marginTop: 4 }]}>
+                <Text style={[styles.prestigeSummarySub, { color: theme.gold, marginTop: 4 }]}>
                   Ready to cash out for +{prestigeGainAvailable} PP
                 </Text>
               )}
@@ -2270,16 +2286,16 @@ export default function Index() {
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.prestigeSummaryRow}>
-              <View style={[styles.rankBadge, { borderColor: C.gold, backgroundColor: "rgba(255,215,0,0.15)" }]}>
-                <Text style={[styles.rankBadgeIcon, { color: C.gold }]}>★</Text>
+              <View style={[styles.rankBadge, { borderColor: theme.gold, backgroundColor: "rgba(255,215,0,0.15)" }]}>
+                <Text style={[styles.rankBadgeIcon, { color: theme.gold }]}>★</Text>
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={[styles.prestigeSummaryTitle, { color: C.gold }]}>LEGACY</Text>
+                <Text style={[styles.prestigeSummaryTitle, { color: theme.gold }]}>LEGACY</Text>
                 <Text style={styles.prestigeSummarySub}>
                   {legacyPoints} LP · {Object.values(legacyUpgrades).filter(Boolean).length}/7 upgrades
                 </Text>
               </View>
-              <Text style={[styles.prestigeSummaryChevron, { color: C.gold }]}>▶</Text>
+              <Text style={[styles.prestigeSummaryChevron, { color: theme.gold }]}>▶</Text>
             </View>
           </Pressable>
         )}
@@ -2294,22 +2310,16 @@ export default function Index() {
             style={({ pressed }) => [
               styles.investBtn,
               !canInvest && styles.investBtnDisabled,
+              canInvest && { backgroundColor: theme.accent },
               pressed && canInvest && { transform: [{ scale: 0.98 }] },
             ]}
             testID="invest-button"
           >
-            {canInvest && (
-              <LinearGradient
-                colors={[C.accent, C.accentDeep, C.accent]}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill} pointerEvents="none"
-              />
-            )}
             <View style={styles.investContent}>
-              <Text style={[styles.investLabel, !canInvest && { color: C.loss }]} testID="invest-label">
+              <Text style={[styles.investLabel, !canInvest && { color: theme.loss }]} testID="invest-label">
                 {ctaLabel}
               </Text>
-              <Text style={[styles.investSub, !canInvest && { color: C.textMuted, opacity: 1 }]}>
+              <Text style={[styles.investSub, !canInvest && { color: theme.textMuted, opacity: 1 }]}>
                 {ctaSub}
               </Text>
             </View>
@@ -2341,7 +2351,7 @@ export default function Index() {
                   onChangeText={(v) => { setDebugPassword(v); setDebugPwError(false); }}
                   onSubmitEditing={submitDebugPassword}
                   placeholder="••••"
-                  placeholderTextColor={C.textMuted}
+                  placeholderTextColor={theme.textMuted}
                   secureTextEntry
                   keyboardType="numeric"
                   autoFocus
@@ -2374,7 +2384,7 @@ export default function Index() {
                       value={debugMoneyInput}
                       onChangeText={setDebugMoneyInput}
                       placeholder="Amount"
-                      placeholderTextColor={C.textMuted}
+                      placeholderTextColor={theme.textMuted}
                       keyboardType="numeric"
                       style={[styles.debugInput, { flex: 1, marginBottom: 0 }]}
                       testID="debug-money-input"
@@ -2401,7 +2411,7 @@ export default function Index() {
                       value={debugPPInput}
                       onChangeText={setDebugPPInput}
                       placeholder="Amount"
-                      placeholderTextColor={C.textMuted}
+                      placeholderTextColor={theme.textMuted}
                       keyboardType="numeric"
                       style={[styles.debugInput, { flex: 1, marginBottom: 0 }]}
                       testID="debug-pp-input"
@@ -2430,7 +2440,7 @@ export default function Index() {
                   ]}
                   testID="debug-close-btn"
                 >
-                  <Text style={[styles.debugActionText, { color: C.text }]}>CLOSE</Text>
+                  <Text style={[styles.debugActionText, { color: theme.text }]}>CLOSE</Text>
                 </Pressable>
               </View>
             )}
@@ -2445,7 +2455,7 @@ export default function Index() {
 // TreeColumn — renders one path of the skill tree
 // ============================================================
 function TreeColumn({
-  title, subtitle, icon, tint, path, skills, prestige, rank, onBuy,
+  title, subtitle, icon, tint, path, skills, prestige, rank, onBuy, theme,
 }: {
   title: string; subtitle: string; icon: string; tint: string;
   path: SkillPath;
@@ -2453,6 +2463,7 @@ function TreeColumn({
   prestige: number;
   rank: Rank;
   onBuy: (n: SkillNode) => void;
+  theme: ThemeColors;
 }) {
   const nodes = SKILLS.filter((s) => s.path === path).sort((a, b) => a.row - b.row);
   return (
@@ -2480,7 +2491,7 @@ function TreeColumn({
                   styles.treeConnector,
                   {
                     backgroundColor:
-                      (level > 0 || !hasPrereq) ? `${tint}90` : `${C.border}90`,
+                      (level > 0 || !hasPrereq) ? `${tint}90` : `${theme.border}90`,
                   },
                 ]}
               />
@@ -2490,7 +2501,7 @@ function TreeColumn({
               disabled={locked || maxed || !affordable}
               style={({ pressed }) => [
                 styles.skillNode,
-                { borderColor: level > 0 ? tint : C.border },
+                { borderColor: level > 0 ? tint : theme.border },
                 level > 0 && { backgroundColor: `${tint}15` },
                 maxed && { borderColor: tint, backgroundColor: `${tint}28` },
                 locked && styles.skillNodeLocked,
@@ -2499,13 +2510,13 @@ function TreeColumn({
               ]}
               testID={`skill-${n.id}`}
             >
-              <Text style={[styles.skillName, { color: level > 0 ? tint : C.text }]}>
+              <Text style={[styles.skillName, { color: level > 0 ? tint : theme.text }]}>
                 {n.short}
               </Text>
               <Text style={styles.skillLvl}>
                 {maxed ? "MAX" : `Lv ${level}/${n.maxLevel}`}
               </Text>
-              <Text style={[styles.skillEffect, { color: level > 0 ? tint : C.textMuted }]} numberOfLines={2}>
+              <Text style={[styles.skillEffect, { color: level > 0 ? tint : theme.textMuted }]} numberOfLines={2}>
                 {n.effect(level)}
               </Text>
               {locked ? (
@@ -2519,8 +2530,8 @@ function TreeColumn({
                   <Text style={[styles.skillCostText, { color: tint }]}>OWNED</Text>
                 </View>
               ) : (
-                <View style={[styles.skillCostBox, { borderColor: affordable ? C.gold : C.border }]}>
-                  <Text style={[styles.skillCostText, { color: affordable ? C.gold : C.textMuted }]} testID={`skill-cost-${n.id}`}>
+                <View style={[styles.skillCostBox, { borderColor: affordable ? theme.gold : theme.border }]}>
+                  <Text style={[styles.skillCostText, { color: affordable ? theme.gold : theme.textMuted }]} testID={`skill-cost-${n.id}`}>
                     {nextCost} PP
                   </Text>
                 </View>
@@ -2708,11 +2719,7 @@ const styles = StyleSheet.create({
   upgradeEffect: { fontSize: 11, fontWeight: "600", marginTop: 4 },
   upgradeCta: { alignItems: "flex-end" },
   upgradeCost: { color: C.text, fontSize: 14, fontWeight: "700" },
-  upgradeBuyBtn: {
-    paddingHorizontal: 16, paddingVertical: 6, borderRadius: 6,
-    overflow: "hidden", marginTop: 4,
-  },
-  upgradeBuy: { color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
+  upgradeBuy: { color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5, marginTop: 4 },
   maxedPill: {
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
     backgroundColor: "rgba(0,107,94,0.08)", borderWidth: 1, borderColor: "rgba(0,107,94,0.2)",
@@ -2736,12 +2743,9 @@ const styles = StyleSheet.create({
   },
   investBtn: {
     height: 56, borderRadius: 12,
-    overflow: "hidden", justifyContent: "center", alignItems: "center",
-    shadowColor: "#000000", shadowOpacity: 0.15, shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 }, elevation: 4,
-  },
-  investBtnGradient: {
-    position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
+    justifyContent: "center", alignItems: "center",
+    shadowColor: "#000000", shadowOpacity: 0.08, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   investBtnDisabled: {
     backgroundColor: C.bgSoft, borderWidth: 1, borderColor: "rgba(220,38,38,0.3)", shadowOpacity: 0,

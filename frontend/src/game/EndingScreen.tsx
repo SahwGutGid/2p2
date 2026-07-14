@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Dimensions, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { formatCurrency, formatNumber, formatTimeDetailed } from "@/src/utils/format";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -41,6 +42,10 @@ type Particle = {
   color: string;
   size: number;
   delay: number;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
 };
 
 function Confetti() {
@@ -49,28 +54,35 @@ function Confetti() {
 
   if (particlesRef.current.length === 0) {
     for (let i = 0; i < 50; i++) {
+      const startX = Math.random() * width;
+      const startY = -20 - Math.random() * 100;
+      const endX = Math.random() * width;
+      const endY = height + 50;
       particlesRef.current.push({
-        x: new Animated.Value(Math.random() * width),
-        y: new Animated.Value(-20 - Math.random() * 100),
+        x: new Animated.Value(0),
+        y: new Animated.Value(0),
         rot: new Animated.Value(0),
         opacity: new Animated.Value(1),
         color: COLORS[i % COLORS.length],
         size: 6 + Math.random() * 8,
         delay: Math.random() * 1500,
+        startX,
+        startY,
+        endX,
+        endY,
       });
     }
   }
 
   useEffect(() => {
     const loops = particlesRef.current.map((p) => {
-      const fallY = height + 50;
       const duration = 3500 + Math.random() * 2000;
       return Animated.loop(
         Animated.sequence([
           Animated.delay(p.delay),
           Animated.parallel([
-            Animated.timing(p.y, { toValue: fallY, duration, useNativeDriver: true }),
-            Animated.timing(p.x, { toValue: Math.random() * width, duration, useNativeDriver: true }),
+            Animated.timing(p.x, { toValue: 1, duration, useNativeDriver: true }),
+            Animated.timing(p.y, { toValue: 1, duration, useNativeDriver: true }),
             Animated.timing(p.rot, { toValue: 360 * (Math.random() > 0.5 ? 1 : -1), duration, useNativeDriver: true }),
             Animated.sequence([
               Animated.delay(duration * 0.7),
@@ -89,17 +101,36 @@ function Confetti() {
     <View style={EndingStyles.confettiLayer} pointerEvents="none">
       {particlesRef.current.map((p, i) => (
         <Animated.View
-          key={i}
+          key={`confetti-${i}`}
           style={{
             position: "absolute",
-            left: p.x,
-            top: p.y,
+            left: p.startX,
+            top: p.startY,
             width: p.size,
             height: p.size * 0.6,
             backgroundColor: p.color,
             borderRadius: 2,
             opacity: p.opacity,
-            transform: [{ rotate: p.rot.interpolate({ inputRange: [0, 360], outputRange: ["0deg", "360deg"] }) }],
+            transform: [
+              {
+                translateX: p.x.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, p.endX - p.startX],
+                }),
+              },
+              {
+                translateY: p.y.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, p.endY - p.startY],
+                }),
+              },
+              {
+                rotate: p.rot.interpolate({
+                  inputRange: [0, 360],
+                  outputRange: ["0deg", "360deg"],
+                }),
+              },
+            ],
           }}
         />
       ))}
@@ -175,93 +206,114 @@ export function EndingScreen({
   };
 
   return (
-    <View style={EndingStyles.root}>
-      <LinearGradient colors={[C.bg, "#1E293B", C.bg]} style={EndingStyles.gradient} />
-      <Confetti />
-      <View style={EndingStyles.content}>
-        <Animated.View style={[EndingStyles.titleWrap, { opacity: iconOpacity }]}>
-          <Animated.View
-            style={[
-              EndingStyles.iconContainer,
-              {
-                opacity: iconOpacity,
-                transform: [{ scale: iconScale }],
-              },
-            ]}
-          >
-            <Text style={EndingStyles.icon}>✓</Text>
-          </Animated.View>
-        </Animated.View>
-
-        <Animated.View
-          style={[
-            EndingStyles.titleSection,
-            {
-              opacity: titleOpacity,
-              transform: [{ translateY: titleSlide }],
-            },
-          ]}
+    <SafeAreaView style={EndingStyles.root} edges={["bottom"]}>
+      <View style={EndingStyles.root}>
+        <LinearGradient colors={[C.bg, "#1E293B", C.bg]} style={EndingStyles.gradient} />
+        <Confetti />
+        <ScrollView
+          style={EndingStyles.scrollView}
+          contentContainerStyle={EndingStyles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={EndingStyles.eyebrow}>GAME COMPLETE</Text>
-          <Text style={EndingStyles.title}>Portfolio Mastered</Text>
-          <Text style={EndingStyles.subtitle}>
-            You've completed the investment journey.{"\n"}
-            Your final portfolio stands as a testament to your strategy.
-          </Text>
-        </Animated.View>
+          <View style={EndingStyles.content}>
+            <Animated.View style={[EndingStyles.titleWrap, { opacity: iconOpacity }]}>
+              <Animated.View
+                style={[
+                  EndingStyles.iconContainer,
+                  {
+                    opacity: iconOpacity,
+                    transform: [{ scale: iconScale }],
+                  },
+                ]}
+              >
+                <Text style={EndingStyles.icon}>✓</Text>
+              </Animated.View>
+            </Animated.View>
 
-        <Animated.View
-          style={[
-            EndingStyles.statsCard,
-            {
-              opacity: statsOpacity,
-              transform: [{ translateY: statsSlide }],
-            },
-          ]}
-        >
-          <Text style={EndingStyles.statsHeader}>FINAL STATISTICS</Text>
-          {statRows.map(([label, value]) => (
-            <View key={label} style={EndingStyles.statRow}>
-              <Text style={EndingStyles.statLabel}>{label}</Text>
-              <Text style={EndingStyles.statValue}>{value}</Text>
-            </View>
-          ))}
-        </Animated.View>
+            <Animated.View
+              style={[
+                EndingStyles.titleSection,
+                {
+                  opacity: titleOpacity,
+                  transform: [{ translateY: titleSlide }],
+                },
+              ]}
+            >
+              <Text style={EndingStyles.eyebrow}>GAME COMPLETE</Text>
+              <Text style={EndingStyles.title}>Portfolio Mastered</Text>
+              <Text style={EndingStyles.subtitle}>
+                You've completed the investment journey.{"\n"}
+                Your final portfolio stands as a testament to your strategy.
+              </Text>
+            </Animated.View>
 
-        <Animated.View
-          style={[
-            EndingStyles.buttonContainer,
-            {
-              opacity: buttonOpacity,
-              transform: [{ scale: Animated.multiply(buttonScale, pressScale) }],
-            },
-          ]}
-        >
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            onPress={onReplay}
-            accessibilityRole="button"
-            accessibilityLabel="Start new game"
-          >
-            <LinearGradient colors={[C.accentDeep, C.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={EndingStyles.replayBtnGradient}>
-              <Text style={EndingStyles.replayBtnText}>START NEW GAME</Text>
-            </LinearGradient>
-          </Pressable>
-          <Text style={EndingStyles.replayHint}>
-            Your completion record is saved. Progress will reset.
-          </Text>
-        </Animated.View>
+            <Animated.View
+              style={[
+                EndingStyles.statsCard,
+                {
+                  opacity: statsOpacity,
+                  transform: [{ translateY: statsSlide }],
+                },
+              ]}
+            >
+              <Text style={EndingStyles.statsHeader}>FINAL STATISTICS</Text>
+              {statRows.map(([label, value]) => (
+                <View key={label} style={EndingStyles.statRow}>
+                  <Text style={EndingStyles.statLabel}>{label}</Text>
+                  <Text style={EndingStyles.statValue}>{value}</Text>
+                </View>
+              ))}
+            </Animated.View>
+
+            <Animated.View
+              style={[
+                EndingStyles.buttonContainer,
+                {
+                  opacity: buttonOpacity,
+                  transform: [{ scale: Animated.multiply(buttonScale, pressScale) }],
+                },
+              ]}
+            >
+              <Pressable
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                onPress={onReplay}
+                accessibilityRole="button"
+                accessibilityLabel="Start new game"
+              >
+                <LinearGradient colors={[C.accentDeep, C.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={EndingStyles.replayBtnGradient}>
+                  <Text style={EndingStyles.replayBtnText}>START NEW GAME</Text>
+                </LinearGradient>
+              </Pressable>
+              <Text style={EndingStyles.replayHint}>
+                Your completion record is saved. Progress will reset.
+              </Text>
+            </Animated.View>
+          </View>
+        </ScrollView>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const EndingStyles = StyleSheet.create({
-  root: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: C.bg },
+  root: { flex: 1, backgroundColor: C.bg },
   gradient: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
   confettiLayer: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden" },
-  content: { alignItems: "center", paddingHorizontal: 24, maxWidth: 440, width: "100%" },
+  scrollView: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 32,
+    minHeight: "100%",
+  },
+  content: {
+    alignItems: "center",
+    maxWidth: 440,
+    width: "100%",
+  },
   titleWrap: { alignItems: "center", marginBottom: 24 },
   iconContainer: {
     width: 72,
@@ -334,13 +386,19 @@ const EndingStyles = StyleSheet.create({
   },
   statLabel: { fontSize: 14, color: C.textMuted, fontWeight: "500" },
   statValue: { fontSize: 15, color: C.accent, fontWeight: "600" },
-  buttonContainer: { alignItems: "center", width: "100%", paddingBottom: 32 },
+  buttonContainer: {
+    alignItems: "center",
+    width: "100%",
+    paddingBottom: 40,
+    paddingTop: 16,
+  },
   replayBtnGradient: {
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 48,
     alignItems: "center",
     borderRadius: 14,
+    minWidth: 200,
   },
   replayBtnText: { fontSize: 16, fontWeight: "700", color: "#FFFFFF", letterSpacing: 1 },
-  replayHint: { fontSize: 12, color: C.textMuted, marginTop: 14, textAlign: "center", lineHeight: 18 },
+  replayHint: { fontSize: 12, color: C.textMuted, marginTop: 16, textAlign: "center", lineHeight: 18, paddingHorizontal: 20 },
 });

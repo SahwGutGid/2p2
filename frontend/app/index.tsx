@@ -2652,13 +2652,13 @@ const styles = StyleSheet.create({
   headerRightRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, gap: 6 },
   balanceLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 1.5, flexShrink: 0 },
   iconChip: {
-    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8,
     borderWidth: 1, flexShrink: 1,
   },
   iconChipText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
 
   balanceRow: { position: "relative", marginTop: 10, flexDirection: "row", alignItems: "flex-start", flexWrap: "nowrap" },
-  balance: { fontSize: 34, fontWeight: "700", letterSpacing: -0.8, flexShrink: 1 },
+  balance: { fontSize: 34, fontWeight: "700", letterSpacing: -0.8, flexShrink: 1, numberOfLines: 1 },
   floatingProfit: {
     position: "absolute", right: 0, top: 4,
     fontSize: 14, fontWeight: "700", maxWidth: 120,
@@ -2690,11 +2690,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8,
     borderWidth: 1,
   },
-  bannerText: { fontSize: 13, fontWeight: "600", flex: 1 },
+  bannerText: { fontSize: 13, fontWeight: "600", flex: 1, numberOfLines: 2 },
   bannerDismiss: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5, marginLeft: 12 },
 
   list: { flex: 1 },
-  listContent: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 8 },
+  listContent: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 100 },
   sectionTitle: { fontSize: 12, fontWeight: "700", letterSpacing: 1, marginBottom: 14, marginLeft: 2, textTransform: "uppercase" },
 
   activeCard: {
@@ -2711,7 +2711,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   activeIconText: { fontSize: 11, fontWeight: "700" },
-  activeName: { fontSize: 14, fontWeight: "600", flexShrink: 1 },
+  activeName: { fontSize: 14, fontWeight: "600", flexShrink: 1, numberOfLines: 1 },
   activeMeta: { fontSize: 11, fontWeight: "600", marginTop: 2 },
   activeCountdown: { fontSize: 14, fontWeight: "700", letterSpacing: 0.2, flexShrink: 0, marginLeft: 10 },
   activeBarTrack: {
@@ -2720,7 +2720,7 @@ const styles = StyleSheet.create({
   },
   activeBarFill: { height: "100%", borderRadius: 3 },
   accelerateBtn: {
-    marginTop: 10, height: 44, borderRadius: 10,
+    marginTop: 10, height: 48, borderRadius: 10,
     borderWidth: 1, overflow: "hidden",
     alignItems: "center", justifyContent: "center",
   },
@@ -2749,7 +2749,7 @@ const styles = StyleSheet.create({
   cardIconText: { fontSize: 12, fontWeight: "700", letterSpacing: 0.3 },
   cardMain: { flex: 1, minWidth: 0 },
   cardTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
-  cardTitle: { fontSize: 15, fontWeight: "600", flexShrink: 1, marginRight: 8 },
+  cardTitle: { fontSize: 15, fontWeight: "600", flexShrink: 1, marginRight: 8, numberOfLines: 1 },
   badgeTag: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
     borderWidth: 1, flexShrink: 0,
@@ -2802,9 +2802,9 @@ const styles = StyleSheet.create({
   },
   upgradeBadgeLevel: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3 },
   upgradeMain: { flex: 1, minWidth: 0, marginRight: 10 },
-  upgradeName: { fontSize: 15, fontWeight: "600", flexShrink: 1 },
-  upgradeDesc: { fontSize: 12, fontWeight: "500", marginTop: 2 },
-  upgradeEffect: { fontSize: 11, fontWeight: "600", marginTop: 4 },
+  upgradeName: { fontSize: 15, fontWeight: "600", flexShrink: 1, numberOfLines: 1 },
+  upgradeDesc: { fontSize: 12, fontWeight: "500", marginTop: 2, numberOfLines: 2 },
+  upgradeEffect: { fontSize: 11, fontWeight: "600", marginTop: 4, numberOfLines: 1 },
   upgradeCta: { alignItems: "flex-end", flexShrink: 0, marginLeft: 8 },
   upgradeCost: { fontSize: 14, fontWeight: "700" },
   upgradeBuy: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5, marginTop: 4 },
@@ -2821,7 +2821,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   prestigeSummaryRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  prestigeSummaryTitle: { fontSize: 15, fontWeight: "700", flexShrink: 1 },
+  prestigeSummaryTitle: { fontSize: 15, fontWeight: "700", flexShrink: 1, numberOfLines: 1 },
   prestigeSummarySub: { fontSize: 12, fontWeight: "500", marginTop: 2 },
   prestigeSummaryChevron: { fontSize: 16, fontWeight: "600", marginLeft: 8, flexShrink: 0 },
 
@@ -2889,7 +2889,7 @@ const styles = StyleSheet.create({
   treeStatCell: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 4 },
   treeStatDivider: { width: 1, height: 28, flexShrink: 0 },
   treeStatLabel: { fontSize: 9, fontWeight: "700", letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 3, textAlign: "center" },
-  treeStatValue: { fontSize: 15, fontWeight: "700", textAlign: "center" },
+  treeStatValue: { fontSize: 15, fontWeight: "700", textAlign: "center", numberOfLines: 1 },
 
   legacyProgressSection: {
     marginTop: 16, paddingTop: 16, borderTopWidth: 1,
@@ -2919,9 +2919,9 @@ const styles = StyleSheet.create({
   prestigeExplanationTitle: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
   prestigeExplanationText: { fontSize: 12, fontWeight: "500", lineHeight: 16, marginTop: 8 },
   infoButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -2959,7 +2959,7 @@ const styles = StyleSheet.create({
   prestigeUpgradeCardLeft: { flex: 1, minWidth: 0 },
   prestigeUpgradeCardRight: { alignItems: "flex-end", flexShrink: 0, marginLeft: 10 },
   prestigeUpgradeCardName: { fontSize: 15, fontWeight: "600", flexShrink: 1 },
-  prestigeUpgradeCardDesc: { fontSize: 12, fontWeight: "500", marginTop: 2 },
+  prestigeUpgradeCardDesc: { fontSize: 12, fontWeight: "500", marginTop: 2, numberOfLines: 2 },
   prestigeUpgradeCardStatus: { fontSize: 11, fontWeight: "600", letterSpacing: 0.3 },
   prestigeUpgradeOwnedBadge: {
     width: 24, height: 24, borderRadius: 12,
@@ -2993,7 +2993,7 @@ const styles = StyleSheet.create({
   legacyStatCell: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 4 },
   legacyStatDivider: { width: 1, height: 28, flexShrink: 0 },
   legacyStatLabel: { fontSize: 9, fontWeight: "700", letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 3, textAlign: "center" },
-  legacyStatValue: { fontSize: 15, fontWeight: "700", textAlign: "center" },
+  legacyStatValue: { fontSize: 15, fontWeight: "700", textAlign: "center", numberOfLines: 1 },
   ultimateBanner: {
     marginTop: 14, padding: 12, borderRadius: 12,
     borderWidth: 1,
@@ -3015,7 +3015,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   legacyBody: { flex: 1 },
-  legacyBodyContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 24 },
+  legacyBodyContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 100 },
   legacyCard: {
     flexDirection: "row", alignItems: "center",
     borderRadius: 14,
@@ -3031,8 +3031,8 @@ const styles = StyleSheet.create({
   legacyCardLeft: { flex: 1, minWidth: 0 },
   legacyCardRight: { alignItems: "flex-end", flexShrink: 0, marginLeft: 10 },
   legacyCardName: { fontSize: 15, fontWeight: "600", flexShrink: 1 },
-  legacyCardDesc: { fontSize: 12, fontWeight: "500", marginTop: 3 },
-  legacyCardEffect: { fontSize: 11, fontWeight: "600", marginTop: 4 },
+  legacyCardDesc: { fontSize: 12, fontWeight: "500", marginTop: 3, numberOfLines: 2 },
+  legacyCardEffect: { fontSize: 11, fontWeight: "600", marginTop: 4, numberOfLines: 1 },
   legacyCardStatus: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
   legacyOwnedBadge: {
     width: 28, height: 28, borderRadius: 14,
@@ -3170,7 +3170,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   onboardingSkip: {
-    padding: 8,
+    padding: 12,
   },
   onboardingSkipText: {
     fontSize: 14,
@@ -3205,6 +3205,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     lineHeight: 16,
+    numberOfLines: 2,
   },
 
   // Celebration banner
@@ -3239,10 +3240,10 @@ const styles = StyleSheet.create({
   cashOutBtnDim: {},
   cashOutBtnArmed: {},
   cashOutBtnText: { fontSize: 14, fontWeight: "700", letterSpacing: 0.3 },
-  cashOutBtnSub: { fontSize: 11, fontWeight: "600", marginTop: 2 },
+  cashOutBtnSub: { fontSize: 11, fontWeight: "600", marginTop: 2, numberOfLines: 1 },
 
   treeBody: { flex: 1 },
-  treeBodyContent: { paddingHorizontal: 8, paddingTop: 16, paddingBottom: 24 },
+  treeBodyContent: { paddingHorizontal: 8, paddingTop: 16, paddingBottom: 100 },
   treeGridRow: { flexDirection: "row", alignItems: "flex-start" },
   treeCol: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 4 },
   treeColHeader: {
@@ -3268,12 +3269,12 @@ const styles = StyleSheet.create({
   skillNodeDim: { opacity: 0.75 },
   skillName: { fontSize: 11, fontWeight: "600", letterSpacing: 0.3, textAlign: "center" },
   skillLvl: { fontSize: 9, fontWeight: "500", letterSpacing: 0.3, marginTop: 2 },
-  skillEffect: { fontSize: 10, fontWeight: "500", textAlign: "center", marginTop: 4, lineHeight: 13 },
+  skillEffect: { fontSize: 10, fontWeight: "500", textAlign: "center", marginTop: 4, lineHeight: 13, numberOfLines: 2 },
   skillLockBox: {
     marginTop: "auto", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6,
     borderWidth: 1,
   },
-  skillLockText: { fontSize: 9, fontWeight: "600", letterSpacing: 0.3 },
+  skillLockText: { fontSize: 9, fontWeight: "600", letterSpacing: 0.3, numberOfLines: 1 },
   skillCostBox: {
     marginTop: "auto", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
     borderWidth: 1,
@@ -3303,7 +3304,7 @@ const styles = StyleSheet.create({
     fontSize: 14, fontWeight: "600", letterSpacing: 0.5,
   },
   debugCloseBtn: {
-    width: 32, height: 32, borderRadius: 8,
+    width: 36, height: 36, borderRadius: 8,
     alignItems: "center", justifyContent: "center",
     borderWidth: 1,
   },
@@ -3325,7 +3326,7 @@ const styles = StyleSheet.create({
     fontSize: 11, fontWeight: "600", marginBottom: 8,
   },
   debugActionBtn: {
-    marginTop: 8, height: 40, borderRadius: 8,
+    marginTop: 8, height: 44, borderRadius: 8,
     alignItems: "center", justifyContent: "center",
     paddingHorizontal: 16,
   },

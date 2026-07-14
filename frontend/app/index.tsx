@@ -2886,10 +2886,10 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center",
     marginTop: 14, paddingTop: 14, borderTopWidth: 1,
   },
-  treeStatCell: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 4 },
+  treeStatCell: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 2 },
   treeStatDivider: { width: 1, height: 28, flexShrink: 0 },
-  treeStatLabel: { fontSize: 9, fontWeight: "700", letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 3, textAlign: "center" },
-  treeStatValue: { fontSize: 15, fontWeight: "700", textAlign: "center", numberOfLines: 1 },
+  treeStatLabel: { fontSize: 8, fontWeight: "700", letterSpacing: 0.2, textTransform: "uppercase", marginBottom: 2, textAlign: "center" },
+  treeStatValue: { fontSize: 14, fontWeight: "700", textAlign: "center", numberOfLines: 1 },
 
   legacyProgressSection: {
     marginTop: 16, paddingTop: 16, borderTopWidth: 1,

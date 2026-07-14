@@ -10,6 +10,7 @@ export interface ThemeColors {
   gold: string;
   gain: string;
   loss: string;
+  info: string;
   text: string;
   textMuted: string;
   border: string;
@@ -25,6 +26,7 @@ export const lightTheme: ThemeColors = {
   gold: "#F59E0B",
   gain: "#00A67E",
   loss: "#DC2626",
+  info: "#2563EB",
   text: "#111827",
   textMuted: "#6B7280",
   border: "#E5E7EB",
@@ -40,6 +42,7 @@ export const darkTheme: ThemeColors = {
   gold: "#F59E0B",
   gain: "#00A67E",
   loss: "#DC2626",
+  info: "#3B82F6",
   text: "#F8FAFC",
   textMuted: "#94A3B8",
   border: "#334155",

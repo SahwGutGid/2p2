@@ -1379,7 +1379,7 @@ export default function Index() {
                 <Pressable
                   onPress={() => { sound.play("click"); setShowLegacy(true); }}
                   hitSlop={12}
-                  style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}25`, marginLeft: 6, borderWidth: 1.5 }]}
+                  style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}15`, marginLeft: 6, borderWidth: 1.5 }]}
                   testID="open-legacy"
                 >
                   <Text style={[styles.iconChipText, { color: theme.legacy }]}>
@@ -1555,16 +1555,16 @@ export default function Index() {
             {/* Cash out */}
             <HoldButton
               onHoldComplete={doPrestige}
-              colors={["#A855F7", "#9333EA"]}
-              textColor={canPrestige ? "#001018" : theme.prestige}
-              progressColor="#FFFFFF"
+              colors={["#E6B84A", "#FFD700"]}
+              textColor="#070B14"
+              progressColor="#F8F9FA"
               disabled={!canPrestige}
               style={[
                 styles.cashOutBtn,
-                { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
+                { borderColor: theme.legacy, backgroundColor: `${theme.legacy}12` },
                 !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
-                prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
-                canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
+                prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.legacy, borderColor: theme.legacy }],
+                canPrestige && !prestigeArmed && { backgroundColor: theme.legacy },
               ]}
               testID="prestige-button"
             >
@@ -1719,7 +1719,7 @@ export default function Index() {
           </View>
 
           {/* Legacy Explanation */}
-          <View style={[styles.legacyExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.legacy}08` }]}>
+          <View style={[styles.legacyExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.legacy}06` }]}>
             <View style={styles.legacyExplanationHeader}>
               <Text style={[styles.legacyExplanationTitle, { color: theme.legacy }]}>WHAT ARE LEGACY POINTS?</Text>
               <Pressable
@@ -1728,7 +1728,7 @@ export default function Index() {
                   setShowLegacyInfo(!showLegacyInfo);
                 }}
                 hitSlop={8}
-                style={[styles.infoButton, { backgroundColor: `${theme.legacy}18` }]}
+                style={[styles.infoButton, { backgroundColor: `${theme.legacy}12` }]}
               >
                 <Text style={[styles.infoButtonText, { color: theme.legacy }]}>ⓘ</Text>
               </Pressable>
@@ -1742,7 +1742,7 @@ export default function Index() {
           </View>
 
           {isUltimateOwned && (
-            <View style={[styles.ultimateBanner, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}12` }]}>
+            <View style={[styles.ultimateBanner, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}08` }]}>
               <Text style={[styles.ultimateBannerText, { color: theme.legacy }]}>🏆 GAME COMPLETE 🏆</Text>
               <Text style={[styles.ultimateBannerSub, { color: theme.text }]}>You have achieved the Ultimate Investor rank</Text>
               <Pressable
@@ -1781,7 +1781,7 @@ export default function Index() {
                   styles.legacyCard,
                   { backgroundColor: theme.panel, borderColor: theme.border },
                   owned && [styles.legacyCardOwned, { backgroundColor: `${upgrade.tint}12` }],
-                  upgrade.isFinal && [styles.legacyCardFinal, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}12` }],
+                  upgrade.isFinal && [styles.legacyCardFinal, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}08` }],
                   !owned && { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}15` },
                   pressed && canAfford && { transform: [{ scale: 0.98 }] },
                 ]}

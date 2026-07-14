@@ -529,7 +529,7 @@ export default function Index() {
         title: "Legacy Endgame",
         description: `You've unlocked the Legacy system! Spend your Legacy Points on permanent upgrades.`,
         progress: "UNLOCKED",
-        color: theme.gold,
+        color: theme.legacy,
       };
     }
     if (balance >= PRESTIGE_MIN_BALANCE) {
@@ -537,7 +537,7 @@ export default function Index() {
         title: "Prestige",
         description: `Cash out to earn Prestige Points. Each PP gives +${fmtPct(5)} permanent profit bonus.`,
         progress: `Ready to cash out`,
-        color: theme.gold,
+        color: theme.legacy,
       };
     }
     if (prestige > 0) {
@@ -552,7 +552,7 @@ export default function Index() {
       title: "First Investment",
       description: `Start investing to build your portfolio and unlock Prestige.`,
       progress: actives.length > 0 ? "In progress" : "Not started",
-      color: theme.accent,
+      color: theme.upgrade,
     };
   }, [balance, prestige, stats.totalPPEarned, actives.length]);
 
@@ -1366,17 +1366,17 @@ export default function Index() {
                 testID="tree-back"
                 style={styles.backBtn}
               >
-                <Text style={[styles.backBtnText, { color: theme.accent }]}>← BACK</Text>
+                <Text style={[styles.backBtnText, { color: theme.upgrade }]}>← BACK</Text>
               </Pressable>
               <Text style={[styles.treeTitle, { color: theme.text }]}>PRESTIGE TREE</Text>
               {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
                 <Pressable
                   onPress={() => { sound.play("click"); setShowLegacy(true); }}
                   hitSlop={12}
-                  style={[styles.iconChip, { borderColor: theme.gold, backgroundColor: `${theme.gold}25`, marginLeft: 6, borderWidth: 1.5 }]}
+                  style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}25`, marginLeft: 6, borderWidth: 1.5 }]}
                   testID="open-legacy"
                 >
-                  <Text style={[styles.iconChipText, { color: theme.gold }]}>
+                  <Text style={[styles.iconChipText, { color: theme.legacy }]}>
                     LEGACY · {compact(legacyPoints)}
                   </Text>
                 </Pressable>
@@ -1425,7 +1425,7 @@ export default function Index() {
             <View style={[styles.treeStats, { backgroundColor: theme.panel, borderColor: theme.border }]}>
               <View style={styles.treeStatCell}>
                 <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>PP AVAILABLE</Text>
-                <Text style={[styles.treeStatValue, { color: theme.gold }]} testID="tree-pp-available">{prestige}</Text>
+                <Text style={[styles.treeStatValue, { color: theme.prestige }]} testID="tree-pp-available">{prestige}</Text>
               </View>
               <View style={[styles.treeStatDivider, { backgroundColor: theme.border }]} />
               <View style={styles.treeStatCell}>
@@ -1456,7 +1456,7 @@ export default function Index() {
                     styles.legacyProgressBarFill,
                     {
                       width: Math.min(100, (stats.totalPPEarned / LEGACY_UNLOCK_THRESHOLD) * 100).toFixed(0) + "%" as any,
-                      backgroundColor: stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD ? theme.gold : theme.gold,
+                      backgroundColor: stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD ? theme.legacy : theme.legacy,
                     },
                   ]}
                 />
@@ -1468,18 +1468,18 @@ export default function Index() {
             </View>
 
             {/* Prestige Explanation */}
-            <View style={[styles.prestigeExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.gold}08` }]}>
+            <View style={[styles.prestigeExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.prestige}08` }]}>
               <View style={styles.prestigeExplanationHeader}>
-                <Text style={[styles.prestigeExplanationTitle, { color: theme.gold }]}>WHAT IS PRESTIGE?</Text>
+                <Text style={[styles.prestigeExplanationTitle, { color: theme.prestige }]}>WHAT IS PRESTIGE?</Text>
                 <Pressable
                   onPress={() => {
                     sound.play("click");
                     setShowPrestigeInfo(!showPrestigeInfo);
                   }}
                   hitSlop={8}
-                  style={[styles.infoButton, { backgroundColor: `${theme.gold}18` }]}
+                  style={[styles.infoButton, { backgroundColor: `${theme.prestige}18` }]}
                 >
-                  <Text style={[styles.infoButtonText, { color: theme.gold }]}>ⓘ</Text>
+                  <Text style={[styles.infoButtonText, { color: theme.prestige }]}>ⓘ</Text>
                 </Pressable>
               </View>
               {showPrestigeInfo && (
@@ -1551,10 +1551,10 @@ export default function Index() {
               onPress={doPrestige}
               style={({ pressed }) => [
                 styles.cashOutBtn,
-                { borderColor: theme.gold, backgroundColor: `${theme.gold}12` },
+                { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
                 !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
-                prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.gold, borderColor: theme.gold }],
-                canPrestige && !prestigeArmed && { backgroundColor: theme.gold },
+                prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
+                canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
                 pressed && canPrestige && { transform: [{ scale: 0.98 }] },
               ]}
               testID="prestige-button"
@@ -1562,7 +1562,7 @@ export default function Index() {
               <Text
                 style={[
                   styles.cashOutBtnText,
-                  { color: theme.gold },
+                  { color: theme.prestige },
                   !canPrestige && { color: theme.textMuted },
                   prestigeArmed && { color: "#001018" },
                   canPrestige && !prestigeArmed && { color: "#001018" },
@@ -1590,13 +1590,14 @@ export default function Index() {
             style={styles.treeBody}
             contentContainerStyle={styles.treeBodyContent}
             showsVerticalScrollIndicator={true}
+            indicatorStyle="white"
           >
             <View style={styles.treeGridRow}>
               <TreeColumn
                 title="AUTOMATION"
                 subtitle="Idle strength"
                 icon="A"
-                tint={theme.accent}
+                tint={theme.upgrade}
                 path="automation"
                 skills={skills}
                 prestige={prestige}
@@ -1620,7 +1621,7 @@ export default function Index() {
                 title="METHODS"
                 subtitle="New income"
                 icon="M"
-                tint={theme.gold}
+                tint={theme.money}
                 path="money"
                 skills={skills}
                 prestige={prestige}
@@ -1700,9 +1701,9 @@ export default function Index() {
               testID="legacy-back"
               style={styles.backBtn}
             >
-              <Text style={[styles.backBtnText, { color: theme.accent }]}>← BACK</Text>
+              <Text style={[styles.backBtnText, { color: theme.upgrade }]}>← BACK</Text>
             </Pressable>
-            <Text style={[styles.legacyTitle, { color: theme.text }, isUltimateOwned && { color: theme.gold }]}>
+            <Text style={[styles.legacyTitle, { color: theme.text }, isUltimateOwned && { color: theme.legacy }]}>
               {isUltimateOwned ? "THE ULTIMATE INVESTOR" : "LEGACY ENDGAME"}
             </Text>
             <View style={{ width: 60 }} />
@@ -1711,7 +1712,7 @@ export default function Index() {
           <View style={[styles.legacyStats, { backgroundColor: theme.panel, borderColor: theme.border }]}>
             <View style={styles.legacyStatCell}>
               <Text style={[styles.legacyStatLabel, { color: theme.textMuted }]}>LEGACY POINTS</Text>
-              <Text style={[styles.legacyStatValue, { color: theme.gold }]}>{compact(legacyPoints)}</Text>
+              <Text style={[styles.legacyStatValue, { color: theme.legacy }]}>{compact(legacyPoints)}</Text>
             </View>
             <View style={[styles.legacyStatDivider, { backgroundColor: theme.border }]} />
             <View style={styles.legacyStatCell}>
@@ -1728,18 +1729,18 @@ export default function Index() {
           </View>
 
           {/* Legacy Explanation */}
-          <View style={[styles.legacyExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.gold}08` }]}>
+          <View style={[styles.legacyExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.legacy}08` }]}>
             <View style={styles.legacyExplanationHeader}>
-              <Text style={[styles.legacyExplanationTitle, { color: theme.gold }]}>WHAT ARE LEGACY POINTS?</Text>
+              <Text style={[styles.legacyExplanationTitle, { color: theme.legacy }]}>WHAT ARE LEGACY POINTS?</Text>
               <Pressable
                 onPress={() => {
                   sound.play("click");
                   setShowLegacyInfo(!showLegacyInfo);
                 }}
                 hitSlop={8}
-                style={[styles.infoButton, { backgroundColor: `${theme.gold}18` }]}
+                style={[styles.infoButton, { backgroundColor: `${theme.legacy}18` }]}
               >
-                <Text style={[styles.infoButtonText, { color: theme.gold }]}>ⓘ</Text>
+                <Text style={[styles.infoButtonText, { color: theme.legacy }]}>ⓘ</Text>
               </Pressable>
             </View>
             {showLegacyInfo && (
@@ -1751,8 +1752,8 @@ export default function Index() {
           </View>
 
           {isUltimateOwned && (
-            <View style={[styles.ultimateBanner, { borderColor: theme.gold, backgroundColor: `${theme.gold}12` }]}>
-              <Text style={[styles.ultimateBannerText, { color: theme.gold }]}>🏆 GAME COMPLETE 🏆</Text>
+            <View style={[styles.ultimateBanner, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}12` }]}>
+              <Text style={[styles.ultimateBannerText, { color: theme.legacy }]}>🏆 GAME COMPLETE 🏆</Text>
               <Text style={[styles.ultimateBannerSub, { color: theme.text }]}>You have achieved the Ultimate Investor rank</Text>
               <Pressable
                 onPress={() => {
@@ -1762,12 +1763,12 @@ export default function Index() {
                 }}
                 style={({ pressed }) => [
                   styles.viewEndingBtn,
-                  { borderColor: theme.gold, backgroundColor: `${theme.gold}12` },
+                  { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
                   pressed && { transform: [{ scale: 0.97 }] },
                 ]}
                 testID="view-ending-btn"
               >
-                <Text style={[styles.viewEndingBtnText, { color: theme.gold }]}>VIEW ENDING</Text>
+                <Text style={[styles.viewEndingBtnText, { color: theme.legacy }]}>VIEW ENDING</Text>
               </Pressable>
             </View>
           )}
@@ -1777,6 +1778,7 @@ export default function Index() {
           style={styles.legacyBody}
           contentContainerStyle={styles.legacyBodyContent}
           showsVerticalScrollIndicator={true}
+          indicatorStyle="white"
         >
           {LEGACY_UPGRADES.map((upgrade) => {
             const owned = legacyUpgrades[upgrade.id];
@@ -1790,7 +1792,7 @@ export default function Index() {
                   styles.legacyCard,
                   { backgroundColor: theme.panel, borderColor: theme.border },
                   owned && [styles.legacyCardOwned, { backgroundColor: `${upgrade.tint}12` }],
-                  upgrade.isFinal && [styles.legacyCardFinal, { borderColor: theme.gold, backgroundColor: `${theme.gold}12` }],
+                  upgrade.isFinal && [styles.legacyCardFinal, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}12` }],
                   !owned && { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}15` },
                   pressed && canAfford && { transform: [{ scale: 0.98 }] },
                 ]}
@@ -1846,8 +1848,8 @@ export default function Index() {
             transform: [{ scale: loadingLogoScale }],
           },
         ]}>
-          <View style={[styles.loadingLogoInner, { borderColor: theme.accent }]}>
-            <Text style={[styles.loadingLogoText, { color: theme.accent }]}>P2P</Text>
+          <View style={[styles.loadingLogoInner, { borderColor: theme.upgrade }]}>
+            <Text style={[styles.loadingLogoText, { color: theme.upgrade }]}>P2P</Text>
           </View>
         </Animated.View>
         <Animated.View style={[styles.loadingTextContainer, { opacity: loadingTextOpacity }]}>
@@ -1855,9 +1857,9 @@ export default function Index() {
           <Text style={styles.loadingSubtitle}>Build Your Financial Empire</Text>
         </Animated.View>
         <View style={styles.loadingSpinner}>
-          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, loadingDot1Style]} />
-          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, loadingDot2Style]} />
-          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, loadingDot3Style]} />
+          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.upgrade }, loadingDot1Style]} />
+          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.upgrade }, loadingDot2Style]} />
+          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.upgrade }, loadingDot3Style]} />
         </View>
       </SafeAreaView>
     );
@@ -1921,8 +1923,8 @@ export default function Index() {
                 key={i}
                 style={[
                   styles.progressDot,
-                  i <= onboardingStep && { backgroundColor: theme.accent },
-                  i < onboardingStep && { backgroundColor: theme.accentDeep },
+                  i <= onboardingStep && { backgroundColor: theme.upgrade },
+                  i < onboardingStep && { backgroundColor: theme.upgrade },
                 ]}
               />
             ))}
@@ -1931,8 +1933,8 @@ export default function Index() {
           <Animated.View style={[styles.onboardingCard, { borderColor: theme.border }, slideStyle]}>
             <Text style={[styles.onboardingTitle, { color: theme.text }]}>{current.title}</Text>
             <Text style={[styles.onboardingDescription, { color: theme.textMuted }]}>{current.description}</Text>
-            <View style={[styles.onboardingHighlight, { backgroundColor: `${theme.accent}12` }]}>
-              <Text style={[styles.onboardingHighlightText, { color: theme.accent }]}>{current.highlight}</Text>
+            <View style={[styles.onboardingHighlight, { backgroundColor: `${theme.upgrade}12` }]}>
+              <Text style={[styles.onboardingHighlightText, { color: theme.upgrade }]}>{current.highlight}</Text>
             </View>
           </Animated.View>
 
@@ -1945,7 +1947,7 @@ export default function Index() {
             testID="onboarding-next"
           >
             <LinearGradient
-              colors={[theme.accent, theme.accentDeep]}
+              colors={[theme.upgrade, theme.upgrade]}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={styles.onboardingButtonGradient}
             >
@@ -1990,7 +1992,7 @@ export default function Index() {
           ]}
         >
           <LinearGradient
-            colors={[`${theme.accent}30`, `${theme.accent}10`, `${theme.accent}30`]}
+            colors={[`${theme.upgrade}30`, `${theme.upgrade}10`, `${theme.upgrade}30`]}
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.celebrationContent}>
@@ -2040,7 +2042,7 @@ export default function Index() {
 
         <Animated.View style={[styles.balanceRow, balanceStyle]}>
           <LinearGradient
-            colors={[`${theme.accent}08`, `${theme.accent}04`, 'transparent']}
+            colors={[`${theme.upgrade}08`, `${theme.upgrade}04`, 'transparent']}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
           />
@@ -2055,12 +2057,12 @@ export default function Index() {
         </Animated.View>
 
         <View style={styles.pillRow}>
-          <View style={[styles.slotPill, { borderColor: theme.accent, backgroundColor: `${theme.accent}08` }]} testID="slot-pill">
-            <Text style={[styles.slotPillText, { color: theme.accent }]}>Slots {actives.length}/{slots}</Text>
+          <View style={[styles.slotPill, { borderColor: theme.upgrade, backgroundColor: `${theme.upgrade}08` }]} testID="slot-pill">
+            <Text style={[styles.slotPillText, { color: theme.upgrade }]}>Slots {actives.length}/{slots}</Text>
           </View>
           {prestige > 0 && (
-            <View style={[styles.pill, { borderColor: theme.gold, backgroundColor: `${theme.gold}22` }]} testID="prestige-pill">
-              <Text style={[styles.pillText, { color: theme.gold }]}>
+            <View style={[styles.pill, { borderColor: theme.prestige, backgroundColor: `${theme.prestige}22` }]} testID="prestige-pill">
+              <Text style={[styles.pillText, { color: theme.prestige }]}>
                 ★ {prestige} PP · +{fmtPct(currentBonusPct)}
               </Text>
             </View>
@@ -2078,8 +2080,8 @@ export default function Index() {
             </View>
           )}
           {treeEffects.savingsRatePerSec > 0 && (
-            <View style={[styles.pill, { borderColor: theme.gold, backgroundColor: `${theme.gold}18` }]} testID="savings-pill">
-              <Text style={[styles.pillText, { color: theme.gold }]}>
+            <View style={[styles.pill, { borderColor: theme.money, backgroundColor: `${theme.money}18` }]} testID="savings-pill">
+              <Text style={[styles.pillText, { color: theme.money }]}>
                 Savings +{fmtPct(treeEffects.savingsRatePerSec * 3600 * 100)}/h
               </Text>
             </View>
@@ -2117,8 +2119,8 @@ export default function Index() {
           </View>
         )}
         {prestigeCelebrate > 0 && (
-          <View style={[styles.banner, { backgroundColor: `${theme.gold}22`, borderColor: theme.gold }]} testID="prestige-celebrate">
-            <Text style={[styles.bannerText, { color: theme.gold }]}>
+          <View style={[styles.banner, { backgroundColor: `${theme.prestige}22`, borderColor: theme.prestige }]} testID="prestige-celebrate">
+            <Text style={[styles.bannerText, { color: theme.prestige }]}>
               +{prestigeCelebrate} PP earned — run #{totalPrestiges}
             </Text>
           </View>
@@ -2144,6 +2146,7 @@ export default function Index() {
         style={styles.list}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={true}
+        indicatorStyle="white"
       >
         {actives.length > 0 && (
           <>
@@ -2172,7 +2175,7 @@ export default function Index() {
                   </View>
                   <View style={[styles.activeBarTrack, { backgroundColor: theme.bgSoft }]}>
                     <LinearGradient
-                      colors={[theme.accent, theme.accentDeep]}
+                      colors={[theme.upgrade, theme.upgrade]}
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                       style={[styles.activeBarFill, { width: (progress * 100).toFixed(0) + "%" as any }]}
                     />
@@ -2218,7 +2221,7 @@ export default function Index() {
                 style={({ pressed }) => [
                   styles.card,
                   { backgroundColor: theme.panel, borderColor: theme.border },
-                  isSelected && [styles.cardSelected, { borderColor: theme.accent, shadowColor: theme.accent }],
+                  isSelected && [styles.cardSelected, { borderColor: theme.upgrade, shadowColor: theme.upgrade }],
                   !affordable && styles.cardLocked,
                   pressed && !disabled && { transform: [{ scale: 0.99 }] },
                 ]}
@@ -2226,7 +2229,7 @@ export default function Index() {
               >
                 {isSelected && !disabled && (
                   <LinearGradient
-                    colors={[`${theme.accent}14`, `${theme.accent}04`]}
+                    colors={[`${theme.upgrade}14`, `${theme.upgrade}04`]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFill}
                     pointerEvents="none"
@@ -2242,7 +2245,7 @@ export default function Index() {
                       {!affordable ? (
                         <View style={[styles.badgeLoss, { borderColor: theme.loss, backgroundColor: `${theme.loss}08` }]}><Text style={[styles.badgeLossText, { color: theme.loss }]}>LOCKED</Text></View>
                       ) : (
-                        <View style={[styles.badgeTag, { borderColor: theme.accent, backgroundColor: `${theme.accent}08` }]}><Text style={[styles.badgeTagText, { color: theme.accent }]}>{pkg.tag}</Text></View>
+                        <View style={[styles.badgeTag, { borderColor: theme.upgrade, backgroundColor: `${theme.upgrade}08` }]}><Text style={[styles.badgeTagText, { color: theme.upgrade }]}>{pkg.tag}</Text></View>
                       )}
                     </View>
                     <View style={styles.cardMetaRow}>
@@ -2284,7 +2287,7 @@ export default function Index() {
                 { backgroundColor: theme.panel, borderColor: theme.border },
                 !affordable && !maxed && styles.upgradeCardDim,
                 pressed && affordable && { transform: [{ scale: 0.99 }] },
-                maxed && { borderColor: theme.accent, backgroundColor: theme.panelElevated },
+                maxed && { borderColor: theme.upgrade, backgroundColor: theme.panelElevated },
               ]}
               testID={`upgrade-${u.id}`}
             >
@@ -2299,7 +2302,7 @@ export default function Index() {
                 </View>
                 <View style={styles.upgradeCta}>
                   {maxed ? (
-                    <View style={[styles.maxedPill, { borderColor: theme.accent, backgroundColor: `${theme.accent}08` }]}><Text style={[styles.maxedText, { color: theme.accent }]}>MAX</Text></View>
+                    <View style={[styles.maxedPill, { borderColor: theme.upgrade, backgroundColor: `${theme.upgrade}08` }]}><Text style={[styles.maxedText, { color: theme.upgrade }]}>MAX</Text></View>
                   ) : (
                     <>
                       <Text style={[styles.upgradeCost, { color: theme.text }, !affordable && { color: theme.textMuted }]} testID={`upgrade-cost-${u.id}`}>{money(cost)}</Text>
@@ -2316,11 +2319,11 @@ export default function Index() {
         <Text style={[styles.sectionTitle, { marginTop: 24 }, { color: theme.textMuted }]}>PRESTIGE</Text>
         <Pressable
           onPress={() => { sound.play("click"); setShowTree(true); }}
-          style={({ pressed }) => [styles.prestigeSummary, { backgroundColor: theme.panel, borderColor: theme.gold }, pressed && { transform: [{ scale: 0.99 }] }]}
+          style={({ pressed }) => [styles.prestigeSummary, { backgroundColor: theme.panel, borderColor: theme.prestige }, pressed && { transform: [{ scale: 0.99 }] }]}
           testID="prestige-summary"
         >
           <LinearGradient
-            colors={[`${theme.gold}22`, `${theme.accent}18`]}
+            colors={[`${theme.prestige}22`, `${theme.upgrade}18`]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
@@ -2334,12 +2337,12 @@ export default function Index() {
                 {prestige} PP · +{fmtPct(currentBonusPct)} profit · {totalPrestiges} cash-outs
               </Text>
               {canPrestige && (
-                <Text style={[styles.prestigeSummarySub, { color: theme.gold, marginTop: 4 }]}>
+                <Text style={[styles.prestigeSummarySub, { color: theme.prestige, marginTop: 4 }]}>
                   Ready to cash out for +{prestigeGainAvailable} PP
                 </Text>
               )}
             </View>
-            <Text style={[styles.prestigeSummaryChevron, { color: theme.gold }]}>▶</Text>
+            <Text style={[styles.prestigeSummaryChevron, { color: theme.prestige }]}>▶</Text>
           </View>
         </Pressable>
 
@@ -2347,25 +2350,25 @@ export default function Index() {
         {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
           <Pressable
             onPress={() => { sound.play("click"); setShowLegacy(true); }}
-            style={({ pressed }) => [styles.prestigeSummary, { marginTop: 12, backgroundColor: theme.panel, borderColor: `${theme.gold}55` }, pressed && { transform: [{ scale: 0.99 }] }]}
+            style={({ pressed }) => [styles.prestigeSummary, { marginTop: 12, backgroundColor: theme.panel, borderColor: `${theme.legacy}55` }, pressed && { transform: [{ scale: 0.99 }] }]}
             testID="legacy-summary"
           >
             <LinearGradient
-              colors={[`${theme.gold}22`, `${theme.gold}12`]}
+              colors={[`${theme.legacy}22`, `${theme.legacy}12`]}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.prestigeSummaryRow}>
-              <View style={[styles.rankBadge, { borderColor: theme.gold, backgroundColor: "rgba(255,215,0,0.15)" }]}>
-                <Text style={[styles.rankBadgeIcon, { color: theme.gold }]}>★</Text>
+              <View style={[styles.rankBadge, { borderColor: theme.legacy, backgroundColor: "rgba(255,215,0,0.15)" }]}>
+                <Text style={[styles.rankBadgeIcon, { color: theme.legacy }]}>★</Text>
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={[styles.prestigeSummaryTitle, { color: theme.gold }]}>LEGACY</Text>
+                <Text style={[styles.prestigeSummaryTitle, { color: theme.legacy }]}>LEGACY</Text>
                 <Text style={[styles.prestigeSummarySub, { color: theme.textMuted }]}>
                   {legacyPoints} LP · {Object.values(legacyUpgrades).filter(Boolean).length}/7 upgrades
                 </Text>
               </View>
-              <Text style={[styles.prestigeSummaryChevron, { color: theme.gold }]}>▶</Text>
+              <Text style={[styles.prestigeSummaryChevron, { color: theme.legacy }]}>▶</Text>
             </View>
           </Pressable>
         )}
@@ -2386,7 +2389,7 @@ export default function Index() {
           >
             {canInvest ? (
               <LinearGradient
-                colors={[theme.accent, theme.accentDeep]}
+                colors={[theme.upgrade, theme.upgrade]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.investBtnGradient}
               >
@@ -2417,9 +2420,9 @@ export default function Index() {
       {/* Developer menu overlay (hidden gesture: 7 taps on "PORTFOLIO BALANCE" within 3s) */}
       {showDebug && (
         <View style={styles.debugOverlay} testID="debug-overlay">
-          <View style={[styles.debugCard, { backgroundColor: theme.panel, borderColor: theme.accent }]}>
+          <View style={[styles.debugCard, { backgroundColor: theme.panel, borderColor: theme.upgrade }]}>
             <View style={[styles.debugHeader, { borderBottomColor: theme.border }]}>
-              <Text style={[styles.debugTitle, { color: theme.accent }]}>DEVELOPER MENU</Text>
+              <Text style={[styles.debugTitle, { color: theme.upgrade }]}>DEVELOPER MENU</Text>
               <Pressable
                 onPress={closeDebug}
                 hitSlop={12}
@@ -2454,7 +2457,7 @@ export default function Index() {
                   onPress={submitDebugPassword}
                   style={({ pressed }) => [
                     styles.debugActionBtn,
-                    { backgroundColor: theme.accent },
+                    { backgroundColor: theme.upgrade },
                     pressed && { opacity: 0.85 },
                   ]}
                   testID="debug-password-submit"
@@ -2480,7 +2483,7 @@ export default function Index() {
                       onPress={devAddMoney}
                       style={({ pressed }) => [
                         styles.debugActionBtn,
-                        { backgroundColor: theme.accent },
+                        { backgroundColor: theme.upgrade },
                         { marginLeft: 8, marginTop: 0, flex: 0 },
                         pressed && { opacity: 0.85 },
                       ]}
@@ -2507,7 +2510,7 @@ export default function Index() {
                       onPress={devAddPP}
                       style={({ pressed }) => [
                         styles.debugActionBtn,
-                        { backgroundColor: theme.accent },
+                        { backgroundColor: theme.upgrade },
                         { marginLeft: 8, marginTop: 0, flex: 0 },
                         pressed && { opacity: 0.85 },
                       ]}
@@ -2617,8 +2620,8 @@ function TreeColumn({
                   <Text style={[styles.skillCostText, { color: tint }]}>OWNED</Text>
                 </View>
               ) : (
-                <View style={[styles.skillCostBox, { borderColor: affordable ? theme.gold : theme.border }]}>
-                  <Text style={[styles.skillCostText, { color: affordable ? theme.gold : theme.textMuted }]} testID={`skill-cost-${n.id}`}>
+                <View style={[styles.skillCostBox, { borderColor: affordable ? theme.prestige : theme.border }]}>
+                  <Text style={[styles.skillCostText, { color: affordable ? theme.prestige : theme.textMuted }]} testID={`skill-cost-${n.id}`}>
                     {nextCost} PP
                   </Text>
                 </View>

@@ -57,7 +57,7 @@ import {
   type Stats,
 } from "@/src/game/features";
 import { formatCurrency, formatNumber, formatDuration, formatSeconds, formatPercent } from "@/src/utils/format";
-import { getTheme, type ThemeMode, type ThemeColors } from "@/src/utils/theme";
+import { getTheme, type ThemeColors } from "@/src/utils/theme";
 
 // ---------- Theme ----------
 const C = {
@@ -145,10 +145,9 @@ type Settings = {
   sfx: boolean;
   haptics: boolean;
   notifications: boolean;
-  theme: ThemeMode;
 };
 const defaultSettings = (): Settings => ({
-  music: true, sfx: true, haptics: true, notifications: true, theme: 'light',
+  music: true, sfx: true, haptics: true, notifications: true,
 });
 
 type CompletionStats = {
@@ -427,8 +426,8 @@ export default function Index() {
   const packages = useMemo(() => getPackages(treeEffects), [treeEffects]);
   const rank = useMemo(() => computeRank(totalPrestiges), [totalPrestiges]);
 
-  // Theme - dynamic based on settings
-  const theme = getTheme(settings.theme);
+  // Theme - always dark mode
+  const theme = getTheme();
 
   // Balance counter animation (RAF)
   const [displayBalance, setDisplayBalance] = useState(100);
@@ -1094,14 +1093,6 @@ export default function Index() {
       const next = !v;
       if (next) music.kick();
       return next;
-    });
-    Haptics.selectionAsync().catch(() => {});
-  };
-
-  const toggleTheme = () => {
-    setSettings((prev) => {
-      const newTheme: ThemeMode = prev.theme === 'light' ? 'dark' : 'light';
-      return { ...prev, theme: newTheme };
     });
     Haptics.selectionAsync().catch(() => {});
   };
@@ -2010,19 +2001,9 @@ export default function Index() {
           </Pressable>
           <View style={styles.headerRightRow}>
             <Pressable
-              onPress={toggleTheme}
-              hitSlop={12}
-              style={[styles.iconChip, { borderColor: theme.border, backgroundColor: theme.bgSoft }]}
-              testID="theme-toggle"
-            >
-              <Text style={[styles.iconChipText, { color: theme.text }]}>
-                {settings.theme === 'light' ? '☀ LIGHT' : '☾ DARK'}
-              </Text>
-            </Pressable>
-            <Pressable
               onPress={toggleMusic}
               hitSlop={12}
-              style={[styles.iconChip, { borderColor: theme.border, backgroundColor: theme.bgSoft, marginLeft: 6 }]}
+              style={[styles.iconChip, { borderColor: theme.border, backgroundColor: theme.bgSoft }]}
               testID="music-toggle"
             >
               <Text style={[styles.iconChipText, { color: theme.text }]}>
@@ -2668,29 +2649,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10,
     borderWidth: 1,
   },
-  slotPillText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
+  slotPillText: { fontSize: 11, fontWeight: "600", letterSpacing: 0.2, numberOfLines: 1 },
   availPill: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10,
     borderWidth: 1,
   },
-  availText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
+  availText: { fontSize: 11, fontWeight: "600", letterSpacing: 0.2, numberOfLines: 1 },
   passivePill: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10,
     borderWidth: 1,
   },
-  passiveText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
+  passiveText: { fontSize: 11, fontWeight: "600", letterSpacing: 0.2, numberOfLines: 1 },
   pill: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10,
     borderWidth: 1,
   },
-  pillText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
+  pillText: { fontSize: 11, fontWeight: "600", letterSpacing: 0.2, numberOfLines: 1 },
 
   banner: {
     marginTop: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8,
     borderWidth: 1,
   },
-  bannerText: { fontSize: 13, fontWeight: "600", flex: 1, numberOfLines: 2 },
+  bannerText: { fontSize: 12, fontWeight: "600", flex: 1, numberOfLines: 2, lineHeight: 16 },
   bannerDismiss: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5, marginLeft: 12 },
 
   list: { flex: 1 },
@@ -2749,7 +2730,7 @@ const styles = StyleSheet.create({
   cardIconText: { fontSize: 12, fontWeight: "700", letterSpacing: 0.3 },
   cardMain: { flex: 1, minWidth: 0 },
   cardTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
-  cardTitle: { fontSize: 15, fontWeight: "600", flexShrink: 1, marginRight: 8, numberOfLines: 1 },
+  cardTitle: { fontSize: 14, fontWeight: "600", flexShrink: 1, marginRight: 8, numberOfLines: 1, lineHeight: 18 },
   badgeTag: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
     borderWidth: 1, flexShrink: 0,
@@ -2763,7 +2744,7 @@ const styles = StyleSheet.create({
   cardMetaRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 4 },
   metaCell: { flex: 1, minWidth: 80, marginRight: 12, marginBottom: 4 },
   metaLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.3, marginBottom: 2, textTransform: "uppercase" },
-  metaValue: { fontSize: 13, fontWeight: "600" },
+  metaValue: { fontSize: 12, fontWeight: "600", numberOfLines: 1 },
   metaGain: {},
   cardProfitSection: {
     marginTop: 8,
@@ -2782,8 +2763,9 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   cardProfitValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
+    numberOfLines: 1,
   },
 
   upgradeCard: {
@@ -2802,11 +2784,11 @@ const styles = StyleSheet.create({
   },
   upgradeBadgeLevel: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3 },
   upgradeMain: { flex: 1, minWidth: 0, marginRight: 10 },
-  upgradeName: { fontSize: 15, fontWeight: "600", flexShrink: 1, numberOfLines: 1 },
+  upgradeName: { fontSize: 14, fontWeight: "600", flexShrink: 1, numberOfLines: 1, lineHeight: 18 },
   upgradeDesc: { fontSize: 12, fontWeight: "500", marginTop: 2, numberOfLines: 2 },
   upgradeEffect: { fontSize: 11, fontWeight: "600", marginTop: 4, numberOfLines: 1 },
   upgradeCta: { alignItems: "flex-end", flexShrink: 0, marginLeft: 8 },
-  upgradeCost: { fontSize: 14, fontWeight: "700" },
+  upgradeCost: { fontSize: 13, fontWeight: "700", numberOfLines: 1 },
   upgradeBuy: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5, marginTop: 4 },
   maxedPill: {
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
@@ -2821,7 +2803,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   prestigeSummaryRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  prestigeSummaryTitle: { fontSize: 15, fontWeight: "700", flexShrink: 1, numberOfLines: 1 },
+  prestigeSummaryTitle: { fontSize: 14, fontWeight: "700", flexShrink: 1, numberOfLines: 1, lineHeight: 18 },
   prestigeSummarySub: { fontSize: 12, fontWeight: "500", marginTop: 2 },
   prestigeSummaryChevron: { fontSize: 16, fontWeight: "600", marginLeft: 8, flexShrink: 0 },
 
@@ -2844,7 +2826,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   investContent: { alignItems: "center", justifyContent: "center", paddingVertical: 8 },
-  investLabel: { fontSize: 17, fontWeight: "700", letterSpacing: 0.5 },
+  investLabel: { fontSize: 16, fontWeight: "700", letterSpacing: 0.5, numberOfLines: 1 },
   investSub: { fontSize: 12, fontWeight: "600", marginTop: 3, opacity: 0.85 },
 
   // Prestige tree screen
@@ -2858,7 +2840,7 @@ const styles = StyleSheet.create({
   },
   backBtn: { paddingVertical: 4, paddingRight: 8, flexShrink: 0 },
   backBtnText: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3 },
-  treeTitle: { fontSize: 17, fontWeight: "700", letterSpacing: 0.5, flexShrink: 1, textAlign: "center" },
+  treeTitle: { fontSize: 16, fontWeight: "700", letterSpacing: 0.5, flexShrink: 1, textAlign: "center", numberOfLines: 1 },
 
   rankCard: {
     flexDirection: "row", alignItems: "center",
@@ -2874,7 +2856,7 @@ const styles = StyleSheet.create({
   },
   rankBadgeIcon: { fontSize: 18, fontWeight: "700", letterSpacing: 0.5 },
   rankLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 1 },
-  rankName: { fontSize: 15, fontWeight: "600", letterSpacing: 0.3, marginTop: 2, flexShrink: 1 },
+  rankName: { fontSize: 14, fontWeight: "600", letterSpacing: 0.3, marginTop: 2, flexShrink: 1, numberOfLines: 1 },
   rankBar: {
     height: 6, borderRadius: 3,
     marginTop: 8, overflow: "hidden", borderWidth: 0,
@@ -2886,10 +2868,10 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center",
     marginTop: 14, paddingTop: 14, borderTopWidth: 1,
   },
-  treeStatCell: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 2 },
+  treeStatCell: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 1 },
   treeStatDivider: { width: 1, height: 28, flexShrink: 0 },
-  treeStatLabel: { fontSize: 8, fontWeight: "700", letterSpacing: 0.2, textTransform: "uppercase", marginBottom: 2, textAlign: "center" },
-  treeStatValue: { fontSize: 14, fontWeight: "700", textAlign: "center", numberOfLines: 1 },
+  treeStatLabel: { fontSize: 8, fontWeight: "700", letterSpacing: 0.1, textTransform: "uppercase", marginBottom: 2, textAlign: "center", lineHeight: 10 },
+  treeStatValue: { fontSize: 13, fontWeight: "700", textAlign: "center", numberOfLines: 1, lineHeight: 16 },
 
   legacyProgressSection: {
     marginTop: 16, paddingTop: 16, borderTopWidth: 1,
@@ -2982,7 +2964,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     marginBottom: 14, gap: 8,
   },
-  legacyTitle: { fontSize: 17, fontWeight: "700", letterSpacing: 0.5, flexShrink: 1, textAlign: "center" },
+  legacyTitle: { fontSize: 16, fontWeight: "700", letterSpacing: 0.5, flexShrink: 1, textAlign: "center", numberOfLines: 1 },
   legacyStats: {
     flexDirection: "row", alignItems: "center",
     borderRadius: 14, padding: 14,
@@ -2992,14 +2974,14 @@ const styles = StyleSheet.create({
   },
   legacyStatCell: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 4 },
   legacyStatDivider: { width: 1, height: 28, flexShrink: 0 },
-  legacyStatLabel: { fontSize: 9, fontWeight: "700", letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 3, textAlign: "center" },
-  legacyStatValue: { fontSize: 15, fontWeight: "700", textAlign: "center", numberOfLines: 1 },
+  legacyStatLabel: { fontSize: 8, fontWeight: "700", letterSpacing: 0.2, textTransform: "uppercase", marginBottom: 2, textAlign: "center", lineHeight: 10 },
+  legacyStatValue: { fontSize: 14, fontWeight: "700", textAlign: "center", numberOfLines: 1, lineHeight: 16 },
   ultimateBanner: {
     marginTop: 14, padding: 12, borderRadius: 12,
     borderWidth: 1,
     alignItems: "center",
   },
-  ultimateBannerText: { fontSize: 14, fontWeight: "600", letterSpacing: 0.5 },
+  ultimateBannerText: { fontSize: 13, fontWeight: "600", letterSpacing: 0.5, numberOfLines: 1 },
   ultimateBannerSub: { fontSize: 11, fontWeight: "500", marginTop: 4 },
   viewEndingBtn: {
     marginTop: 12,
@@ -3030,7 +3012,7 @@ const styles = StyleSheet.create({
   },
   legacyCardLeft: { flex: 1, minWidth: 0 },
   legacyCardRight: { alignItems: "flex-end", flexShrink: 0, marginLeft: 10 },
-  legacyCardName: { fontSize: 15, fontWeight: "600", flexShrink: 1 },
+  legacyCardName: { fontSize: 14, fontWeight: "600", flexShrink: 1, numberOfLines: 1, lineHeight: 18 },
   legacyCardDesc: { fontSize: 12, fontWeight: "500", marginTop: 3, numberOfLines: 2 },
   legacyCardEffect: { fontSize: 11, fontWeight: "600", marginTop: 4, numberOfLines: 1 },
   legacyCardStatus: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
@@ -3128,15 +3110,16 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   onboardingTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700",
     letterSpacing: 0.3,
     marginBottom: 14,
+    numberOfLines: 2,
   },
   onboardingDescription: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "500",
-    lineHeight: 23,
+    lineHeight: 22,
     marginBottom: 20,
   },
   onboardingHighlight: {
@@ -3164,10 +3147,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   onboardingButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     letterSpacing: 1,
     color: "#FFFFFF",
+    numberOfLines: 1,
   },
   onboardingSkip: {
     padding: 12,
@@ -3222,10 +3206,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
   celebrationText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "600",
     letterSpacing: 0.3,
     textAlign: "center",
+    numberOfLines: 2,
   },
 
   cashOutBtn: {
@@ -3239,7 +3224,7 @@ const styles = StyleSheet.create({
   },
   cashOutBtnDim: {},
   cashOutBtnArmed: {},
-  cashOutBtnText: { fontSize: 14, fontWeight: "700", letterSpacing: 0.3 },
+  cashOutBtnText: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3, numberOfLines: 1 },
   cashOutBtnSub: { fontSize: 11, fontWeight: "600", marginTop: 2, numberOfLines: 1 },
 
   treeBody: { flex: 1 },
@@ -3252,8 +3237,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   treeColIcon: { fontSize: 14, fontWeight: "600" },
-  treeColTitle: { fontSize: 11, fontWeight: "700", letterSpacing: 0.3, marginTop: 2, textAlign: "center" },
-  treeColSub: { fontSize: 9, fontWeight: "500", letterSpacing: 0.3, marginTop: 1, textAlign: "center" },
+  treeColTitle: { fontSize: 10, fontWeight: "700", letterSpacing: 0.2, marginTop: 2, textAlign: "center", numberOfLines: 1 },
+  treeColSub: { fontSize: 8, fontWeight: "500", letterSpacing: 0.2, marginTop: 1, textAlign: "center", numberOfLines: 1 },
 
   treeConnector: {
     width: 3, height: 18, borderRadius: 2,
@@ -3267,7 +3252,7 @@ const styles = StyleSheet.create({
   },
   skillNodeLocked: { opacity: 0.6, borderStyle: "dashed" },
   skillNodeDim: { opacity: 0.75 },
-  skillName: { fontSize: 11, fontWeight: "600", letterSpacing: 0.3, textAlign: "center" },
+  skillName: { fontSize: 10, fontWeight: "600", letterSpacing: 0.2, textAlign: "center", numberOfLines: 1 },
   skillLvl: { fontSize: 9, fontWeight: "500", letterSpacing: 0.3, marginTop: 2 },
   skillEffect: { fontSize: 10, fontWeight: "500", textAlign: "center", marginTop: 4, lineHeight: 13, numberOfLines: 2 },
   skillLockBox: {

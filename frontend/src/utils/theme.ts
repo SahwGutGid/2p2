@@ -1,5 +1,3 @@
-export type ThemeMode = 'light' | 'dark' | 'system';
-
 export interface ThemeColors {
   bg: string;
   bgSoft: string;
@@ -16,39 +14,22 @@ export interface ThemeColors {
   border: string;
 }
 
-export const lightTheme: ThemeColors = {
-  bg: "#FFFFFF",
-  bgSoft: "#F7F8FA",
-  panel: "#FFFFFF",
-  panelElevated: "#FFFFFF",
-  accent: "#006B5E",
-  accentDeep: "#005A4E",
-  gold: "#F59E0B",
-  gain: "#00A67E",
-  loss: "#DC2626",
-  info: "#2563EB",
-  text: "#111827",
-  textMuted: "#6B7280",
-  border: "#E5E7EB",
-};
-
 export const darkTheme: ThemeColors = {
-  bg: "#0F172A",
-  bgSoft: "#1E293B",
-  panel: "#1E293B",
-  panelElevated: "#334155",
-  accent: "#006B5E",
-  accentDeep: "#005A4E",
-  gold: "#F59E0B",
-  gain: "#00A67E",
-  loss: "#DC2626",
-  info: "#3B82F6",
-  text: "#F8FAFC",
-  textMuted: "#94A3B8",
-  border: "#334155",
+  bg: "#0B0F19",
+  bgSoft: "#151B2B",
+  panel: "#1A2332",
+  panelElevated: "#242F42",
+  accent: "#00D4AA",
+  accentDeep: "#00A885",
+  gold: "#FFB84D",
+  gain: "#00E676",
+  loss: "#FF5252",
+  info: "#4FC3F7",
+  text: "#FFFFFF",
+  textMuted: "#9CA3AF",
+  border: "#2D3748",
 };
 
-export const getTheme = (mode: ThemeMode): ThemeColors => {
-  if (mode === 'dark') return darkTheme;
-  return lightTheme; // Default to light for now, can add system detection later
+export const getTheme = (): ThemeColors => {
+  return darkTheme;
 };

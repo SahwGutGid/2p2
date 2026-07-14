@@ -2866,7 +2866,7 @@ const styles = StyleSheet.create({
 
   treeStats: {
     flexDirection: "row", alignItems: "center",
-    marginTop: 14, paddingTop: 14, borderTopWidth: 1,
+    marginTop: 14, paddingTop: 14, paddingBottom: 14, borderTopWidth: 1,
   },
   treeStatCell: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 1 },
   treeStatDivider: { width: 1, height: 28, flexShrink: 0 },

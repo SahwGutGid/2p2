@@ -1256,6 +1256,21 @@ export default function Index() {
     transform: [{ translateY: interpolate(mainScreenOpacity.value, [0, 1], [12, 0]) }],
   }));
 
+  // Loading screen spinner dot styles (declared unconditionally to satisfy
+  // the Rules of Hooks — used only inside the !loadingComplete early return).
+  const loadingDot1Style = useAnimatedStyle(() => ({
+    opacity: interpolate(spinnerPulse.value, [0, 0.33, 1], [0.3, 1, 0.3]),
+    transform: [{ scale: interpolate(spinnerPulse.value, [0, 0.33, 1], [0.8, 1.2, 0.8]) }],
+  }));
+  const loadingDot2Style = useAnimatedStyle(() => ({
+    opacity: interpolate(spinnerPulse.value, [0, 0.66, 1], [0.3, 1, 0.3]),
+    transform: [{ scale: interpolate(spinnerPulse.value, [0, 0.66, 1], [0.8, 1.2, 0.8]) }],
+  }));
+  const loadingDot3Style = useAnimatedStyle(() => ({
+    opacity: interpolate(spinnerPulse.value, [0.33, 1, 1.33], [0.3, 1, 0.3], 'clamp'),
+    transform: [{ scale: interpolate(spinnerPulse.value, [0.33, 1, 1.33], [0.8, 1.2, 0.8], 'clamp') }],
+  }));
+
   if (!ready) {
     return (
       <SafeAreaView style={styles.safe} testID="game-screen">
@@ -1814,18 +1829,6 @@ export default function Index() {
   // Loading Screen
   // ============================================================
   if (!loadingComplete) {
-    const dot1Style = useAnimatedStyle(() => ({
-      opacity: interpolate(spinnerPulse.value, [0, 0.33, 1], [0.3, 1, 0.3]),
-      transform: [{ scale: interpolate(spinnerPulse.value, [0, 0.33, 1], [0.8, 1.2, 0.8]) }],
-    }));
-    const dot2Style = useAnimatedStyle(() => ({
-      opacity: interpolate(spinnerPulse.value, [0, 0.66, 1], [0.3, 1, 0.3]),
-      transform: [{ scale: interpolate(spinnerPulse.value, [0, 0.66, 1], [0.8, 1.2, 0.8]) }],
-    }));
-    const dot3Style = useAnimatedStyle(() => ({
-      opacity: interpolate(spinnerPulse.value, [0.33, 1, 1.33], [0.3, 1, 0.3], 'clamp'),
-      transform: [{ scale: interpolate(spinnerPulse.value, [0.33, 1, 1.33], [0.8, 1.2, 0.8], 'clamp') }],
-    }));
     return (
       <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.bg }]} testID="loading-screen">
         <LinearGradient
@@ -1843,9 +1846,9 @@ export default function Index() {
           <Text style={styles.loadingSubtitle}>Build Your Financial Empire</Text>
         </Animated.View>
         <View style={styles.loadingSpinner}>
-          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, dot1Style]} />
-          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, dot2Style]} />
-          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, dot3Style]} />
+          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, loadingDot1Style]} />
+          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, loadingDot2Style]} />
+          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, loadingDot3Style]} />
         </View>
       </SafeAreaView>
     );

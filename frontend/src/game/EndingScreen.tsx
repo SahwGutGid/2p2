@@ -3,6 +3,7 @@ import { Animated, Dimensions, Pressable, ScrollView, StyleSheet, Text, View } f
 import { LinearGradient } from "expo-linear-gradient";
 import { formatCurrency, formatNumber, formatTimeDetailed } from "@/src/utils/format";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HoldButton } from "@/src/components/HoldButton";
 
 const { width, height } = Dimensions.get("window");
 
@@ -141,9 +142,11 @@ function Confetti() {
 export function EndingScreen({
   stats,
   onReplay,
+  onContinue,
 }: {
   stats: CompletionStats;
   onReplay: () => void;
+  onContinue: () => void;
 }) {
   const iconScale = useRef(new Animated.Value(0)).current;
   const iconOpacity = useRef(new Animated.Value(0)).current;
@@ -274,19 +277,41 @@ export function EndingScreen({
                 },
               ]}
             >
+              {/* Continue Current Run - Safe Option */}
               <Pressable
-                onPressIn={handlePressIn}
-                onPressOut={handlePressOut}
-                onPress={onReplay}
+                onPress={onContinue}
+                style={({ pressed }) => [
+                  EndingStyles.continueBtn,
+                  pressed && EndingStyles.continueBtnPressed,
+                ]}
                 accessibilityRole="button"
-                accessibilityLabel="Start new game"
+                accessibilityLabel="Continue current run"
               >
-                <LinearGradient colors={[C.accentDeep, C.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={EndingStyles.replayBtnGradient}>
-                  <Text style={EndingStyles.replayBtnText}>START NEW GAME</Text>
+                <LinearGradient
+                  colors={["#00C896", "#22C55E"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={EndingStyles.continueBtnGradient}
+                >
+                  <Text style={EndingStyles.continueBtnText}>CONTINUE CURRENT RUN</Text>
                 </LinearGradient>
               </Pressable>
+              
+              <Text style={EndingStyles.buttonDivider}>OR</Text>
+              
+              {/* Restart Run - Destructive Hold Button */}
+              <HoldButton
+                onHoldComplete={onReplay}
+                colors={["#DC2626", "#EF4444"]}
+                textColor="#FFFFFF"
+                progressColor="#FFFFFF"
+                style={EndingStyles.restartBtn}
+              >
+                RESTART RUN
+              </HoldButton>
+              
               <Text style={EndingStyles.replayHint}>
-                Your completion record is saved. Progress will reset.
+                Restart will reset all progress. Your completion record is saved.
               </Text>
             </Animated.View>
           </View>
@@ -391,6 +416,34 @@ const EndingStyles = StyleSheet.create({
     width: "100%",
     paddingBottom: 40,
     paddingTop: 16,
+  },
+  continueBtn: {
+    paddingVertical: 18,
+    paddingHorizontal: 48,
+    borderRadius: 14,
+    minWidth: 200,
+    marginBottom: 16,
+  },
+  continueBtnPressed: {
+    transform: [{ scale: 0.97 }],
+  },
+  continueBtnGradient: {
+    paddingVertical: 18,
+    paddingHorizontal: 48,
+    alignItems: "center",
+    borderRadius: 14,
+    minWidth: 200,
+  },
+  continueBtnText: { fontSize: 16, fontWeight: "700", color: "#FFFFFF", letterSpacing: 1 },
+  buttonDivider: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: C.textMuted,
+    marginVertical: 12,
+    letterSpacing: 2,
+  },
+  restartBtn: {
+    marginBottom: 16,
   },
   replayBtnGradient: {
     paddingVertical: 18,

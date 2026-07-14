@@ -25,6 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useSoundEngine } from "@/src/game/sounds";
 import { EndingScreen } from "@/src/game/EndingScreen";
+import { HoldButton } from "@/src/components/HoldButton";
 import { useBackgroundMusic } from "@/src/game/music";
 import {
   computeRank,
@@ -1284,6 +1285,11 @@ export default function Index() {
 
   // Game completion ending screen
   if (endingPending && completionStats) {
+    const handleContinue = () => {
+      // Simply dismiss the ending screen and continue playing
+      setEndingPending(false);
+    };
+
     const handleReplay = () => {
       const comp = completionStats;
       // Wipe save but preserve completion data
@@ -1321,7 +1327,7 @@ export default function Index() {
     };
     return (
       <SafeAreaView style={styles.safe} testID="ending-screen">
-        <EndingScreen stats={completionStats} onReplay={handleReplay} />
+        <EndingScreen stats={completionStats} onReplay={handleReplay} onContinue={handleContinue} />
       </SafeAreaView>
     );
   }
@@ -1547,42 +1553,27 @@ export default function Index() {
             </View>
 
             {/* Cash out */}
-            <Pressable
-              onPress={doPrestige}
-              style={({ pressed }) => [
+            <HoldButton
+              onHoldComplete={doPrestige}
+              colors={["#A855F7", "#9333EA"]}
+              textColor={canPrestige ? "#001018" : theme.prestige}
+              progressColor="#FFFFFF"
+              disabled={!canPrestige}
+              style={[
                 styles.cashOutBtn,
                 { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
                 !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
                 prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
                 canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
-                pressed && canPrestige && { transform: [{ scale: 0.98 }] },
               ]}
               testID="prestige-button"
             >
-              <Text
-                style={[
-                  styles.cashOutBtnText,
-                  { color: theme.prestige },
-                  !canPrestige && { color: theme.textMuted },
-                  prestigeArmed && { color: "#001018" },
-                  canPrestige && !prestigeArmed && { color: "#001018" },
-                ]}
-                testID="prestige-button-label"
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {!canPrestige
-                  ? `Reach ${money(PRESTIGE_MIN_BALANCE)} to cash out`
-                  : prestigeArmed
-                  ? `TAP AGAIN — CONFIRM +${prestigeGainAvailable} PP`
-                  : `CASH OUT · +${prestigeGainAvailable} PP`}
-              </Text>
-              {canPrestige && !prestigeArmed && (
-                <Text style={[styles.cashOutBtnSub, { color: "#001018" }]}>
-                  Reset run · permanent +{fmtPct(prestigeGainAvailable * PRESTIGE_BONUS_PER_POINT * 100)} profit
-                </Text>
-              )}
-            </Pressable>
+              {!canPrestige
+                ? `Reach ${money(PRESTIGE_MIN_BALANCE)} to cash out`
+                : prestigeArmed
+                ? `TAP AGAIN — CONFIRM +${prestigeGainAvailable} PP`
+                : `CASH OUT · +${prestigeGainAvailable} PP`}
+            </HoldButton>
           </LinearGradient>
 
           {/* Tree body: 3 columns */}

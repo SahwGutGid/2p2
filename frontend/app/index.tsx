@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,6 +28,8 @@ import { useSoundEngine } from "@/src/game/sounds";
 import { EndingScreen } from "@/src/game/EndingScreen";
 import { HoldButton } from "@/src/components/HoldButton";
 import { useBackgroundMusic } from "@/src/game/music";
+import { LoadingScreen } from "@/src/components/LoadingScreen";
+import { SettingsScreen } from "@/src/components/SettingsScreen";
 import {
   computeRank,
   deriveTreeEffects,
@@ -347,11 +350,15 @@ export default function Index() {
   const [prestigeCelebrate, setPrestigeCelebrate] = useState<number>(0);
   const [rankUpBanner, setRankUpBanner] = useState<Rank | null>(null);
   const [showLegacy, setShowLegacy] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Game completion state
   const [gameComplete, setGameComplete] = useState(false);
   const [endingPending, setEndingPending] = useState(false);
   const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
+
+  // Loading screen state
+  const [showLoading, setShowLoading] = useState(true);
 
   // Celebration banners for early game milestones
   const [celebrationBanner, setCelebrationBanner] = useState<string | null>(null);
@@ -1374,7 +1381,14 @@ export default function Index() {
               >
                 <Text style={[styles.backBtnText, { color: theme.upgrade }]}>← BACK</Text>
               </Pressable>
-              <Text style={[styles.treeTitle, { color: theme.text }]}>PRESTIGE TREE</Text>
+              <View style={styles.treeHeaderCenter}>
+                <Text style={[styles.treeTitle, { color: theme.text }]}>PRESTIGE TREE</Text>
+                <ExpoImage
+                  source={require("@/assets/images/p2p-logo.png")}
+                  style={styles.treeHeaderLogo}
+                  contentFit="contain"
+                />
+              </View>
               {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
                 <Pressable
                   onPress={() => { sound.play("click"); setShowLegacy(true); }}
@@ -1693,10 +1707,16 @@ export default function Index() {
             >
               <Text style={[styles.backBtnText, { color: theme.upgrade }]}>← BACK</Text>
             </Pressable>
-            <Text style={[styles.legacyTitle, { color: theme.text }, isUltimateOwned && { color: theme.legacy }]}>
-              {isUltimateOwned ? "THE ULTIMATE INVESTOR" : "LEGACY ENDGAME"}
-            </Text>
-            <View style={{ width: 60 }} />
+            <View style={styles.legacyHeaderCenter}>
+              <Text style={[styles.legacyTitle, { color: theme.text }, isUltimateOwned && { color: theme.legacy }]}>
+                {isUltimateOwned ? "THE ULTIMATE INVESTOR" : "LEGACY ENDGAME"}
+              </Text>
+              <ExpoImage
+                source={require("@/assets/images/p2p-logo.png")}
+                style={styles.legacyHeaderLogo}
+                contentFit="contain"
+              />
+            </View>
           </View>
 
           <View style={[styles.legacyStats, { backgroundColor: theme.panel, borderColor: theme.border }]}>
@@ -1834,35 +1854,13 @@ export default function Index() {
   // ============================================================
   // Loading Screen
   // ============================================================
-  if (!loadingComplete) {
+  if (!loadingComplete || showLoading) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.bg }]} testID="loading-screen">
-        <LinearGradient
-          colors={legacyUpgrades["ultimate-investor"] ? ["#0B1220", "#11110a", "#0B1220"] : [theme.bg, theme.bgSoft, theme.bg]}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <Animated.View style={[
-          styles.loadingLogo,
-          {
-            opacity: loadingLogoOpacity,
-            transform: [{ scale: loadingLogoScale }],
-          },
-        ]}>
-          <View style={[styles.loadingLogoInner, { borderColor: theme.upgrade }]}>
-            <Text style={[styles.loadingLogoText, { color: theme.upgrade }]}>P2P</Text>
-          </View>
-        </Animated.View>
-        <Animated.View style={[styles.loadingTextContainer, { opacity: loadingTextOpacity }]}>
-          <Text style={styles.loadingTitle}>INVESTMENT IDLE</Text>
-          <Text style={styles.loadingSubtitle}>Build Your Financial Empire</Text>
-        </Animated.View>
-        <View style={styles.loadingSpinner}>
-          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.upgrade }, loadingDot1Style]} />
-          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.upgrade }, loadingDot2Style]} />
-          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.upgrade }, loadingDot3Style]} />
-        </View>
-      </SafeAreaView>
+      <LoadingScreen onComplete={() => {
+        if (showLoading) {
+          setShowLoading(false);
+        }
+      }} />
     );
   }
 
@@ -2008,6 +2006,12 @@ export default function Index() {
         start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}
         style={styles.header}
       >
+        {/* Subtle P2P Watermark */}
+        <ExpoImage
+          source={require("@/assets/images/p2p-logo.png")}
+          style={styles.headerWatermark}
+          contentFit="contain"
+        />
         <View style={styles.headerTopRow}>
           <Pressable
             onPress={handleSecretTap}
@@ -2017,6 +2021,11 @@ export default function Index() {
           >
             <Text style={[styles.balanceLabel, { color: theme.textMuted }]}>PORTFOLIO BALANCE</Text>
           </Pressable>
+          <ExpoImage
+            source={require("@/assets/images/p2p-logo.png")}
+            style={styles.headerLogo}
+            contentFit="contain"
+          />
           <View style={styles.headerRightRow}>
             <Pressable
               onPress={toggleMusic}
@@ -2037,6 +2046,14 @@ export default function Index() {
               <Text style={[styles.iconChipText, { color: rankMeta.tint }]}>
                 {rankMeta.short.toUpperCase()} · TREE
               </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => { sound.play("click"); setShowSettings(true); }}
+              hitSlop={12}
+              style={[styles.iconChip, { borderColor: theme.border, backgroundColor: theme.bgSoft, marginLeft: 6 }]}
+              testID="open-settings"
+            >
+              <Text style={[styles.iconChipText, { color: theme.text }]}>⚙</Text>
             </Pressable>
           </View>
         </View>
@@ -2150,7 +2167,14 @@ export default function Index() {
       >
         {actives.length > 0 && (
           <>
-            <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>ACTIVE INVESTMENTS</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>ACTIVE INVESTMENTS</Text>
+              <ExpoImage
+                source={require("@/assets/images/p2p-logo.png")}
+                style={styles.sectionLogo}
+                contentFit="contain"
+              />
+            </View>
             {actives.map((a) => {
               const pkg = packages.find((p) => p.id === a.pkgId);
               if (!pkg) return null;
@@ -2196,9 +2220,16 @@ export default function Index() {
           </>
         )}
 
-        <Text style={[styles.sectionTitle, actives.length > 0 && { marginTop: 20 }, { color: theme.textMuted }]}>
-          INVESTMENT PACKAGES
-        </Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={[styles.sectionTitle, actives.length > 0 && { marginTop: 20 }, { color: theme.textMuted }]}>
+            INVESTMENT PACKAGES
+          </Text>
+          <ExpoImage
+            source={require("@/assets/images/p2p-logo.png")}
+            style={styles.sectionLogo}
+            contentFit="contain"
+          />
+        </View>
 
         {packages.map((pkg) => {
           const affordable = balance >= pkg.cost;
@@ -2271,7 +2302,14 @@ export default function Index() {
           );
         })}
 
-        <Text style={[styles.sectionTitle, { marginTop: 24 }, { color: theme.textMuted }]}>UPGRADES</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={[styles.sectionTitle, { marginTop: 24 }, { color: theme.textMuted }]}>UPGRADES</Text>
+          <ExpoImage
+            source={require("@/assets/images/p2p-logo.png")}
+            style={styles.sectionLogo}
+            contentFit="contain"
+          />
+        </View>
 
         {UPGRADES.map((u) => {
           const level = levels[u.id];
@@ -2414,6 +2452,9 @@ export default function Index() {
             )}
           </Pressable>
         </Animated.View>
+        
+        {/* Footer Branding */}
+        <Text style={styles.footerBranding}>Powered by P2P • p2p.com.mk</Text>
       </View>
       </Animated.View>
 
@@ -2537,6 +2578,14 @@ export default function Index() {
           </View>
         </View>
       )}
+
+      {/* Settings Screen */}
+      <SettingsScreen
+        visible={showSettings}
+        onClose={() => setShowSettings(false)}
+        settings={settings}
+        onSettingChange={(key, value) => setSettings({ ...settings, [key]: value })}
+      />
     </SafeAreaView>
   );
 }
@@ -2650,6 +2699,15 @@ const styles = StyleSheet.create({
   headerTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "nowrap", gap: 8 },
   headerRightRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, gap: 6 },
   balanceLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 1.5, flexShrink: 0 },
+  headerLogo: { width: 24, height: 24 },
+  headerWatermark: {
+    position: "absolute",
+    right: 20,
+    top: 20,
+    width: 60,
+    height: 60,
+    opacity: 0.03,
+  },
   iconChip: {
     paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8,
     borderWidth: 1, flexShrink: 1,
@@ -2695,6 +2753,8 @@ const styles = StyleSheet.create({
   list: { flex: 1 },
   listContent: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 100 },
   sectionTitle: { fontSize: 12, fontWeight: "700", letterSpacing: 1, marginBottom: 14, marginLeft: 2, textTransform: "uppercase" },
+  sectionHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
+  sectionLogo: { width: 16, height: 16, opacity: 0.6 },
 
   activeCard: {
     borderRadius: 14,
@@ -2829,6 +2889,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 14, paddingBottom: 18,
     borderTopWidth: 1,
   },
+  footerBranding: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#94A3B8",
+    textAlign: "center",
+    marginTop: 12,
+    letterSpacing: 0.5,
+  },
   investBtn: {
     height: 56, borderRadius: 14,
     justifyContent: "center", alignItems: "center",
@@ -2855,6 +2923,16 @@ const styles = StyleSheet.create({
   treeHeaderRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     marginBottom: 14, gap: 8,
+  },
+  treeHeaderCenter: {
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  treeHeaderLogo: {
+    width: 20,
+    height: 20,
+    marginTop: 4,
+    opacity: 0.7,
   },
   backBtn: { paddingVertical: 4, paddingRight: 8, flexShrink: 0 },
   backBtnText: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3 },
@@ -2981,6 +3059,16 @@ const styles = StyleSheet.create({
   legacyHeaderRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     marginBottom: 14, gap: 8,
+  },
+  legacyHeaderCenter: {
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  legacyHeaderLogo: {
+    width: 20,
+    height: 20,
+    marginTop: 4,
+    opacity: 0.7,
   },
   legacyTitle: { fontSize: 16, fontWeight: "700", letterSpacing: 0.5, flexShrink: 1, textAlign: "center", numberOfLines: 1 },
   legacyStats: {

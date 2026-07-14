@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { formatCurrency, formatNumber, formatTimeDetailed } from "@/src/utils/format";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HoldButton } from "@/src/components/HoldButton";
+import { Image as ExpoImage } from "expo-image";
 
 const { width, height } = Dimensions.get("window");
 
@@ -135,6 +136,11 @@ export function EndingScreen({
                 },
               ]}
             >
+              <ExpoImage
+                source={require("@/assets/images/p2p-logo.png")}
+                style={EndingStyles.endingLogo}
+                contentFit="contain"
+              />
               <Text style={EndingStyles.eyebrow}>GAME COMPLETE</Text>
               <Text style={EndingStyles.title}>Portfolio Mastered</Text>
               <Text style={EndingStyles.subtitle}>
@@ -206,6 +212,12 @@ export function EndingScreen({
               <Text style={EndingStyles.replayHint}>
                 Restart will reset all progress. Your completion record is saved.
               </Text>
+              
+              {/* Official P2P Branding */}
+              <View style={EndingStyles.brandingContainer}>
+                <Text style={EndingStyles.poweredBy}>Powered by P2P</Text>
+                <Text style={EndingStyles.website}>p2p.com.mk</Text>
+              </View>
             </Animated.View>
           </View>
         </ScrollView>
@@ -247,6 +259,12 @@ const EndingStyles = StyleSheet.create({
   },
   icon: { fontSize: 36, fontWeight: "700", color: "#FFFFFF" },
   titleSection: { alignItems: "center", marginBottom: 32 },
+  endingLogo: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
+    opacity: 0.9,
+  },
   eyebrow: {
     fontSize: 11,
     fontWeight: "700",
@@ -346,4 +364,24 @@ const EndingStyles = StyleSheet.create({
   },
   replayBtnText: { fontSize: 16, fontWeight: "700", color: "#FFFFFF", letterSpacing: 1 },
   replayHint: { fontSize: 12, color: C.textMuted, marginTop: 16, textAlign: "center", lineHeight: 18, paddingHorizontal: 20 },
+  brandingContainer: {
+    alignItems: "center",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+  },
+  poweredBy: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: C.textMuted,
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  website: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: C.accent,
+    letterSpacing: 0.5,
+  },
 });

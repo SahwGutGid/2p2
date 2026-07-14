@@ -13,6 +13,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   Easing,
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -482,6 +483,35 @@ export default function Index() {
       duration: 300, easing: Easing.out(Easing.cubic),
     });
   }, [showTree, treeSlide]);
+
+  // Legacy screen slide-in
+  const legacySlide = useSharedValue(0);
+  useEffect(() => {
+    legacySlide.value = withTiming(showLegacy ? 1 : 0, {
+      duration: 300, easing: Easing.out(Easing.cubic),
+    });
+  }, [showLegacy, legacySlide]);
+
+  // Main screen entrance fade
+  const mainScreenOpacity = useSharedValue(0);
+  useEffect(() => {
+    if (loadingComplete && !showOnboarding && !endingPending) {
+      mainScreenOpacity.value = withTiming(1, {
+        duration: 400, easing: Easing.out(Easing.cubic),
+      });
+    }
+  }, [loadingComplete, showOnboarding, endingPending]);
+
+  // Loading screen spinner dots pulse
+  const spinnerPulse = useSharedValue(0);
+  useEffect(() => {
+    spinnerPulse.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+      ), -1, false,
+    );
+  }, []);
 
   // Calculate next goal (must be called before early returns)
   const nextGoal = useMemo(() => {
@@ -1216,6 +1246,16 @@ export default function Index() {
     transform: [{ translateY: (1 - treeSlide.value) * 20 }],
   }));
 
+  const legacySlideStyle = useAnimatedStyle(() => ({
+    opacity: legacySlide.value,
+    transform: [{ translateY: (1 - legacySlide.value) * 20 }],
+  }));
+
+  const mainScreenEntranceStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(mainScreenOpacity.value, [0, 1], [0, 1]),
+    transform: [{ translateY: interpolate(mainScreenOpacity.value, [0, 1], [12, 0]) }],
+  }));
+
   if (!ready) {
     return (
       <SafeAreaView style={styles.safe} testID="game-screen">
@@ -1633,6 +1673,7 @@ export default function Index() {
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
+        <Animated.View style={[{ flex: 1 }, legacySlideStyle]}>
         <View style={[styles.legacyHeader, { borderBottomColor: theme.border }]}>
           <View style={styles.legacyHeaderRow}>
             <Pressable
@@ -1764,6 +1805,7 @@ export default function Index() {
             );
           })}
         </ScrollView>
+        </Animated.View>
       </SafeAreaView>
     );
   }
@@ -1772,6 +1814,18 @@ export default function Index() {
   // Loading Screen
   // ============================================================
   if (!loadingComplete) {
+    const dot1Style = useAnimatedStyle(() => ({
+      opacity: interpolate(spinnerPulse.value, [0, 0.33, 1], [0.3, 1, 0.3]),
+      transform: [{ scale: interpolate(spinnerPulse.value, [0, 0.33, 1], [0.8, 1.2, 0.8]) }],
+    }));
+    const dot2Style = useAnimatedStyle(() => ({
+      opacity: interpolate(spinnerPulse.value, [0, 0.66, 1], [0.3, 1, 0.3]),
+      transform: [{ scale: interpolate(spinnerPulse.value, [0, 0.66, 1], [0.8, 1.2, 0.8]) }],
+    }));
+    const dot3Style = useAnimatedStyle(() => ({
+      opacity: interpolate(spinnerPulse.value, [0.33, 1, 1.33], [0.3, 1, 0.3], 'clamp'),
+      transform: [{ scale: interpolate(spinnerPulse.value, [0.33, 1, 1.33], [0.8, 1.2, 0.8], 'clamp') }],
+    }));
     return (
       <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.bg }]} testID="loading-screen">
         <LinearGradient
@@ -1789,9 +1843,9 @@ export default function Index() {
           <Text style={styles.loadingSubtitle}>Build Your Financial Empire</Text>
         </Animated.View>
         <View style={styles.loadingSpinner}>
-          <View style={[styles.spinnerDot, { backgroundColor: theme.accent }]} />
-          <View style={[styles.spinnerDot, { backgroundColor: theme.accent, opacity: 0.6 }]} />
-          <View style={[styles.spinnerDot, { backgroundColor: theme.accent, opacity: 0.3 }]} />
+          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, dot1Style]} />
+          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, dot2Style]} />
+          <Animated.View style={[styles.spinnerDot, { backgroundColor: theme.accent }, dot3Style]} />
         </View>
       </SafeAreaView>
     );
@@ -1862,11 +1916,11 @@ export default function Index() {
             ))}
           </View>
 
-          <Animated.View style={[styles.onboardingCard, slideStyle]}>
-            <Text style={styles.onboardingTitle}>{current.title}</Text>
-            <Text style={styles.onboardingDescription}>{current.description}</Text>
-            <View style={styles.onboardingHighlight}>
-              <Text style={styles.onboardingHighlightText}>{current.highlight}</Text>
+          <Animated.View style={[styles.onboardingCard, { borderColor: theme.border }, slideStyle]}>
+            <Text style={[styles.onboardingTitle, { color: theme.text }]}>{current.title}</Text>
+            <Text style={[styles.onboardingDescription, { color: theme.textMuted }]}>{current.description}</Text>
+            <View style={[styles.onboardingHighlight, { backgroundColor: `${theme.accent}12` }]}>
+              <Text style={[styles.onboardingHighlightText, { color: theme.accent }]}>{current.highlight}</Text>
             </View>
           </Animated.View>
 
@@ -1878,9 +1932,15 @@ export default function Index() {
             ]}
             testID="onboarding-next"
           >
-            <Text style={styles.onboardingButtonText}>
-              {onboardingStep === onboardingSteps.length - 1 ? "START INVESTING" : "NEXT"}
-            </Text>
+            <LinearGradient
+              colors={[theme.accent, theme.accentDeep]}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={styles.onboardingButtonGradient}
+            >
+              <Text style={styles.onboardingButtonText}>
+                {onboardingStep === onboardingSteps.length - 1 ? "START INVESTING" : "NEXT"}
+              </Text>
+            </LinearGradient>
           </Pressable>
 
           <Pressable
@@ -2077,6 +2137,7 @@ export default function Index() {
         </View>
       </LinearGradient>
 
+      <Animated.View style={[{ flex: 1 }, mainScreenEntranceStyle]}>
       <ScrollView
         style={styles.list}
         contentContainerStyle={styles.listContent}
@@ -2317,22 +2378,39 @@ export default function Index() {
             style={({ pressed }) => [
               styles.investBtn,
               !canInvest && styles.investBtnDisabled,
-              canInvest && { backgroundColor: theme.accent },
               pressed && canInvest && { transform: [{ scale: 0.98 }] },
             ]}
             testID="invest-button"
           >
-            <View style={styles.investContent}>
-              <Text style={[styles.investLabel, { color: canInvest ? '#FFFFFF' : theme.loss }, !canInvest && { color: theme.loss }]} testID="invest-label">
-                {ctaLabel}
-              </Text>
-              <Text style={[styles.investSub, { color: canInvest ? '#FFFFFF' : theme.textMuted }, !canInvest && { color: theme.textMuted, opacity: 1 }]}>
-                {ctaSub}
-              </Text>
-            </View>
+            {canInvest ? (
+              <LinearGradient
+                colors={[theme.accent, theme.accentDeep]}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={styles.investBtnGradient}
+              >
+                <View style={styles.investContent}>
+                  <Text style={[styles.investLabel, { color: '#FFFFFF' }]} testID="invest-label">
+                    {ctaLabel}
+                  </Text>
+                  <Text style={[styles.investSub, { color: '#FFFFFF' }]}>
+                    {ctaSub}
+                  </Text>
+                </View>
+              </LinearGradient>
+            ) : (
+              <View style={styles.investContent}>
+                <Text style={[styles.investLabel, { color: theme.loss }]} testID="invest-label">
+                  {ctaLabel}
+                </Text>
+                <Text style={[styles.investSub, { color: theme.textMuted }]}>
+                  {ctaSub}
+                </Text>
+              </View>
+            )}
           </Pressable>
         </Animated.View>
       </View>
+      </Animated.View>
 
       {/* Developer menu overlay (hidden gesture: 7 taps on "PORTFOLIO BALANCE" within 3s) */}
       {showDebug && (
@@ -2561,42 +2639,42 @@ const styles = StyleSheet.create({
   loaderText: { fontSize: 14, fontWeight: "700" },
 
   header: {
-    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16,
+    paddingHorizontal: 22, paddingTop: 20, paddingBottom: 20,
     borderBottomWidth: 1,
   },
   headerTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   headerRightRow: { flexDirection: "row", alignItems: "center" },
-  balanceLabel: { fontSize: 12, fontWeight: "600", letterSpacing: 1 },
+  balanceLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 1.5 },
   iconChip: {
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
     borderWidth: 1,
   },
   iconChipText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
 
-  balanceRow: { position: "relative", marginTop: 8 },
-  balance: { fontSize: 36, fontWeight: "700", letterSpacing: -0.5, flexShrink: 1 },
+  balanceRow: { position: "relative", marginTop: 10 },
+  balance: { fontSize: 38, fontWeight: "700", letterSpacing: -0.8, flexShrink: 1 },
   floatingProfit: {
     position: "absolute", right: 0, top: 0,
     fontSize: 16, fontWeight: "700",
   },
-  pillRow: { flexDirection: "row", alignItems: "center", marginTop: 12, gap: 8, flexWrap: "wrap" },
+  pillRow: { flexDirection: "row", alignItems: "center", marginTop: 14, gap: 8, flexWrap: "wrap" },
   slotPill: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10,
     borderWidth: 1,
   },
   slotPillText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
   availPill: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10,
     borderWidth: 1,
   },
   availText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
   passivePill: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10,
     borderWidth: 1,
   },
   passiveText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
   pill: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10,
     borderWidth: 1,
   },
   pillText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
@@ -2610,15 +2688,15 @@ const styles = StyleSheet.create({
   bannerDismiss: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5, marginLeft: 12 },
 
   list: { flex: 1 },
-  listContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 8 },
-  sectionTitle: { fontSize: 13, fontWeight: "600", letterSpacing: 0.5, marginBottom: 12, marginLeft: 2 },
+  listContent: { paddingHorizontal: 18, paddingTop: 22, paddingBottom: 8 },
+  sectionTitle: { fontSize: 12, fontWeight: "700", letterSpacing: 1, marginBottom: 14, marginLeft: 2, textTransform: "uppercase" },
 
   activeCard: {
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 12, marginBottom: 10, overflow: "hidden",
-    shadowOpacity: 0.08, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 }, elevation: 3,
+    padding: 14, marginBottom: 10, overflow: "hidden",
+    shadowOpacity: 0.06, shadowRadius: 12,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   activeHeaderRow: { flexDirection: "row", alignItems: "flex-start" },
   activeIcon: {
@@ -2703,10 +2781,10 @@ const styles = StyleSheet.create({
   },
 
   upgradeCard: {
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 14, marginBottom: 10,
-    shadowOpacity: 0.06, shadowRadius: 8,
+    padding: 16, marginBottom: 10,
+    shadowOpacity: 0.05, shadowRadius: 10,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   upgradeCardDim: { opacity: 0.6 },
@@ -2730,9 +2808,9 @@ const styles = StyleSheet.create({
   maxedText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.3 },
 
   prestigeSummary: {
-    borderRadius: 12, borderWidth: 1,
-    padding: 14, overflow: "hidden",
-    shadowOpacity: 0.06, shadowRadius: 8,
+    borderRadius: 14, borderWidth: 1,
+    padding: 16, overflow: "hidden",
+    shadowOpacity: 0.05, shadowRadius: 10,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   prestigeSummaryRow: { flexDirection: "row", alignItems: "center" },
@@ -2741,21 +2819,26 @@ const styles = StyleSheet.create({
   prestigeSummaryChevron: { fontSize: 16, fontWeight: "600", marginLeft: 8 },
 
   ctaBar: {
-    paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16,
+    paddingHorizontal: 18, paddingTop: 14, paddingBottom: 18,
     borderTopWidth: 1,
   },
   investBtn: {
-    height: 56, borderRadius: 12,
+    height: 56, borderRadius: 14,
     justifyContent: "center", alignItems: "center",
-    shadowOpacity: 0.08, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    overflow: "hidden",
+  },
+  investBtnGradient: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center", alignItems: "center",
   },
   investBtnDisabled: {
     borderWidth: 1, shadowOpacity: 0,
+    backgroundColor: "transparent",
   },
-  investContent: { alignItems: "center", justifyContent: "center" },
-  investLabel: { fontSize: 18, fontWeight: "600", letterSpacing: 0.3 },
-  investSub: { fontSize: 12, fontWeight: "500", marginTop: 2, opacity: 0.9 },
+  investContent: { alignItems: "center", justifyContent: "center", paddingVertical: 8 },
+  investLabel: { fontSize: 17, fontWeight: "700", letterSpacing: 0.5 },
+  investSub: { fontSize: 12, fontWeight: "600", marginTop: 3, opacity: 0.85 },
 
   // Prestige tree screen
   treeHeader: {
@@ -2959,47 +3042,47 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   loadingLogo: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   loadingLogoInner: {
-    width: 80,
-    height: 80,
-    borderRadius: 16,
-    borderWidth: 1,
+    width: 88,
+    height: 88,
+    borderRadius: 20,
+    borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
-    shadowOpacity: 0.04, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    shadowOpacity: 0.08, shadowRadius: 12,
+    shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
   loadingLogoText: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "700",
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   loadingTextContainer: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 48,
   },
   loadingTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "600",
-    letterSpacing: 0.5,
+    letterSpacing: 1,
     marginBottom: 8,
   },
   loadingSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   loadingSpinner: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   spinnerDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
   },
 
   // Onboarding screen
@@ -3025,29 +3108,29 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   onboardingCard: {
-    borderRadius: 12,
-    padding: 24,
+    borderRadius: 16,
+    padding: 28,
     borderWidth: 1,
     width: "100%",
-    marginBottom: 40,
-    shadowOpacity: 0.04, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    marginBottom: 36,
+    shadowOpacity: 0.06, shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   onboardingTitle: {
     fontSize: 22,
-    fontWeight: "600",
+    fontWeight: "700",
     letterSpacing: 0.3,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   onboardingDescription: {
     fontSize: 15,
     fontWeight: "500",
-    lineHeight: 22,
-    marginBottom: 16,
+    lineHeight: 23,
+    marginBottom: 20,
   },
   onboardingHighlight: {
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 14,
+    padding: 14,
     borderWidth: 1,
   },
   onboardingHighlightText: {
@@ -3056,20 +3139,24 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   onboardingButton: {
-    paddingHorizontal: 48,
-    paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 16,
-    shadowOpacity: 0.1, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 }, elevation: 3,
+    overflow: "hidden",
   },
   onboardingButtonPressed: {
-    opacity: 0.8,
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
+  },
+  onboardingButtonGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    alignItems: "center",
   },
   onboardingButtonText: {
     fontSize: 16,
-    fontWeight: "600",
-    letterSpacing: 0.5,
+    fontWeight: "700",
+    letterSpacing: 1,
+    color: "#FFFFFF",
   },
   onboardingSkip: {
     padding: 8,

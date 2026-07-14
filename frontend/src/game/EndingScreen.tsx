@@ -48,7 +48,7 @@ function Confetti() {
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
 
   if (particlesRef.current.length === 0) {
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 50; i++) {
       particlesRef.current.push({
         x: new Animated.Value(Math.random() * width),
         y: new Animated.Value(-20 - Math.random() * 100),
@@ -56,7 +56,7 @@ function Confetti() {
         opacity: new Animated.Value(1),
         color: COLORS[i % COLORS.length],
         size: 6 + Math.random() * 8,
-        delay: Math.random() * 2000,
+        delay: Math.random() * 1500,
       });
     }
   }
@@ -64,7 +64,7 @@ function Confetti() {
   useEffect(() => {
     const loops = particlesRef.current.map((p) => {
       const fallY = height + 50;
-      const duration = 3000 + Math.random() * 2000;
+      const duration = 3500 + Math.random() * 2000;
       return Animated.loop(
         Animated.sequence([
           Animated.delay(p.delay),
@@ -80,7 +80,7 @@ function Confetti() {
         ]),
       );
     });
-    animRef.current = Animated.stagger(50, loops);
+    animRef.current = Animated.stagger(60, loops);
     animRef.current.start();
     return () => animRef.current?.stop();
   }, []);
@@ -114,19 +114,44 @@ export function EndingScreen({
   stats: CompletionStats;
   onReplay: () => void;
 }) {
+  const iconScale = useRef(new Animated.Value(0)).current;
+  const iconOpacity = useRef(new Animated.Value(0)).current;
   const titleOpacity = useRef(new Animated.Value(0)).current;
+  const titleSlide = useRef(new Animated.Value(12)).current;
   const statsOpacity = useRef(new Animated.Value(0)).current;
+  const statsSlide = useRef(new Animated.Value(16)).current;
   const buttonOpacity = useRef(new Animated.Value(0)).current;
+  const buttonScale = useRef(new Animated.Value(0.95)).current;
+  const pressScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.timing(titleOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+    Animated.parallel([
+      Animated.spring(iconScale, { toValue: 1, friction: 5, tension: 50, useNativeDriver: true }),
+      Animated.timing(iconOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+    ]).start();
+
     const t1 = setTimeout(() => {
-      Animated.timing(statsOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start();
-    }, 400);
+      Animated.parallel([
+        Animated.timing(titleOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.timing(titleSlide, { toValue: 0, duration: 500, useNativeDriver: true }),
+      ]).start();
+    }, 300);
+
     const t2 = setTimeout(() => {
-      Animated.timing(buttonOpacity, { toValue: 1, duration: 400, useNativeDriver: true }).start();
-    }, 1000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+      Animated.parallel([
+        Animated.timing(statsOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.timing(statsSlide, { toValue: 0, duration: 500, useNativeDriver: true }),
+      ]).start();
+    }, 600);
+
+    const t3 = setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(buttonScale, { toValue: 1, friction: 4, tension: 40, useNativeDriver: true }),
+        Animated.timing(buttonOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      ]).start();
+    }, 1100);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
   const statRows: [string, string][] = [
@@ -142,24 +167,59 @@ export function EndingScreen({
     ["Total Play Time", formatTimeDetailed(stats.activePlayTimeMs)],
   ];
 
+  const handlePressIn = () => {
+    Animated.spring(pressScale, { toValue: 0.97, friction: 8, tension: 100, useNativeDriver: true }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(pressScale, { toValue: 1, friction: 8, tension: 100, useNativeDriver: true }).start();
+  };
+
   return (
     <View style={EndingStyles.root}>
-      <LinearGradient colors={[C.bg, "#0F1830", C.bg]} style={EndingStyles.gradient} />
+      <LinearGradient colors={[C.bg, "#F0F4F8", C.bg]} style={EndingStyles.gradient} />
       <Confetti />
       <View style={EndingStyles.content}>
-        <Animated.View style={[EndingStyles.titleWrap, { opacity: titleOpacity }]}>
-          <View style={EndingStyles.iconContainer}>
+        <Animated.View style={[EndingStyles.titleWrap, { opacity: iconOpacity }]}>
+          <Animated.View
+            style={[
+              EndingStyles.iconContainer,
+              {
+                opacity: iconOpacity,
+                transform: [{ scale: iconScale }],
+              },
+            ]}
+          >
             <Text style={EndingStyles.icon}>✓</Text>
-          </View>
+          </Animated.View>
+        </Animated.View>
+
+        <Animated.View
+          style={[
+            EndingStyles.titleSection,
+            {
+              opacity: titleOpacity,
+              transform: [{ translateY: titleSlide }],
+            },
+          ]}
+        >
           <Text style={EndingStyles.eyebrow}>GAME COMPLETE</Text>
           <Text style={EndingStyles.title}>Portfolio Mastered</Text>
           <Text style={EndingStyles.subtitle}>
-            You've completed the investment journey. Your final stats show a successful career in the markets.
+            You've completed the investment journey.{"\n"}
+            Your final portfolio stands as a testament to your strategy.
           </Text>
         </Animated.View>
 
-        <Animated.View style={[EndingStyles.statsCard, { opacity: statsOpacity }]}>
-          <Text style={EndingStyles.statsHeader}>Final Statistics</Text>
+        <Animated.View
+          style={[
+            EndingStyles.statsCard,
+            {
+              opacity: statsOpacity,
+              transform: [{ translateY: statsSlide }],
+            },
+          ]}
+        >
+          <Text style={EndingStyles.statsHeader}>FINAL STATISTICS</Text>
           {statRows.map(([label, value]) => (
             <View key={label} style={EndingStyles.statRow}>
               <Text style={EndingStyles.statLabel}>{label}</Text>
@@ -168,14 +228,23 @@ export function EndingScreen({
           ))}
         </Animated.View>
 
-        <Animated.View style={[EndingStyles.buttonContainer, { opacity: buttonOpacity }]}>
+        <Animated.View
+          style={[
+            EndingStyles.buttonContainer,
+            {
+              opacity: buttonOpacity,
+              transform: [{ scale: Animated.multiply(buttonScale, pressScale) }],
+            },
+          ]}
+        >
           <Pressable
-            style={EndingStyles.replayBtn}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
             onPress={onReplay}
             accessibilityRole="button"
             accessibilityLabel="Start new game"
           >
-            <LinearGradient colors={[C.accentDeep, C.accent]} style={EndingStyles.replayBtnGradient}>
+            <LinearGradient colors={[C.accentDeep, C.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={EndingStyles.replayBtnGradient}>
               <Text style={EndingStyles.replayBtnText}>START NEW GAME</Text>
             </LinearGradient>
           </Pressable>
@@ -192,30 +261,29 @@ const EndingStyles = StyleSheet.create({
   root: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: C.bg },
   gradient: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
   confettiLayer: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden" },
-  content: { alignItems: "center", paddingHorizontal: 20, maxWidth: 440, width: "100%" },
-  titleWrap: { alignItems: "center", marginBottom: 32 },
+  content: { alignItems: "center", paddingHorizontal: 24, maxWidth: 440, width: "100%" },
+  titleWrap: { alignItems: "center", marginBottom: 24 },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: C.success,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
-    shadowColor: "#000000", shadowOpacity: 0.1, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    shadowColor: C.success,
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
-  icon: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
+  icon: { fontSize: 36, fontWeight: "700", color: "#FFFFFF" },
+  titleSection: { alignItems: "center", marginBottom: 32 },
   eyebrow: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 11,
+    fontWeight: "700",
     color: C.accent,
-    letterSpacing: 2,
-    marginBottom: 8,
+    letterSpacing: 2.5,
+    marginBottom: 10,
     textTransform: "uppercase",
   },
   title: {
@@ -224,7 +292,8 @@ const EndingStyles = StyleSheet.create({
     color: C.text,
     textAlign: "center",
     lineHeight: 36,
-    marginBottom: 12,
+    marginBottom: 14,
+    letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 15,
@@ -236,35 +305,42 @@ const EndingStyles = StyleSheet.create({
   statsCard: {
     width: "100%",
     backgroundColor: C.card,
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: 16,
+    padding: 24,
     borderWidth: 1,
     borderColor: C.border,
-    marginBottom: 24,
-    shadowColor: "#000000", shadowOpacity: 0.04, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    marginBottom: 28,
+    shadowColor: "#000000",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   statsHeader: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: C.text,
-    marginBottom: 16,
+    fontSize: 11,
+    fontWeight: "700",
+    color: C.textMuted,
+    marginBottom: 18,
+    letterSpacing: 1.5,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   statRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: C.border,
   },
-  statLabel: { fontSize: 13, color: C.textMuted, fontWeight: "500" },
-  statValue: { fontSize: 14, color: C.accent, fontWeight: "600" },
+  statLabel: { fontSize: 14, color: C.textMuted, fontWeight: "500" },
+  statValue: { fontSize: 15, color: C.accent, fontWeight: "600" },
   buttonContainer: { alignItems: "center", width: "100%" },
-  replayBtn: { borderRadius: 12, overflow: "hidden", width: "100%" },
-  replayBtnGradient: { paddingVertical: 16, alignItems: "center" },
-  replayBtnText: { fontSize: 16, fontWeight: "600", color: "#FFFFFF", letterSpacing: 0.5 },
-  replayHint: { fontSize: 12, color: C.textMuted, marginTop: 12, textAlign: "center", lineHeight: 18 },
+  replayBtnGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    alignItems: "center",
+    borderRadius: 14,
+  },
+  replayBtnText: { fontSize: 16, fontWeight: "700", color: "#FFFFFF", letterSpacing: 1 },
+  replayHint: { fontSize: 12, color: C.textMuted, marginTop: 14, textAlign: "center", lineHeight: 18 },
 });

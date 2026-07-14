@@ -55,16 +55,16 @@ export interface ThemeColors {
 
 export const darkTheme: ThemeColors = {
   // Foundation
-  bg: "#070B14",
-  bgSoft: "#0F141F",
-  panel: "#1A1F2E",
-  panelElevated: "#242938",
-  border: "rgba(255, 215, 0, 0.15)",
+  bg: "#071426",
+  bgSoft: "#12243D",
+  panel: "#183152",
+  panelElevated: "#1E3A5F",
+  border: "rgba(255, 255, 255, 0.08)",
   
   // Text
-  text: "#F8F9FA",
-  textSecondary: "#D4D5D7",
-  textMuted: "#9CA3AF",
+  text: "#FFFFFF",
+  textSecondary: "#B8C7D9",
+  textMuted: "#718096",
   
   // Money / Investments
   money: "#00C896",
@@ -81,10 +81,10 @@ export const darkTheme: ThemeColors = {
   prestigeLight: "#C084FC",
   prestigeDark: "#9333EA",
   
-  // Legacy - Luxury Gold Theme
-  legacy: "#E6B84A",
-  legacyLight: "#FFD700",
-  legacyDark: "#B8860B",
+  // Legacy
+  legacy: "#F59E0B",
+  legacyLight: "#FBBF24",
+  legacyDark: "#FFD700",
   
   // Status
   gain: "#00C896",
@@ -92,19 +92,19 @@ export const darkTheme: ThemeColors = {
   info: "#3B82F6",
   
   // Scroll indicators
-  scrollbar: "#1F2937",
-  scrollbarActive: "#E6B84A",
+  scrollbar: "#334155",
+  scrollbarActive: "#3B82F6",
   scrollbarPrestige: "#A855F7",
-  scrollbarLegacy: "#FFD700",
+  scrollbarLegacy: "#FBBF24",
   
-  // Late game tiers - Luxury Theme
-  billionaireBg: "#0A0E18",
+  // Late game tiers
+  billionaireBg: "#0A192F",
   billionaireGold: "#FFD700",
-  corporateBg: "#1A1F2E",
-  corporateDark: "#242938",
-  marketBg: "#0F141F",
+  corporateBg: "#7F1D1D",
+  corporateDark: "#991B1B",
+  marketBg: "#134E4A",
   marketTeal: "#14B8A6",
-  ultimateBg: "#050508",
+  ultimateBg: "#09090B",
   ultimatePlatinum: "#E5E7EB",
 };
 

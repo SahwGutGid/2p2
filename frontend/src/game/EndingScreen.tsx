@@ -22,18 +22,18 @@ export type CompletionStats = {
 };
 
 const C = {
-  bg: "#070B14",
-  card: "#1A1F2E",
-  accent: "#E6B84A",
-  accentDeep: "#B8860B",
+  bg: "#0F172A",
+  card: "#1E293B",
+  accent: "#F59E0B",
+  accentDeep: "#F59E0B",
   success: "#00C896",
-  white: "#F8F9FA",
-  text: "#F8F9FA",
-  textMuted: "#9CA3AF",
-  border: "rgba(230, 184, 74, 0.3)",
+  white: "#FFFFFF",
+  text: "#F1F5F9",
+  textMuted: "#94A3B8",
+  border: "#334155",
 };
 
-const COLORS = ["#FFD700", "#E6B84A", "#B8860B", "#00C896", "#A855F7", "#9CA3AF"];
+const COLORS = ["#F59E0B", "#00C896", "#3B82F6", "#EF4444", "#A855F7", "#94A3B8"];
 
 type Particle = {
   x: Animated.Value;
@@ -211,7 +211,7 @@ export function EndingScreen({
   return (
     <SafeAreaView style={EndingStyles.root} edges={["bottom"]}>
       <View style={EndingStyles.root}>
-        <LinearGradient colors={[C.bg, "#1A1F2E", C.bg]} style={EndingStyles.gradient} />
+        <LinearGradient colors={[C.bg, "#1E293B", C.bg]} style={EndingStyles.gradient} />
         <Confetti />
         <ScrollView
           style={EndingStyles.scrollView}
@@ -288,7 +288,7 @@ export function EndingScreen({
                 accessibilityLabel="Continue current run"
               >
                 <LinearGradient
-                  colors={["#E6B84A", "#FFD700"]}
+                  colors={["#00C896", "#22C55E"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={EndingStyles.continueBtnGradient}
@@ -302,9 +302,9 @@ export function EndingScreen({
               {/* Restart Run - Destructive Hold Button */}
               <HoldButton
                 onHoldComplete={onReplay}
-                colors={["#B8860B", "#E6B84A"]}
-                textColor="#F8F9FA"
-                progressColor="#FFD700"
+                colors={["#DC2626", "#EF4444"]}
+                textColor="#FFFFFF"
+                progressColor="#FFFFFF"
                 style={EndingStyles.restartBtn}
               >
                 RESTART RUN

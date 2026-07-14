@@ -26,6 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSoundEngine } from "@/src/game/sounds";
 import { EndingScreen } from "@/src/game/EndingScreen";
 import { HoldButton } from "@/src/components/HoldButton";
+import { FinalUpgradeCelebration } from "@/src/components/FinalUpgradeCelebration";
 import { useBackgroundMusic } from "@/src/game/music";
 import {
   computeRank,
@@ -352,6 +353,9 @@ export default function Index() {
   const [gameComplete, setGameComplete] = useState(false);
   const [endingPending, setEndingPending] = useState(false);
   const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
+
+  // Final upgrade celebration
+  const [showFinalCelebration, setShowFinalCelebration] = useState(false);
 
   // Celebration banners for early game milestones
   const [celebrationBanner, setCelebrationBanner] = useState<string | null>(null);
@@ -1327,6 +1331,10 @@ export default function Index() {
     };
     return (
       <SafeAreaView style={styles.safe} testID="ending-screen">
+        <FinalUpgradeCelebration
+          visible={showFinalCelebration}
+          onAnimationComplete={() => setShowFinalCelebration(false)}
+        />
         <EndingScreen stats={completionStats} onReplay={handleReplay} onContinue={handleContinue} />
       </SafeAreaView>
     );
@@ -1379,7 +1387,7 @@ export default function Index() {
                 <Pressable
                   onPress={() => { sound.play("click"); setShowLegacy(true); }}
                   hitSlop={12}
-                  style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}15`, marginLeft: 6, borderWidth: 1.5 }]}
+                  style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}25`, marginLeft: 6, borderWidth: 1.5 }]}
                   testID="open-legacy"
                 >
                   <Text style={[styles.iconChipText, { color: theme.legacy }]}>
@@ -1555,16 +1563,16 @@ export default function Index() {
             {/* Cash out */}
             <HoldButton
               onHoldComplete={doPrestige}
-              colors={["#E6B84A", "#FFD700"]}
-              textColor="#070B14"
-              progressColor="#F8F9FA"
+              colors={["#A855F7", "#9333EA"]}
+              textColor={canPrestige ? "#001018" : theme.prestige}
+              progressColor="#FFFFFF"
               disabled={!canPrestige}
               style={[
                 styles.cashOutBtn,
-                { borderColor: theme.legacy, backgroundColor: `${theme.legacy}12` },
+                { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
                 !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
-                prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.legacy, borderColor: theme.legacy }],
-                canPrestige && !prestigeArmed && { backgroundColor: theme.legacy },
+                prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
+                canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
               ]}
               testID="prestige-button"
             >
@@ -1643,31 +1651,37 @@ export default function Index() {
 
       // Detect game completion when ultimate-investor is purchased
       if (upgrade.isFinal) {
-        const compStats: CompletionStats = {
-          balance,
-          totalPrestiges: totalPrestiges,
-          totalPPEarned: stats.totalPPEarned,
-          investmentsCompleted: stats.investmentsCompleted,
-          upgradesPurchased: stats.upgradesPurchased,
-          accelerateUses: stats.accelerateUses,
-          activePlayTimeMs: stats.activePlayTimeMs,
-          highestBalance: stats.highestBalance,
-          totalMoneyEarned: stats.totalMoneyEarned,
-          legacyUpgradesOwned: Object.values(newLegacyUpgrades).filter(Boolean).length,
-          completedAt: Date.now(),
-        };
-        setGameComplete(true);
-        setEndingPending(true);
-        setCompletionStats(compStats);
-        sound.play("victory");
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-        saveState({
-          legacyPoints: newLegacyPoints,
-          legacyUpgrades: newLegacyUpgrades,
-          gameComplete: true,
-          endingPending: true,
-          completionStats: compStats,
-        });
+        // Show celebration first
+        setShowFinalCelebration(true);
+        
+        // Then transition to ending screen after celebration
+        setTimeout(() => {
+          const compStats: CompletionStats = {
+            balance,
+            totalPrestiges: totalPrestiges,
+            totalPPEarned: stats.totalPPEarned,
+            investmentsCompleted: stats.investmentsCompleted,
+            upgradesPurchased: stats.upgradesPurchased,
+            accelerateUses: stats.accelerateUses,
+            activePlayTimeMs: stats.activePlayTimeMs,
+            highestBalance: stats.highestBalance,
+            totalMoneyEarned: stats.totalMoneyEarned,
+            legacyUpgradesOwned: Object.values(newLegacyUpgrades).filter(Boolean).length,
+            completedAt: Date.now(),
+          };
+          setGameComplete(true);
+          setEndingPending(true);
+          setCompletionStats(compStats);
+          sound.play("victory");
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+          saveState({
+            legacyPoints: newLegacyPoints,
+            legacyUpgrades: newLegacyUpgrades,
+            gameComplete: true,
+            endingPending: true,
+            completionStats: compStats,
+          });
+        }, 3500); // Wait for celebration to complete
       } else {
         saveState({ legacyPoints: newLegacyPoints, legacyUpgrades: newLegacyUpgrades });
       }
@@ -1678,7 +1692,7 @@ export default function Index() {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]} testID="legacy-screen">
         <LinearGradient
-          colors={isUltimateOwned ? ["#FFD700", "#FFA500", "#FF8C00"] : [theme.bg, theme.bgSoft, theme.panel]}
+          colors={[theme.bg, theme.bgSoft, theme.panel]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
@@ -1719,7 +1733,7 @@ export default function Index() {
           </View>
 
           {/* Legacy Explanation */}
-          <View style={[styles.legacyExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.legacy}06` }]}>
+          <View style={[styles.legacyExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.legacy}08` }]}>
             <View style={styles.legacyExplanationHeader}>
               <Text style={[styles.legacyExplanationTitle, { color: theme.legacy }]}>WHAT ARE LEGACY POINTS?</Text>
               <Pressable
@@ -1728,7 +1742,7 @@ export default function Index() {
                   setShowLegacyInfo(!showLegacyInfo);
                 }}
                 hitSlop={8}
-                style={[styles.infoButton, { backgroundColor: `${theme.legacy}12` }]}
+                style={[styles.infoButton, { backgroundColor: `${theme.legacy}18` }]}
               >
                 <Text style={[styles.infoButtonText, { color: theme.legacy }]}>ⓘ</Text>
               </Pressable>
@@ -1742,7 +1756,7 @@ export default function Index() {
           </View>
 
           {isUltimateOwned && (
-            <View style={[styles.ultimateBanner, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}08` }]}>
+            <View style={[styles.ultimateBanner, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}12` }]}>
               <Text style={[styles.ultimateBannerText, { color: theme.legacy }]}>🏆 GAME COMPLETE 🏆</Text>
               <Text style={[styles.ultimateBannerSub, { color: theme.text }]}>You have achieved the Ultimate Investor rank</Text>
               <Pressable
@@ -1781,7 +1795,19 @@ export default function Index() {
                   styles.legacyCard,
                   { backgroundColor: theme.panel, borderColor: theme.border },
                   owned && [styles.legacyCardOwned, { backgroundColor: `${upgrade.tint}12` }],
-                  upgrade.isFinal && [styles.legacyCardFinal, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}08` }],
+                  upgrade.isFinal && [
+                    styles.legacyCardFinal, 
+                    { 
+                      borderColor: theme.legacy, 
+                      backgroundColor: `${theme.legacy}08`,
+                      borderWidth: 2,
+                      shadowColor: theme.legacy,
+                      shadowOpacity: 0.4,
+                      shadowRadius: 12,
+                      shadowOffset: { width: 0, height: 0 },
+                      elevation: 4,
+                    }
+                  ],
                   !owned && { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}15` },
                   pressed && canAfford && { transform: [{ scale: 0.98 }] },
                 ]}

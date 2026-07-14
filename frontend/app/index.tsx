@@ -468,6 +468,15 @@ export default function Index() {
   const flash = useSharedValue(0);
   const selectedPulse = useSharedValue(1);
   const treeSlide = useSharedValue(0);
+  const loadingLogoScale = useSharedValue(0);
+  const loadingLogoOpacity = useSharedValue(0);
+  const loadingTextOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    loadingLogoScale.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.back(1.2)) });
+    loadingLogoOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
+    loadingTextOpacity.value = withDelay(200, withTiming(1, { duration: 500, easing: Easing.out(Easing.ease) }));
+  }, []);
 
   useEffect(() => {
     selectedPulse.value = withRepeat(
@@ -1580,7 +1589,7 @@ export default function Index() {
           <ScrollView
             style={styles.treeBody}
             contentContainerStyle={styles.treeBodyContent}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
           >
             <View style={styles.treeGridRow}>
               <TreeColumn
@@ -1767,7 +1776,7 @@ export default function Index() {
         <ScrollView
           style={styles.legacyBody}
           contentContainerStyle={styles.legacyBodyContent}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
         >
           {LEGACY_UPGRADES.map((upgrade) => {
             const owned = legacyUpgrades[upgrade.id];
@@ -1830,12 +1839,18 @@ export default function Index() {
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        <Animated.View style={[styles.loadingLogo, logoStyle]}>
+        <Animated.View style={[
+          styles.loadingLogo,
+          {
+            opacity: loadingLogoOpacity,
+            transform: [{ scale: loadingLogoScale }],
+          },
+        ]}>
           <View style={[styles.loadingLogoInner, { borderColor: theme.accent }]}>
             <Text style={[styles.loadingLogoText, { color: theme.accent }]}>P2P</Text>
           </View>
         </Animated.View>
-        <Animated.View style={[styles.loadingTextContainer, textStyle]}>
+        <Animated.View style={[styles.loadingTextContainer, { opacity: loadingTextOpacity }]}>
           <Text style={styles.loadingTitle}>INVESTMENT IDLE</Text>
           <Text style={styles.loadingSubtitle}>Build Your Financial Empire</Text>
         </Animated.View>
@@ -2128,7 +2143,7 @@ export default function Index() {
       <ScrollView
         style={styles.list}
         contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         {actives.length > 0 && (
           <>
@@ -3035,37 +3050,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   loadingLogo: {
-    marginBottom: 28,
+    marginBottom: 32,
   },
   loadingLogoInner: {
-    width: 88,
-    height: 88,
-    borderRadius: 20,
-    borderWidth: 1.5,
+    width: 96,
+    height: 96,
+    borderRadius: 24,
+    borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
-    shadowOpacity: 0.08, shadowRadius: 12,
-    shadowOffset: { width: 0, height: 3 }, elevation: 3,
+    shadowOpacity: 0.15, shadowRadius: 20,
+    shadowOffset: { width: 0, height: 4 }, elevation: 5,
   },
   loadingLogoText: {
-    fontSize: 30,
-    fontWeight: "700",
-    letterSpacing: 1.5,
+    fontSize: 32,
+    fontWeight: "800",
+    letterSpacing: 2,
   },
   loadingTextContainer: {
     alignItems: "center",
-    marginBottom: 48,
+    marginBottom: 56,
   },
   loadingTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    letterSpacing: 1,
-    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+    marginBottom: 12,
   },
   loadingSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "500",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+    opacity: 0.9,
   },
   loadingSpinner: {
     flexDirection: "row",

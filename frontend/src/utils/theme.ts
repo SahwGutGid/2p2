@@ -15,19 +15,19 @@ export interface ThemeColors {
 }
 
 export const darkTheme: ThemeColors = {
-  bg: "#0B0F19",
-  bgSoft: "#151B2B",
-  panel: "#1A2332",
-  panelElevated: "#242F42",
-  accent: "#00D4AA",
-  accentDeep: "#00A885",
-  gold: "#FFB84D",
-  gain: "#00E676",
-  loss: "#FF5252",
-  info: "#4FC3F7",
+  bg: "#0A0E17",
+  bgSoft: "#121929",
+  panel: "#182234",
+  panelElevated: "#222D42",
+  accent: "#00E5C2",
+  accentDeep: "#00B89F",
+  gold: "#FFC94D",
+  gain: "#00FF85",
+  loss: "#FF4D4D",
+  info: "#5DD0F9",
   text: "#FFFFFF",
-  textMuted: "#9CA3AF",
-  border: "#2D3748",
+  textMuted: "#A0AAB8",
+  border: "#2A3548",
 };
 
 export const getTheme = (): ThemeColors => {

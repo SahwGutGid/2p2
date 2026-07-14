@@ -1651,37 +1651,36 @@ export default function Index() {
 
       // Detect game completion when ultimate-investor is purchased
       if (upgrade.isFinal) {
-        // Show celebration first
-        setShowFinalCelebration(true);
+        const compStats: CompletionStats = {
+          balance,
+          totalPrestiges: totalPrestiges,
+          totalPPEarned: stats.totalPPEarned,
+          investmentsCompleted: stats.investmentsCompleted,
+          upgradesPurchased: stats.upgradesPurchased,
+          accelerateUses: stats.accelerateUses,
+          activePlayTimeMs: stats.activePlayTimeMs,
+          highestBalance: stats.highestBalance,
+          totalMoneyEarned: stats.totalMoneyEarned,
+          legacyUpgradesOwned: Object.values(newLegacyUpgrades).filter(Boolean).length,
+          completedAt: Date.now(),
+        };
+        setGameComplete(true);
+        setEndingPending(true);
+        setCompletionStats(compStats);
+        sound.play("victory");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        saveState({
+          legacyPoints: newLegacyPoints,
+          legacyUpgrades: newLegacyUpgrades,
+          gameComplete: true,
+          endingPending: true,
+          completionStats: compStats,
+        });
         
-        // Then transition to ending screen after celebration
+        // Show celebration after ending screen is visible
         setTimeout(() => {
-          const compStats: CompletionStats = {
-            balance,
-            totalPrestiges: totalPrestiges,
-            totalPPEarned: stats.totalPPEarned,
-            investmentsCompleted: stats.investmentsCompleted,
-            upgradesPurchased: stats.upgradesPurchased,
-            accelerateUses: stats.accelerateUses,
-            activePlayTimeMs: stats.activePlayTimeMs,
-            highestBalance: stats.highestBalance,
-            totalMoneyEarned: stats.totalMoneyEarned,
-            legacyUpgradesOwned: Object.values(newLegacyUpgrades).filter(Boolean).length,
-            completedAt: Date.now(),
-          };
-          setGameComplete(true);
-          setEndingPending(true);
-          setCompletionStats(compStats);
-          sound.play("victory");
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-          saveState({
-            legacyPoints: newLegacyPoints,
-            legacyUpgrades: newLegacyUpgrades,
-            gameComplete: true,
-            endingPending: true,
-            completionStats: compStats,
-          });
-        }, 3500); // Wait for celebration to complete
+          setShowFinalCelebration(true);
+        }, 400);
       } else {
         saveState({ legacyPoints: newLegacyPoints, legacyUpgrades: newLegacyUpgrades });
       }

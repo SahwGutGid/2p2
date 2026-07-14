@@ -54,7 +54,7 @@ function Confetti() {
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
 
   if (particlesRef.current.length === 0) {
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 25; i++) {
       const startX = Math.random() * width;
       const startY = -20 - Math.random() * 100;
       const endX = Math.random() * width;
@@ -91,11 +91,15 @@ function Confetti() {
             ]),
           ]),
         ]),
+        { resetBeforeIteration: true },
       );
     });
     animRef.current = Animated.stagger(60, loops);
     animRef.current.start();
-    return () => animRef.current?.stop();
+    return () => {
+      animRef.current?.stop();
+      animRef.current = null;
+    };
   }, []);
 
   return (
@@ -209,7 +213,7 @@ export function EndingScreen({
   };
 
   return (
-    <SafeAreaView style={EndingStyles.root} edges={["bottom"]}>
+    <SafeAreaView style={EndingStyles.root} edges={["top", "bottom"]}>
       <View style={EndingStyles.root}>
         <LinearGradient colors={[C.bg, "#1E293B", C.bg]} style={EndingStyles.gradient} />
         <Confetti />

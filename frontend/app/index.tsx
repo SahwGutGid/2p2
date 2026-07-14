@@ -26,7 +26,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSoundEngine } from "@/src/game/sounds";
 import { EndingScreen } from "@/src/game/EndingScreen";
 import { HoldButton } from "@/src/components/HoldButton";
-import { FinalUpgradeCelebration } from "@/src/components/FinalUpgradeCelebration";
 import { useBackgroundMusic } from "@/src/game/music";
 import {
   computeRank,
@@ -353,9 +352,6 @@ export default function Index() {
   const [gameComplete, setGameComplete] = useState(false);
   const [endingPending, setEndingPending] = useState(false);
   const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
-
-  // Final upgrade celebration
-  const [showFinalCelebration, setShowFinalCelebration] = useState(false);
 
   // Celebration banners for early game milestones
   const [celebrationBanner, setCelebrationBanner] = useState<string | null>(null);
@@ -1331,10 +1327,6 @@ export default function Index() {
     };
     return (
       <SafeAreaView style={styles.safe} testID="ending-screen">
-        <FinalUpgradeCelebration
-          visible={showFinalCelebration}
-          onAnimationComplete={() => setShowFinalCelebration(false)}
-        />
         <EndingScreen stats={completionStats} onReplay={handleReplay} onContinue={handleContinue} />
       </SafeAreaView>
     );
@@ -1676,11 +1668,6 @@ export default function Index() {
           endingPending: true,
           completionStats: compStats,
         });
-        
-        // Show celebration after ending screen is visible
-        setTimeout(() => {
-          setShowFinalCelebration(true);
-        }, 400);
       } else {
         saveState({ legacyPoints: newLegacyPoints, legacyUpgrades: newLegacyUpgrades });
       }

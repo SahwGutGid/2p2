@@ -33,116 +33,6 @@ const C = {
   border: "#334155",
 };
 
-const COLORS = ["#F59E0B", "#00C896", "#3B82F6", "#EF4444", "#A855F7", "#94A3B8"];
-
-type Particle = {
-  x: Animated.Value;
-  y: Animated.Value;
-  rot: Animated.Value;
-  opacity: Animated.Value;
-  color: string;
-  size: number;
-  delay: number;
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-};
-
-function Confetti() {
-  const particlesRef = useRef<Particle[]>([]);
-  const animRef = useRef<Animated.CompositeAnimation | null>(null);
-
-  if (particlesRef.current.length === 0) {
-    for (let i = 0; i < 25; i++) {
-      const startX = Math.random() * width;
-      const startY = -20 - Math.random() * 100;
-      const endX = Math.random() * width;
-      const endY = height + 50;
-      particlesRef.current.push({
-        x: new Animated.Value(0),
-        y: new Animated.Value(0),
-        rot: new Animated.Value(0),
-        opacity: new Animated.Value(1),
-        color: COLORS[i % COLORS.length],
-        size: 6 + Math.random() * 8,
-        delay: Math.random() * 1500,
-        startX,
-        startY,
-        endX,
-        endY,
-      });
-    }
-  }
-
-  useEffect(() => {
-    const loops = particlesRef.current.map((p) => {
-      const duration = 3500 + Math.random() * 2000;
-      return Animated.loop(
-        Animated.sequence([
-          Animated.delay(p.delay),
-          Animated.parallel([
-            Animated.timing(p.x, { toValue: 1, duration, useNativeDriver: true }),
-            Animated.timing(p.y, { toValue: 1, duration, useNativeDriver: true }),
-            Animated.timing(p.rot, { toValue: 360 * (Math.random() > 0.5 ? 1 : -1), duration, useNativeDriver: true }),
-            Animated.sequence([
-              Animated.delay(duration * 0.7),
-              Animated.timing(p.opacity, { toValue: 0, duration: duration * 0.3, useNativeDriver: true }),
-            ]),
-          ]),
-        ]),
-        { resetBeforeIteration: true },
-      );
-    });
-    animRef.current = Animated.stagger(60, loops);
-    animRef.current.start();
-    return () => {
-      animRef.current?.stop();
-      animRef.current = null;
-    };
-  }, []);
-
-  return (
-    <View style={EndingStyles.confettiLayer} pointerEvents="none">
-      {particlesRef.current.map((p, i) => (
-        <Animated.View
-          key={`confetti-${i}`}
-          style={{
-            position: "absolute",
-            left: p.startX,
-            top: p.startY,
-            width: p.size,
-            height: p.size * 0.6,
-            backgroundColor: p.color,
-            borderRadius: 2,
-            opacity: p.opacity,
-            transform: [
-              {
-                translateX: p.x.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, p.endX - p.startX],
-                }),
-              },
-              {
-                translateY: p.y.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, p.endY - p.startY],
-                }),
-              },
-              {
-                rotate: p.rot.interpolate({
-                  inputRange: [0, 360],
-                  outputRange: ["0deg", "360deg"],
-                }),
-              },
-            ],
-          }}
-        />
-      ))}
-    </View>
-  );
-}
-
 export function EndingScreen({
   stats,
   onReplay,
@@ -216,7 +106,6 @@ export function EndingScreen({
     <SafeAreaView style={EndingStyles.root} edges={["top", "bottom"]}>
       <View style={EndingStyles.root}>
         <LinearGradient colors={[C.bg, "#1E293B", C.bg]} style={EndingStyles.gradient} />
-        <Confetti />
         <ScrollView
           style={EndingStyles.scrollView}
           contentContainerStyle={EndingStyles.scrollContent}
@@ -328,7 +217,6 @@ export function EndingScreen({
 const EndingStyles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   gradient: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
-  confettiLayer: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden" },
   scrollView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,

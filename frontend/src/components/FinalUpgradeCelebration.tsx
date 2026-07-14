@@ -1,20 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Dimensions } from "react-native";
-
-const { width, height } = Dimensions.get("window");
-
-interface Particle {
-  x: Animated.Value;
-  y: Animated.Value;
-  scale: Animated.Value;
-  opacity: Animated.Value;
-  rotation: Animated.Value;
-  color: string;
-  size: number;
-  delay: number;
-}
 
 interface FinalUpgradeCelebrationProps {
   visible: boolean;
@@ -29,73 +15,24 @@ export function FinalUpgradeCelebration({
   const trophyOpacity = useRef(new Animated.Value(0)).current;
   const glowOpacity = useRef(new Animated.Value(0)).current;
   const textOpacity = useRef(new Animated.Value(0)).current;
-  const textSlide = useRef(new Animated.Value(20)).current;
-  const particlesRef = useRef<Particle[]>([]);
-  const particleAnimRef = useRef<Animated.CompositeAnimation | null>(null);
-
-  // Initialize particles - reduced count for performance
-  if (particlesRef.current.length === 0) {
-    const colors = ["#FFD700", "#F59E0B", "#A855F7", "#3B82F6", "#FFFFFF"];
-    for (let i = 0; i < 15; i++) {
-      particlesRef.current.push({
-        x: new Animated.Value(0),
-        y: new Animated.Value(0),
-        scale: new Animated.Value(0),
-        opacity: new Animated.Value(1),
-        rotation: new Animated.Value(0),
-        color: colors[i % colors.length],
-        size: 4 + Math.random() * 6,
-        delay: Math.random() * 500,
-      });
-    }
-  }
 
   useEffect(() => {
     if (visible) {
-      // Trophy entrance animation
+      // Simple trophy entrance animation
       Animated.parallel([
         Animated.spring(trophyScale, { toValue: 1, friction: 4, tension: 40, useNativeDriver: true }),
         Animated.timing(trophyOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
       ]).start();
 
-      // Glow animation
+      // Simple glow animation
       Animated.timing(glowOpacity, { toValue: 1, duration: 800, useNativeDriver: true }).start();
 
-      // Particle animations - using transform for native driver compatibility
-      const particleAnims = particlesRef.current.map((p) => {
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 80 + Math.random() * 100;
-        const duration = 1200 + Math.random() * 800;
-        
-        return Animated.sequence([
-          Animated.delay(p.delay),
-          Animated.parallel([
-            Animated.timing(p.scale, { toValue: 1, duration: 400, useNativeDriver: true }),
-            Animated.timing(p.rotation, { toValue: 360, duration, useNativeDriver: true }),
-            Animated.sequence([
-              Animated.timing(p.x, { toValue: Math.cos(angle) * distance, duration, useNativeDriver: true }),
-              Animated.timing(p.y, { toValue: Math.sin(angle) * distance, duration, useNativeDriver: true }),
-            ]),
-            Animated.sequence([
-              Animated.delay(duration * 0.6),
-              Animated.timing(p.opacity, { toValue: 0, duration: duration * 0.4, useNativeDriver: true }),
-            ]),
-          ]),
-        ]);
-      });
-      
-      particleAnimRef.current = Animated.parallel(particleAnims);
-      particleAnimRef.current.start();
-
-      // Text animation
+      // Simple text animation
       const textAnim = setTimeout(() => {
-        Animated.parallel([
-          Animated.timing(textOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-          Animated.timing(textSlide, { toValue: 0, duration: 500, useNativeDriver: true }),
-        ]).start();
+        Animated.timing(textOpacity, { toValue: 1, duration: 500, useNativeDriver: true }).start();
       }, 300);
 
-      // Auto-dismiss after 3 seconds
+      // Auto-dismiss after 2.5 seconds
       const dismissAnim = setTimeout(() => {
         Animated.parallel([
           Animated.timing(trophyOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
@@ -104,12 +41,11 @@ export function FinalUpgradeCelebration({
         ]).start(() => {
           onAnimationComplete?.();
         });
-      }, 3000);
+      }, 2500);
 
       return () => {
         clearTimeout(textAnim);
         clearTimeout(dismissAnim);
-        particleAnimRef.current?.stop();
       };
     } else {
       // Reset animations
@@ -117,15 +53,6 @@ export function FinalUpgradeCelebration({
       trophyOpacity.setValue(0);
       glowOpacity.setValue(0);
       textOpacity.setValue(0);
-      textSlide.setValue(20);
-      particleAnimRef.current?.stop();
-      particlesRef.current.forEach(p => {
-        p.x.setValue(0);
-        p.y.setValue(0);
-        p.scale.setValue(0);
-        p.opacity.setValue(1);
-        p.rotation.setValue(0);
-      });
     }
   }, [visible, onAnimationComplete]);
 
@@ -133,38 +60,6 @@ export function FinalUpgradeCelebration({
 
   return (
     <View style={styles.container}>
-      {/* Particles - centered with transform */}
-      {particlesRef.current.map((p, i) => (
-        <Animated.View
-          key={`particle-${i}`}
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: 0,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: p.opacity,
-            transform: [
-              { translateX: p.x },
-              { translateY: p.y },
-              { scale: p.scale },
-              { rotate: p.rotation.interpolate({ inputRange: [0, 360], outputRange: ["0deg", "360deg"] }) },
-            ],
-          }}
-        >
-          <View
-            style={{
-              width: p.size,
-              height: p.size,
-              borderRadius: p.size / 2,
-              backgroundColor: p.color,
-            }}
-          />
-        </Animated.View>
-      ))}
-      
       <Animated.View style={[styles.glow, { opacity: glowOpacity }]} />
       
       <Animated.View
@@ -191,7 +86,6 @@ export function FinalUpgradeCelebration({
           styles.textContainer,
           {
             opacity: textOpacity,
-            transform: [{ translateY: textSlide }],
           },
         ]}
       >

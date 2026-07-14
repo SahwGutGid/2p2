@@ -20,18 +20,18 @@ export type CompletionStats = {
 };
 
 const C = {
-  bg: "#FFFFFF",
-  card: "#FFFFFF",
-  accent: "#006B5E",
-  accentDeep: "#005A4E",
-  success: "#00A67E",
+  bg: "#0F172A",
+  card: "#1E293B",
+  accent: "#FBBF24",
+  accentDeep: "#F59E0B",
+  success: "#00C896",
   white: "#FFFFFF",
-  text: "#111827",
-  textMuted: "#6B7280",
-  border: "#E5E7EB",
+  text: "#F1F5F9",
+  textMuted: "#94A3B8",
+  border: "#334155",
 };
 
-const COLORS = ["#006B5E", "#00A67E", "#005A4E", "#E5E7EB", "#6B7280", "#111827"];
+const COLORS = ["#FBBF24", "#00C896", "#3B82F6", "#EF4444", "#A855F7", "#94A3B8"];
 
 type Particle = {
   x: Animated.Value;
@@ -176,7 +176,7 @@ export function EndingScreen({
 
   return (
     <View style={EndingStyles.root}>
-      <LinearGradient colors={[C.bg, "#F0F4F8", C.bg]} style={EndingStyles.gradient} />
+      <LinearGradient colors={[C.bg, "#1E293B", C.bg]} style={EndingStyles.gradient} />
       <Confetti />
       <View style={EndingStyles.content}>
         <Animated.View style={[EndingStyles.titleWrap, { opacity: iconOpacity }]}>
@@ -334,7 +334,7 @@ const EndingStyles = StyleSheet.create({
   },
   statLabel: { fontSize: 14, color: C.textMuted, fontWeight: "500" },
   statValue: { fontSize: 15, color: C.accent, fontWeight: "600" },
-  buttonContainer: { alignItems: "center", width: "100%" },
+  buttonContainer: { alignItems: "center", width: "100%", paddingBottom: 32 },
   replayBtnGradient: {
     paddingVertical: 16,
     paddingHorizontal: 48,

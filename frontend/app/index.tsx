@@ -1589,15 +1589,14 @@ export default function Index() {
           <ScrollView
             style={styles.treeBody}
             contentContainerStyle={styles.treeBodyContent}
-            showsVerticalScrollIndicator={true}
-            indicatorStyle="white"
+            showsVerticalScrollIndicator={false}
           >
             <View style={styles.treeGridRow}>
               <TreeColumn
                 title="AUTOMATION"
                 subtitle="Idle strength"
                 icon="A"
-                tint={theme.upgrade}
+                tint="#EF4444"
                 path="automation"
                 skills={skills}
                 prestige={prestige}
@@ -1609,7 +1608,7 @@ export default function Index() {
                 title="BONUS"
                 subtitle="Steady growth"
                 icon="B"
-                tint={theme.gain}
+                tint="#00C896"
                 path="bonus"
                 skills={skills}
                 prestige={prestige}
@@ -1621,7 +1620,7 @@ export default function Index() {
                 title="METHODS"
                 subtitle="New income"
                 icon="M"
-                tint={theme.money}
+                tint="#3B82F6"
                 path="money"
                 skills={skills}
                 prestige={prestige}
@@ -1777,8 +1776,7 @@ export default function Index() {
         <ScrollView
           style={styles.legacyBody}
           contentContainerStyle={styles.legacyBodyContent}
-          showsVerticalScrollIndicator={true}
-          indicatorStyle="white"
+          showsVerticalScrollIndicator={false}
         >
           {LEGACY_UPGRADES.map((upgrade) => {
             const owned = legacyUpgrades[upgrade.id];
@@ -2145,8 +2143,7 @@ export default function Index() {
       <ScrollView
         style={styles.list}
         contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={true}
-        indicatorStyle="white"
+        showsVerticalScrollIndicator={false}
       >
         {actives.length > 0 && (
           <>

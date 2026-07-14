@@ -181,7 +181,7 @@ export const SKILLS: SkillNode[] = [
     effect: () => "Auto-invest freed slot",
     path: "automation", row: 0,
     baseCost: 5, costGrowth: 1, maxLevel: 1,
-    prereqs: [], requiredRank: "bronze", tint: "#2563EB",
+    prereqs: [], requiredRank: "bronze", tint: "#EF4444",
   },
   {
     id: "auto-fill",
@@ -191,7 +191,7 @@ export const SKILLS: SkillNode[] = [
     effect: () => "Fill all empty slots",
     path: "automation", row: 1,
     baseCost: 15, costGrowth: 1, maxLevel: 1,
-    prereqs: [{ id: "auto-reinvest", level: 1 }], requiredRank: "silver", tint: "#3B82F6",
+    prereqs: [{ id: "auto-reinvest", level: 1 }], requiredRank: "silver", tint: "#DC2626",
   },
   {
     id: "auto-accel",
@@ -201,7 +201,7 @@ export const SKILLS: SkillNode[] = [
     effect: (l) => `${formatPercent([33, 66, 100][l - 1] ?? 0)} of manual power`,
     path: "automation", row: 2,
     baseCost: 12, costGrowth: 1.75, maxLevel: 3,
-    prereqs: [{ id: "auto-reinvest", level: 1 }], requiredRank: "silver", tint: "#3B82F6",
+    prereqs: [{ id: "auto-reinvest", level: 1 }], requiredRank: "silver", tint: "#DC2626",
   },
   {
     id: "offline-loop",
@@ -211,7 +211,7 @@ export const SKILLS: SkillNode[] = [
     effect: () => "Offline auto-reinvest",
     path: "automation", row: 3,
     baseCost: 40, costGrowth: 1, maxLevel: 1,
-    prereqs: [{ id: "auto-fill", level: 1 }], requiredRank: "gold", tint: "#3B82F6",
+    prereqs: [{ id: "auto-fill", level: 1 }], requiredRank: "gold", tint: "#EF4444",
   },
   {
     id: "smart-select",
@@ -221,7 +221,7 @@ export const SKILLS: SkillNode[] = [
     effect: () => "Best pkg selected",
     path: "automation", row: 4,
     baseCost: 60, costGrowth: 1, maxLevel: 1,
-    prereqs: [{ id: "auto-fill", level: 1 }], requiredRank: "platinum", tint: "#60A5FA",
+    prereqs: [{ id: "auto-fill", level: 1 }], requiredRank: "platinum", tint: "#F87171",
   },
 
   // ─── BONUS (6 nodes) ──────────────────────────────────────────
@@ -266,7 +266,7 @@ export const SKILLS: SkillNode[] = [
     effect: (l) => `${l + 1}× accel power`,
     path: "bonus", row: 3,
     baseCost: 15, costGrowth: 1.8, maxLevel: 3,
-    prereqs: [{ id: "time-cut", level: 3 }], requiredRank: "silver", tint: "#00E6A8",
+    prereqs: [{ id: "time-cut", level: 3 }], requiredRank: "silver", tint: "#22C55E",
   },
   {
     id: "passive-mult",
@@ -276,7 +276,7 @@ export const SKILLS: SkillNode[] = [
     effect: (l) => `+${formatPercent(l * 15)} passive`,
     path: "bonus", row: 4,
     baseCost: 10, costGrowth: 1.55, maxLevel: 6,
-    prereqs: [{ id: "profit-boost", level: 5 }], requiredRank: "silver", tint: "#00A878",
+    prereqs: [{ id: "profit-boost", level: 5 }], requiredRank: "silver", tint: "#22C55E",
   },
   {
     id: "slot-power",
@@ -286,7 +286,7 @@ export const SKILLS: SkillNode[] = [
     effect: (l) => `+${formatPercent(l * 4)} per filled slot`,
     path: "bonus", row: 5,
     baseCost: 25, costGrowth: 1.6, maxLevel: 5,
-    prereqs: [{ id: "passive-mult", level: 3 }], requiredRank: "gold", tint: "#00A878",
+    prereqs: [{ id: "passive-mult", level: 3 }], requiredRank: "gold", tint: "#22C55E",
   },
 
   // ─── MONEY METHODS (7 nodes) ──────────────────────────────────
@@ -298,7 +298,7 @@ export const SKILLS: SkillNode[] = [
     effect: (l) => `+${formatPercent(l * 0.2)}/hr on cash`,
     path: "money", row: 0,
     baseCost: 4, costGrowth: 1.5, maxLevel: 5,
-    prereqs: [], requiredRank: "bronze", tint: "#F59E0B",
+    prereqs: [], requiredRank: "bronze", tint: "#3B82F6",
   },
   {
     id: "grants",
@@ -311,7 +311,7 @@ export const SKILLS: SkillNode[] = [
     },
     path: "money", row: 1,
     baseCost: 4, costGrowth: 2, maxLevel: 3,
-    prereqs: [], requiredRank: "bronze", tint: "#F59E0B",
+    prereqs: [], requiredRank: "bronze", tint: "#3B82F6",
   },
   {
     id: "dividends",
@@ -321,7 +321,7 @@ export const SKILLS: SkillNode[] = [
     effect: (l) => `+${formatPercent(l * 3)} dividend tip`,
     path: "money", row: 2,
     baseCost: 10, costGrowth: 1.5, maxLevel: 5,
-    prereqs: [{ id: "savings", level: 3 }], requiredRank: "silver", tint: "#FBBF24",
+    prereqs: [{ id: "savings", level: 3 }], requiredRank: "silver", tint: "#60A5FA",
   },
   {
     id: "contracts",
@@ -331,7 +331,7 @@ export const SKILLS: SkillNode[] = [
     effect: () => "New package: Contract",
     path: "money", row: 3,
     baseCost: 50, costGrowth: 1, maxLevel: 1,
-    prereqs: [{ id: "dividends", level: 3 }], requiredRank: "gold", tint: "#FFD700",
+    prereqs: [{ id: "dividends", level: 3 }], requiredRank: "gold", tint: "#60A5FA",
   },
   {
     id: "super-contract",
@@ -341,7 +341,7 @@ export const SKILLS: SkillNode[] = [
     effect: () => "New package: Legendary",
     path: "money", row: 4,
     baseCost: 100, costGrowth: 1, maxLevel: 1,
-    prereqs: [{ id: "contracts", level: 1 }], requiredRank: "platinum", tint: "#FFD700",
+    prereqs: [{ id: "contracts", level: 1 }], requiredRank: "platinum", tint: "#60A5FA",
   },
   {
     id: "whale-mult",
@@ -351,7 +351,7 @@ export const SKILLS: SkillNode[] = [
     effect: () => `Whale Vault +${formatPercent(50)}`,
     path: "money", row: 5,
     baseCost: 80, costGrowth: 1, maxLevel: 1,
-    prereqs: [{ id: "contracts", level: 1 }], requiredRank: "diamond", tint: "#FFD700",
+    prereqs: [{ id: "contracts", level: 1 }], requiredRank: "diamond", tint: "#60A5FA",
   },
   {
     id: "legend-bonus",
@@ -361,7 +361,7 @@ export const SKILLS: SkillNode[] = [
     effect: () => `Legendary +${formatPercent(100)}`,
     path: "money", row: 6,
     baseCost: 200, costGrowth: 1, maxLevel: 1,
-    prereqs: [{ id: "super-contract", level: 1 }], requiredRank: "legend", tint: "#F59E0B",
+    prereqs: [{ id: "super-contract", level: 1 }], requiredRank: "legend", tint: "#3B82F6",
   },
 
   // ─── ENDGAME (Legend-only chain in the Money column) ──────────

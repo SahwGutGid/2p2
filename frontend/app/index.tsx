@@ -149,9 +149,10 @@ type Settings = {
   sfx: boolean;
   haptics: boolean;
   notifications: boolean;
+  holdToPrestige: boolean;
 };
 const defaultSettings = (): Settings => ({
-  music: true, sfx: true, haptics: true, notifications: true,
+  music: true, sfx: true, haptics: true, notifications: true, holdToPrestige: true,
 });
 
 type CompletionStats = {
@@ -653,6 +654,7 @@ export default function Index() {
             gameComplete: parsed.gameComplete ?? false,
             endingPending: parsed.endingPending ?? false,
             completionStats: parsed.completionStats ?? null,
+            settings: { ...defaultSettings(), ...(parsed.settings ?? {}) },
           };
         }
 
@@ -681,8 +683,9 @@ export default function Index() {
             if (pkg) {
               const filled = saved.actives.length; // approx
               const pct = computeProfitPct(pkg, saved.levels.yield ?? 0, saved.prestige ?? 0, savedTree, filled, null, saved.prestigeUpgrades?.foundation ?? false, saved.legacyUpgrades ?? {});
-              const div = a.cost * pct * savedTree.dividendPct;
-              simBal += a.cost + a.cost * pct + div;
+              const lpMult = 1 + 0.10 * (saved.legacyPoints ?? 0);
+              const div = a.cost * pct * lpMult * savedTree.dividendPct;
+              simBal += a.cost + a.cost * pct * lpMult + div;
             } else simBal += a.cost;
           } else {
             remaining.push(a);
@@ -711,8 +714,9 @@ export default function Index() {
               const pkg = savedPkgs.find((p) => p.id === a.pkgId);
               if (pkg) {
                 const pct = computeProfitPct(pkg, saved.levels.yield ?? 0, saved.prestige ?? 0, savedTree, filled.length, null, saved.prestigeUpgrades?.foundation ?? false, saved.legacyUpgrades ?? {});
-                const div = a.cost * pct * savedTree.dividendPct;
-                simBal += a.cost + a.cost * pct + div;
+                const lpMult = 1 + 0.10 * (saved.legacyPoints ?? 0);
+                const div = a.cost * pct * lpMult * savedTree.dividendPct;
+                simBal += a.cost + a.cost * pct * lpMult + div;
               }
             }
             let filledNext = filled.filter((a) => a.endsAt > cursor);
@@ -891,10 +895,11 @@ export default function Index() {
 
       const filled = list.length;
       const pct = computeProfitPct(pkg, state.levels.yield, state.prestige, state.treeEffects, filled, null, state.prestigeUpgrades?.foundation ?? false, state.legacyUpgrades);
-      let profit = a.cost * pct;
+      const lpMult = 1 + 0.10 * (state.legacyPoints ?? 0);
+      let profit = a.cost * pct * lpMult;
       const lucky = Math.random() < luckyChance(state.levels.lucky);
       if (lucky) profit *= 2;
-      const dividend = a.cost * pct * state.treeEffects.dividendPct;
+      const dividend = a.cost * pct * lpMult * state.treeEffects.dividendPct;
       const totalReturn = a.cost + profit + dividend;
 
       setBalance((b) => b + totalReturn);
@@ -1218,10 +1223,10 @@ export default function Index() {
     setTimeout(() => setPrestigeCelebrate(0), 4500);
 
     // Award Legacy Points after threshold is reached
-    // Earn 1 LP per 100 PP gained (slow progression)
+    // Earn 1 LP per 250 PP gained (slow progression)
     const newTotalPrestiges = totalPrestiges + 1;
     if (newStats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD) {
-      const legacyGain = Math.max(1, Math.floor(gain / 100));
+      const legacyGain = Math.max(1, Math.floor(gain / 250));
       setLegacyPoints((lp: number) => lp + legacyGain);
       // Persist Legacy Points immediately to ensure they're saved
       setTimeout(() => {
@@ -1562,34 +1567,60 @@ export default function Index() {
             </View>
 
             {/* Cash out */}
-            <HoldButton
-              onHoldComplete={doPrestige}
-              colors={["#A855F7", "#9333EA"]}
-              textColor={canPrestige ? "#001018" : theme.prestige}
-              progressColor="#FFFFFF"
-              disabled={!canPrestige}
-              style={[
-                styles.cashOutBtn,
-                { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
-                !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
-                prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
-                canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
-              ]}
-              testID="prestige-button"
-            >
-              {!canPrestige
-                ? `Reach ${money(PRESTIGE_MIN_BALANCE)} to cash out`
-                : prestigeArmed
-                ? `TAP AGAIN — CONFIRM +${prestigeGainAvailable} PP`
-                : `CASH OUT · +${prestigeGainAvailable} PP`}
-            </HoldButton>
+            {settings.holdToPrestige ? (
+              <HoldButton
+                onHoldComplete={doPrestige}
+                colors={["#A855F7", "#9333EA"]}
+                textColor={canPrestige ? "#001018" : theme.prestige}
+                progressColor="#FFFFFF"
+                disabled={!canPrestige}
+                style={[
+                  styles.cashOutBtn,
+                  { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
+                  !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
+                  prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
+                  canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
+                ]}
+                testID="prestige-button"
+              >
+                {!canPrestige
+                  ? `Reach ${money(PRESTIGE_MIN_BALANCE)} to cash out`
+                  : prestigeArmed
+                  ? `TAP AGAIN — CONFIRM +${prestigeGainAvailable} PP`
+                  : `CASH OUT · +${prestigeGainAvailable} PP`}
+              </HoldButton>
+            ) : (
+              <Pressable
+                onPress={doPrestige}
+                disabled={!canPrestige}
+                style={({ pressed }) => [
+                  styles.cashOutBtn,
+                  styles.cashOutBtnInner,
+                  { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
+                  !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
+                  prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
+                  canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
+                  pressed && { transform: [{ scale: 0.98 }] },
+                ]}
+                testID="prestige-button"
+              >
+                <Text style={[styles.cashOutBtnText, { color: canPrestige ? "#001018" : theme.prestige }]}>
+                  {!canPrestige
+                    ? `Reach ${money(PRESTIGE_MIN_BALANCE)} to cash out`
+                    : prestigeArmed
+                    ? `TAP AGAIN — CONFIRM +${prestigeGainAvailable} PP`
+                    : `CASH OUT · +${prestigeGainAvailable} PP`}
+                </Text>
+              </Pressable>
+            )}
           </LinearGradient>
 
           {/* Tree body: 3 columns */}
           <ScrollView
             style={styles.treeBody}
             contentContainerStyle={styles.treeBodyContent}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
+            indicatorStyle="white"
           >
             <View style={styles.treeGridRow}>
               <TreeColumn
@@ -1745,8 +1776,8 @@ export default function Index() {
             </View>
             {showLegacyInfo && (
               <Text style={[styles.legacyExplanationText, { color: theme.textMuted }]}>
-                Earn 1 Legacy Point per 100 Prestige Points gained after reaching 10,000 total PP.
-                Spend Legacy Points on permanent endgame upgrades that dramatically boost your investment power.
+                Earn 1 Legacy Point per 250 Prestige Points gained after reaching 10,000 total PP.
+                Each LP grants +10% cash generation. Spend LP on permanent endgame upgrades that dramatically boost your investment power.
               </Text>
             )}
           </View>
@@ -3351,6 +3382,7 @@ const styles = StyleSheet.create({
   },
   cashOutBtnDim: {},
   cashOutBtnArmed: {},
+  cashOutBtnInner: { alignItems: "center", justifyContent: "center" },
   cashOutBtnText: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3, numberOfLines: 1 },
   cashOutBtnSub: { fontSize: 11, fontWeight: "600", marginTop: 2, numberOfLines: 1 },
 

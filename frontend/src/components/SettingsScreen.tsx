@@ -1,7 +1,6 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 
 interface SettingsScreenProps {
@@ -12,6 +11,7 @@ interface SettingsScreenProps {
     sfx: boolean;
     haptics: boolean;
     notifications: boolean;
+    holdToPrestige: boolean;
   };
   onSettingChange: (key: string, value: boolean) => void;
 }
@@ -25,6 +25,7 @@ const C = {
   text: "#F1F5F9",
   textMuted: "#94A3B8",
   border: "#334155",
+  overlay: "rgba(0,0,0,0.6)",
 };
 
 export function SettingsScreen({
@@ -33,14 +34,14 @@ export function SettingsScreen({
   settings,
   onSettingChange,
 }: SettingsScreenProps) {
-  if (!visible) return null;
-
   const SettingToggle = ({
     label,
+    description,
     value,
     onToggle,
   }: {
     label: string;
+    description?: string;
     value: boolean;
     onToggle: () => void;
   }) => (
@@ -51,7 +52,10 @@ export function SettingsScreen({
         pressed && styles.settingRowPressed,
       ]}
     >
-      <Text style={styles.settingLabel}>{label}</Text>
+      <View style={styles.settingTextContainer}>
+        <Text style={styles.settingLabel}>{label}</Text>
+        {description && <Text style={styles.settingDescription}>{description}</Text>}
+      </View>
       <View style={[styles.toggle, value && styles.toggleOn]}>
         <View style={[styles.toggleDot, value && styles.toggleDotOn]} />
       </View>
@@ -59,207 +63,262 @@ export function SettingsScreen({
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <LinearGradient
-        colors={[C.bg, "#1E293B", C.bg]}
-        style={StyleSheet.absoluteFill}
-      />
-      
-      <View style={styles.header}>
-        <Pressable onPress={onClose} hitSlop={16} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← BACK</Text>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <Pressable style={styles.modalWrapper} onPress={(e) => e.stopPropagation()}>
+          <LinearGradient
+            colors={[C.bg, "#1E293B", C.bg]}
+            style={styles.modalCard}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.headerSpacer} />
+              <Text style={styles.headerTitle}>SETTINGS</Text>
+              <Pressable onPress={onClose} hitSlop={16} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>✕</Text>
+              </Pressable>
+            </View>
+
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={true}
+              indicatorStyle="white"
+            >
+              {/* Branding */}
+              <View style={styles.brandingCard}>
+                <ExpoImage
+                  source={require("@/assets/images/22.png")}
+                  style={styles.brandingLogo}
+                  contentFit="contain"
+                />
+                <View style={styles.brandingDivider} />
+                <Text style={styles.brandingTitle}>Investment Idle</Text>
+                <Text style={styles.brandingSubtitle}>An Official P2P Experience</Text>
+                <Text style={styles.brandingWebsite}>p2p.com.mk</Text>
+              </View>
+
+              {/* Preferences */}
+              <View style={styles.settingsCard}>
+                <Text style={styles.sectionTitle}>PREFERENCES</Text>
+
+                <SettingToggle
+                  label="Music"
+                  value={settings.music}
+                  onToggle={() => onSettingChange("music", !settings.music)}
+                />
+
+                <SettingToggle
+                  label="Sound Effects"
+                  value={settings.sfx}
+                  onToggle={() => onSettingChange("sfx", !settings.sfx)}
+                />
+
+                <SettingToggle
+                  label="Haptics"
+                  value={settings.haptics}
+                  onToggle={() => onSettingChange("haptics", !settings.haptics)}
+                />
+
+                <SettingToggle
+                  label="Notifications"
+                  value={settings.notifications}
+                  onToggle={() => onSettingChange("notifications", !settings.notifications)}
+                />
+              </View>
+
+              {/* Gameplay */}
+              <View style={styles.settingsCard}>
+                <Text style={styles.sectionTitle}>GAMEPLAY</Text>
+
+                <SettingToggle
+                  label="Hold to Prestige"
+                  description="Requires holding the button to confirm prestige. Turn off for instant tap."
+                  value={settings.holdToPrestige}
+                  onToggle={() => onSettingChange("holdToPrestige", !settings.holdToPrestige)}
+                />
+              </View>
+
+              {/* Version */}
+              <View style={styles.versionCard}>
+                <Text style={styles.versionLabel}>Version</Text>
+                <Text style={styles.versionValue}>1.0.0</Text>
+              </View>
+
+              {/* Footer */}
+              <View style={styles.footer}>
+                <ExpoImage
+                  source={require("@/assets/images/22.png")}
+                  style={styles.footerLogo}
+                  contentFit="contain"
+                />
+                <Text style={styles.footerText}>p2p.com.mk</Text>
+              </View>
+            </ScrollView>
+          </LinearGradient>
         </Pressable>
-        <Text style={styles.headerTitle}>SETTINGS</Text>
-        <View style={{ width: 60 }} />
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Official P2P Branding Card */}
-        <View style={styles.brandingCard}>
-          <ExpoImage
-            source={require("@/assets/images/22.png")}
-            style={styles.brandingLogo}
-            contentFit="contain"
-          />
-          <View style={styles.brandingDivider} />
-          <Text style={styles.brandingTitle}>Investment Idle</Text>
-          <Text style={styles.brandingSubtitle}>An Official P2P Experience</Text>
-          <Text style={styles.brandingWebsite}>p2p.com.mk</Text>
-        </View>
-
-        {/* Settings Section */}
-        <View style={styles.settingsCard}>
-          <Text style={styles.sectionTitle}>PREFERENCES</Text>
-          
-          <SettingToggle
-            label="Music"
-            value={settings.music}
-            onToggle={() => onSettingChange("music", !settings.music)}
-          />
-          
-          <SettingToggle
-            label="Sound Effects"
-            value={settings.sfx}
-            onToggle={() => onSettingChange("sfx", !settings.sfx)}
-          />
-          
-          <SettingToggle
-            label="Haptics"
-            value={settings.haptics}
-            onToggle={() => onSettingChange("haptics", !settings.haptics)}
-          />
-          
-          <SettingToggle
-            label="Notifications"
-            value={settings.notifications}
-            onToggle={() => onSettingChange("notifications", !settings.notifications)}
-          />
-        </View>
-
-        {/* Version Info */}
-        <View style={styles.versionCard}>
-          <Text style={styles.versionLabel}>Version</Text>
-          <Text style={styles.versionValue}>1.0.0</Text>
-        </View>
-
-        {/* Footer Branding */}
-        <View style={styles.footer}>
-          <ExpoImage
-            source={require("@/assets/images/22.png")}
-            style={styles.footerLogo}
-            contentFit="contain"
-          />
-          <Text style={styles.footerText}>p2p.com.mk</Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      </Pressable>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  overlay: {
     flex: 1,
-    backgroundColor: C.bg,
+    backgroundColor: C.overlay,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalWrapper: {
+    width: "100%",
+    maxWidth: 380,
+    maxHeight: "85%",
+  },
+  modalCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: C.border,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 16,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingTop: 18,
+    paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: C.border,
   },
-  backButton: {
-    paddingVertical: 4,
-    paddingRight: 8,
-  },
-  backButtonText: {
-    fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-    color: C.accent,
-  },
+  headerSpacer: { width: 32 },
   headerTitle: {
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.5,
     color: C.text,
   },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: C.card,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  closeButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: C.textMuted,
+  },
   scrollView: {
-    flex: 1,
+    maxHeight: 520,
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 28,
   },
   brandingCard: {
     backgroundColor: C.card,
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 14,
+    padding: 20,
     alignItems: "center",
     borderWidth: 1,
     borderColor: C.border,
-    marginBottom: 20,
-    shadowColor: "#000000",
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    marginBottom: 16,
   },
   brandingLogo: {
-    width: 120,
-    height: 60,
-    marginBottom: 0,
+    width: 100,
+    height: 50,
   },
   brandingDivider: {
-    width: 40,
+    width: 36,
     height: 1,
     backgroundColor: C.border,
-    marginVertical: 16,
+    marginVertical: 12,
   },
   brandingTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
     color: C.text,
     marginBottom: 4,
     letterSpacing: 0.3,
   },
   brandingSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "500",
     color: C.textMuted,
-    marginBottom: 10,
+    marginBottom: 8,
     letterSpacing: 0.3,
   },
   brandingWebsite: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: C.accent,
     letterSpacing: 0.5,
   },
   settingsCard: {
     backgroundColor: C.card,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 14,
+    padding: 4,
+    paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: C.border,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     color: C.textMuted,
     letterSpacing: 1.5,
-    marginBottom: 12,
+    marginBottom: 8,
+    marginTop: 12,
     textTransform: "uppercase",
   },
   settingRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 4,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: C.border,
   },
   settingRowPressed: {
     opacity: 0.7,
   },
+  settingTextContainer: {
+    flex: 1,
+    paddingRight: 12,
+  },
   settingLabel: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "500",
     color: C.text,
   },
+  settingDescription: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: C.textMuted,
+    marginTop: 3,
+    lineHeight: 15,
+  },
   toggle: {
-    width: 48,
-    height: 28,
-    borderRadius: 14,
+    width: 44,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: C.bg,
     borderWidth: 2,
     borderColor: C.border,
@@ -270,9 +329,9 @@ const styles = StyleSheet.create({
     borderColor: C.success,
   },
   toggleDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: C.textMuted,
   },
   toggleDotOn: {
@@ -281,35 +340,36 @@ const styles = StyleSheet.create({
   },
   versionCard: {
     backgroundColor: C.card,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 14,
+    padding: 14,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: C.border,
-    marginBottom: 20,
+    marginBottom: 16,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   versionLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
     color: C.textMuted,
   },
   versionValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: C.text,
   },
   footer: {
     alignItems: "center",
-    paddingTop: 20,
+    paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: C.border,
     gap: 8,
   },
   footerLogo: {
-    width: 72,
-    height: 36,
+    width: 64,
+    height: 32,
     opacity: 0.6,
   },
   footerText: {

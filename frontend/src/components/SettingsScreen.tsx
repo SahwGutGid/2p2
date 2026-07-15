@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 28,
+    paddingBottom: 32,
   },
   brandingCard: {
     backgroundColor: C.card,

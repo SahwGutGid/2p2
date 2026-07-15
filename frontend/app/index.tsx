@@ -116,11 +116,11 @@ type Upgrade = {
   baseCost: number; costGrowth: number; maxLevel: number; tint: string;
 };
 const UPGRADES: Upgrade[] = [
-  { id: "yield",   name: "Yield Boost",     description: "+8% profit multiplier per level",       effect: (l) => `+${fmtPct(l * 8)} profit`,               baseCost: 15,  costGrowth: 1.55, maxLevel: 15, tint: "#00FF88" },
-  { id: "turbo",   name: "Turbo Trades",    description: "-6% investment duration per level",     effect: (l) => `-${fmtPct(Math.min(72, l * 6))} time`,     baseCost: 25,  costGrowth: 1.6,  maxLevel: 12, tint: "#00E5FF" },
-  { id: "passive", name: "Passive Yield",   description: "+$1.00/sec passive income per level",   effect: (l) => `+$${(l * 1.0).toFixed(2)}/sec`,                baseCost: 40,  costGrowth: 1.5,  maxLevel: 25, tint: "#FFB84D" },
-  { id: "lucky",   name: "Lucky Streak",    description: "+4% chance for 2× profit per level",    effect: (l) => `${fmtPct(Math.min(60, l * 4))} x2`,        baseCost: 100, costGrowth: 1.7,  maxLevel: 15, tint: "#FF6EC7" },
-  { id: "slots",   name: "Portfolio Slots", description: "+1 concurrent investment per level",    effect: (l) => `${l + 1} slot${l === 0 ? "" : "s"}`,           baseCost: 300, costGrowth: 2.5,  maxLevel: 4,  tint: "#00E5FF" },
+  { id: "yield",   name: "Yield Boost",     description: "Increases profit multiplier by 8% per level",       effect: (l) => `+${fmtPct(l * 8)} profit`,               baseCost: 15,  costGrowth: 1.55, maxLevel: 15, tint: "#00FF88" },
+  { id: "turbo",   name: "Turbo Trades",    description: "Reduces investment duration by 6% per level",     effect: (l) => `-${fmtPct(Math.min(72, l * 6))} time`,     baseCost: 25,  costGrowth: 1.6,  maxLevel: 12, tint: "#00E5FF" },
+  { id: "passive", name: "Passive Yield",   description: "Generates $1.00/sec passive income per level",   effect: (l) => `+$${(l * 1.0).toFixed(2)}/sec`,                baseCost: 40,  costGrowth: 1.5,  maxLevel: 25, tint: "#FFB84D" },
+  { id: "lucky",   name: "Lucky Streak",    description: "Adds 4% chance for 2× profit per level",        effect: (l) => `${fmtPct(Math.min(60, l * 4))} x2`,        baseCost: 100, costGrowth: 1.7,  maxLevel: 15, tint: "#FF6EC7" },
+  { id: "slots",   name: "Portfolio Slots", description: "Adds 1 concurrent investment slot per level",    effect: (l) => `${l + 1} slot${l === 0 ? "" : "s"}`,           baseCost: 300, costGrowth: 2.5,  maxLevel: 4,  tint: "#00E5FF" },
 ];
 const upgradeCost = (u: Upgrade, level: number) =>
   Math.floor(u.baseCost * Math.pow(u.costGrowth, level));
@@ -567,8 +567,8 @@ export default function Index() {
       };
     }
     return {
-      title: "First Investment",
-      description: `Start investing to build your portfolio and unlock Prestige.`,
+      title: "Start Investing",
+      description: `Make your first investment to begin building your portfolio.`,
       progress: actives.length > 0 ? "In progress" : "Not started",
       color: theme.upgrade,
     };
@@ -2788,16 +2788,17 @@ const styles = StyleSheet.create({
   iconChip: {
     paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8,
     borderWidth: 1, flexShrink: 1,
+    minWidth: 70,
   },
-  iconChipText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
+  iconChipText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5, textAlign: "center" },
 
-  balanceRow: { position: "relative", marginTop: 6, flexDirection: "row", alignItems: "flex-start", flexWrap: "nowrap" },
-  balance: { fontSize: 34, fontWeight: "700", letterSpacing: -0.8, flexShrink: 1 },
+  balanceRow: { position: "relative", marginTop: 6, flexDirection: "row", alignItems: "flex-start", flexWrap: "nowrap", paddingHorizontal: 4 },
+  balance: { fontSize: 34, fontWeight: "700", letterSpacing: -0.8, flexShrink: 1, marginRight: 8 },
   floatingProfit: {
     position: "absolute", right: 0, top: 4,
     fontSize: 14, fontWeight: "700", maxWidth: 120,
   },
-  pillRow: { flexDirection: "row", alignItems: "center", marginTop: 14, gap: 8, flexWrap: "wrap" },
+  pillRow: { flexDirection: "row", alignItems: "center", marginTop: 14, gap: 8, flexWrap: "wrap", paddingHorizontal: 4 },
   slotPill: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10,
     borderWidth: 1,
@@ -2828,7 +2829,7 @@ const styles = StyleSheet.create({
   bannerDismiss: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5, marginLeft: 12 },
 
   list: { flex: 1 },
-  listContent: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 100 },
+  listContent: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 120 },
   sectionTitle: { fontSize: 12, fontWeight: "700", letterSpacing: 1, marginBottom: 0, marginLeft: 2, textTransform: "uppercase" },
   sectionHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
   sectionBadge: {
@@ -2844,7 +2845,7 @@ const styles = StyleSheet.create({
   activeCard: {
     borderRadius: 14,
     borderWidth: 1,
-    padding: 14, marginBottom: 10, overflow: "hidden",
+    padding: 14, marginBottom: 12, overflow: "hidden",
     shadowOpacity: 0.06, shadowRadius: 12,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
@@ -2854,7 +2855,7 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", marginRight: 12,
     flexShrink: 0,
   },
-  activeIconText: { fontSize: 11, fontWeight: "700" },
+  activeIconText: { fontSize: 11, fontWeight: "700", lineHeight: 13 },
   activeName: { fontSize: 14, fontWeight: "600", flexShrink: 1 },
   activeMeta: { fontSize: 11, fontWeight: "600", marginTop: 2 },
   activeCountdown: { fontSize: 14, fontWeight: "700", letterSpacing: 0.2, flexShrink: 0, marginLeft: 10 },
@@ -2867,14 +2868,15 @@ const styles = StyleSheet.create({
     marginTop: 10, height: 48, borderRadius: 10,
     borderWidth: 1, overflow: "hidden",
     alignItems: "center", justifyContent: "center",
+    paddingHorizontal: 16,
   },
   accelerateText: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5 },
-  accelerateHint: { fontSize: 10, fontWeight: "600", marginTop: 1 },
+  accelerateHint: { fontSize: 10, fontWeight: "600", marginTop: 2 },
 
   card: {
     borderRadius: 14,
     borderWidth: 1,
-    padding: 16, marginBottom: 10, position: "relative", overflow: "hidden",
+    padding: 16, marginBottom: 12, position: "relative", overflow: "hidden",
     shadowOpacity: 0.05, shadowRadius: 10,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
@@ -2890,7 +2892,7 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", marginRight: 12,
     flexShrink: 0,
   },
-  cardIconText: { fontSize: 12, fontWeight: "700", letterSpacing: 0.3 },
+  cardIconText: { fontSize: 12, fontWeight: "700", letterSpacing: 0.3, lineHeight: 14 },
   cardMain: { flex: 1, minWidth: 0 },
   cardTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
   cardTitle: { fontSize: 14, fontWeight: "600", flexShrink: 1, marginRight: 8, lineHeight: 18 },
@@ -2933,7 +2935,7 @@ const styles = StyleSheet.create({
   upgradeCard: {
     borderRadius: 14,
     borderWidth: 1,
-    padding: 16, marginBottom: 10,
+    padding: 16, marginBottom: 12,
     shadowOpacity: 0.05, shadowRadius: 10,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
@@ -2944,7 +2946,7 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", marginRight: 12, paddingHorizontal: 6,
     flexShrink: 0,
   },
-  upgradeBadgeLevel: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3 },
+  upgradeBadgeLevel: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3, lineHeight: 15 },
   upgradeMain: { flex: 1, minWidth: 0, marginRight: 10 },
   upgradeName: { fontSize: 14, fontWeight: "600", flexShrink: 1, lineHeight: 18 },
   upgradeDesc: { fontSize: 12, fontWeight: "500", marginTop: 2 },
@@ -3122,7 +3124,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center",
     borderRadius: 14,
     borderWidth: 1,
-    padding: 16, marginBottom: 10,
+    padding: 16, marginBottom: 12,
     shadowOpacity: 0.05, shadowRadius: 10,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
@@ -3196,7 +3198,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   legacyBody: { flex: 1 },
-  legacyBodyContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 100 },
+  legacyBodyContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 120 },
   legacyCard: {
     flexDirection: "row", alignItems: "center",
     borderRadius: 14,
@@ -3405,7 +3407,7 @@ const styles = StyleSheet.create({
   cashOutBtnSub: { fontSize: 11, fontWeight: "600", marginTop: 2 },
 
   treeBody: { flex: 1 },
-  treeBodyContent: { paddingHorizontal: 8, paddingTop: 16, paddingBottom: 100 },
+  treeBodyContent: { paddingHorizontal: 8, paddingTop: 16, paddingBottom: 120 },
   treeGridRow: { flexDirection: "row", alignItems: "flex-start" },
   treeCol: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 4 },
   treeColHeader: {

@@ -1107,6 +1107,9 @@ export default function Index() {
     kickMusicOnce();
     const level = skills[node.id] ?? 0;
     if (level >= node.maxLevel) return;
+    if (!prestigeUpgrades.foundation) {
+      sound.play("error"); doShake(); return;
+    }
     if (!rankMeetsRequirement(rank, node.requiredRank)) {
       sound.play("error"); doShake(); return;
     }
@@ -1662,6 +1665,7 @@ export default function Index() {
                 skills={skills}
                 prestige={prestige}
                 rank={rank}
+                prestigeUpgrades={prestigeUpgrades}
                 onBuy={buySkill}
                 theme={theme}
               />
@@ -1674,6 +1678,7 @@ export default function Index() {
                 skills={skills}
                 prestige={prestige}
                 rank={rank}
+                prestigeUpgrades={prestigeUpgrades}
                 onBuy={buySkill}
                 theme={theme}
               />
@@ -1686,6 +1691,7 @@ export default function Index() {
                 skills={skills}
                 prestige={prestige}
                 rank={rank}
+                prestigeUpgrades={prestigeUpgrades}
                 onBuy={buySkill}
                 theme={theme}
               />
@@ -2679,17 +2685,19 @@ export default function Index() {
 // TreeColumn — renders one path of the skill tree
 // ============================================================
 function TreeColumn({
-  title, subtitle, icon, tint, path, skills, prestige, rank, onBuy, theme,
+  title, subtitle, icon, tint, path, skills, prestige, rank, prestigeUpgrades, onBuy, theme,
 }: {
   title: string; subtitle: string; icon: string; tint: string;
   path: SkillPath;
   skills: SkillLevels;
   prestige: number;
   rank: Rank;
+  prestigeUpgrades: Record<PrestigeUpgradeId, boolean>;
   onBuy: (n: SkillNode) => void;
   theme: ThemeColors;
 }) {
   const nodes = SKILLS.filter((s) => s.path === path).sort((a, b) => a.row - b.row);
+  const hasFoundation = prestigeUpgrades.foundation;
   return (
     <View style={styles.treeCol}>
       <View style={[styles.treeColHeader, { borderColor: tint, backgroundColor: `${tint}18` }]}>
@@ -2704,8 +2712,8 @@ function TreeColumn({
         const rankOk = rankMeetsRequirement(rank, n.requiredRank);
         const missing = missingPrereqs(n, skills);
         const nextCost = maxed ? 0 : skillCost(n, level);
-        const affordable = rankOk && missing.length === 0 && !maxed && prestige >= nextCost;
-        const locked = !rankOk || missing.length > 0;
+        const affordable = hasFoundation && rankOk && missing.length === 0 && !maxed && prestige >= nextCost;
+        const locked = !hasFoundation || !rankOk || missing.length > 0;
         const hasPrereq = n.prereqs.length > 0;
         return (
           <View key={n.id} style={{ width: "100%", alignItems: "center" }}>
@@ -2746,7 +2754,7 @@ function TreeColumn({
               {locked ? (
                 <View style={[styles.skillLockBox, { borderColor: theme.loss, backgroundColor: `${theme.loss}08` }]}>
                   <Text style={[styles.skillLockText, { color: theme.loss }]}>
-                    {!rankOk ? `${RANK_META[n.requiredRank].short} rank` : missing[0]}
+                    {!hasFoundation ? "Prestige Foundation required" : !rankOk ? `${RANK_META[n.requiredRank].short} rank` : missing[0]}
                   </Text>
                 </View>
               ) : maxed ? (

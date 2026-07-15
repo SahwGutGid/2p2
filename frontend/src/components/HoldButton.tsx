@@ -10,6 +10,7 @@ interface HoldButtonProps {
   progressColor?: string;
   disabled?: boolean;
   style?: any;
+  testID?: string;
 }
 
 export function HoldButton({
@@ -20,6 +21,7 @@ export function HoldButton({
   progressColor = "#FFFFFF",
   disabled = false,
   style,
+  testID,
 }: HoldButtonProps) {
   const progress = useRef(new Animated.Value(0)).current;
   const [isHolding, setIsHolding] = useState(false);
@@ -94,6 +96,7 @@ export function HoldButton({
       onPressIn={startHold}
       onPressOut={cancelHold}
       disabled={disabled}
+      testID={testID}
       style={({ pressed }) => [
         styles.container,
         disabled && styles.disabled,

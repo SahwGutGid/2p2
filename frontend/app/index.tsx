@@ -1404,257 +1404,259 @@ export default function Index() {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]} testID="prestige-screen">
         <Animated.View style={[{ flex: 1 }, treeSlideStyle]}>
-          <LinearGradient
-            colors={[theme.bgSoft, theme.bg]}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={styles.treeHeader}
-          >
-            <View style={styles.treeHeaderRow}>
-              <Pressable
-                onPress={() => { sound.play("click"); setShowTree(false); }}
-                hitSlop={16}
-                testID="tree-back"
-                style={styles.backBtn}
-              >
-                <Text style={[styles.backBtnText, { color: theme.upgrade }]}>← BACK</Text>
-              </Pressable>
-              <View style={styles.treeHeaderCenter}>
-                <Text style={[styles.treeTitle, { color: theme.text }]}>PRESTIGE TREE</Text>
-              </View>
-              {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
-                <Pressable
-                  onPress={() => { sound.play("click"); setShowLegacy(true); }}
-                  hitSlop={12}
-                  style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}25`, marginLeft: 6, borderWidth: 1.5 }]}
-                  testID="open-legacy"
-                >
-                  <Text style={[styles.iconChipText, { color: theme.legacy }]}>
-                    LEGACY · {compact(legacyPoints)}
-                  </Text>
-                </Pressable>
-              )}
-            </View>
-
-            <View style={[styles.rankCard, { backgroundColor: theme.panel, borderColor: theme.border }]}>
-              <View
-                style={[
-                  styles.rankBadge,
-                  { borderColor: rankMeta.tint, backgroundColor: `${rankMeta.tint}22` },
-                ]}
-              >
-                <Text style={[styles.rankBadgeIcon, { color: rankMeta.tint }]}>
-                  {rankMeta.icon}
-                </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.rankLabel, { color: theme.textMuted }]}>CURRENT RANK</Text>
-                <Text style={[styles.rankName, { color: rankMeta.tint }]}>
-                  {rankMeta.name}
-                </Text>
-                {nRankMeta ? (
-                  <>
-                    <View style={[styles.rankBar, { backgroundColor: theme.bgSoft }]}>
-                      <View
-                        style={[
-                          styles.rankBarFill,
-                          {
-                            backgroundColor: nRankMeta.tint,
-                            width: Math.min(100, ((totalPrestiges - rankMeta.minPrestiges) / (nRankMeta.minPrestiges - rankMeta.minPrestiges)) * 100).toFixed(1) + "%" as any,
-                          },
-                        ]}
-                      />
-                    </View>
-                    <Text style={[styles.rankProgress, { color: theme.textMuted }]}>
-                      {totalPrestiges - rankMeta.minPrestiges} / {nRankMeta.minPrestiges - rankMeta.minPrestiges} to {nRankMeta.short}
-                    </Text>
-                  </>
-                ) : (
-                  <Text style={[styles.rankProgress, { color: theme.textMuted }]}>Maximum rank achieved</Text>
-                )}
-              </View>
-            </View>
-
-            <View style={[styles.treeStats, { backgroundColor: theme.panel, borderColor: theme.border }]}>
-              <View style={styles.treeStatCell}>
-                <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>PP AVAILABLE</Text>
-                <Text style={[styles.treeStatValue, { color: theme.prestige }]} testID="tree-pp-available">{prestige}</Text>
-              </View>
-              <View style={[styles.treeStatDivider, { backgroundColor: theme.border }]} />
-              <View style={styles.treeStatCell}>
-                <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>PP SPENT</Text>
-                <Text style={[styles.treeStatValue, { color: theme.text }]}>{totalSpentPP(skills)}</Text>
-              </View>
-              <View style={[styles.treeStatDivider, { backgroundColor: theme.border }]} />
-              <View style={styles.treeStatCell}>
-                <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>PROFIT BONUS</Text>
-                <Text style={[styles.treeStatValue, { color: theme.gain }]}>+{fmtPct(currentBonusPct)}</Text>
-              </View>
-              <View style={[styles.treeStatDivider, { backgroundColor: theme.border }]} />
-              <View style={styles.treeStatCell}>
-                <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>CASH-OUTS</Text>
-                <Text style={[styles.treeStatValue, { color: theme.text }]}>{totalPrestiges}</Text>
-              </View>
-            </View>
-
-            {/* Legacy Progress */}
-            <View style={[styles.legacyProgressSection, { borderTopColor: theme.border }]}>
-              <View style={styles.legacyProgressHeader}>
-                <Text style={[styles.legacyProgressTitle, { color: theme.text }]}>LEGACY PROGRESS</Text>
-                <Text style={[styles.legacyProgressSubtitle, { color: theme.textMuted }]}>Unlock at 10,000 total PP</Text>
-              </View>
-              <View style={[styles.legacyProgressBar, { backgroundColor: theme.bgSoft }]}>
-                <View
-                  style={[
-                    styles.legacyProgressBarFill,
-                    {
-                      width: Math.min(100, (stats.totalPPEarned / LEGACY_UNLOCK_THRESHOLD) * 100).toFixed(0) + "%" as any,
-                      backgroundColor: stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD ? theme.legacy : theme.legacy,
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={[styles.legacyProgressText, { color: theme.textMuted }]}>
-                {compact(stats.totalPPEarned)} / {compact(LEGACY_UNLOCK_THRESHOLD)} PP
-                {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && " · UNLOCKED"}
-              </Text>
-            </View>
-
-            {/* Prestige Explanation */}
-            <View style={[styles.prestigeExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.prestige}08` }]}>
-              <View style={styles.prestigeExplanationHeader}>
-                <Text style={[styles.prestigeExplanationTitle, { color: theme.prestige }]}>WHAT IS PRESTIGE?</Text>
-                <Pressable
-                  onPress={() => {
-                    sound.play("click");
-                    setShowPrestigeInfo(!showPrestigeInfo);
-                  }}
-                  hitSlop={8}
-                  style={[styles.infoButton, { backgroundColor: `${theme.prestige}18` }]}
-                >
-                  <Text style={[styles.infoButtonText, { color: theme.prestige }]}>ⓘ</Text>
-                </Pressable>
-              </View>
-              {showPrestigeInfo && (
-                <Text style={[styles.prestigeExplanationText, { color: theme.textMuted }]}>
-                  Cash out your run to earn Prestige Points (PP). Each PP gives +{fmtPct(5)} permanent profit bonus.
-                  Use PP to unlock skill tree nodes and prestige upgrades. Your balance resets but upgrades persist.
-                </Text>
-              )}
-            </View>
-
-            {/* Prestige Upgrades */}
-            <View style={[styles.upgradesSection, { borderTopColor: theme.border }]}>
-              <Text style={[styles.upgradesSectionTitle, { color: theme.text }]}>PRESTIGE UPGRADES</Text>
-              {PRESTIGE_UPGRADES.map((upgrade) => {
-                const owned = prestigeUpgrades[upgrade.id];
-                const canAfford = prestige >= upgrade.cost && !owned;
-                return (
-                  <Pressable
-                    key={upgrade.id}
-                    onPress={() => {
-                      if (canAfford) {
-                        sound.play("upgrade");
-                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-                        const newPrestigeUpgrades = { ...prestigeUpgrades, [upgrade.id]: true };
-                        setPrestige((p) => p - upgrade.cost);
-                        setPrestigeUpgrades(newPrestigeUpgrades);
-                        saveState({ prestigeUpgrades: newPrestigeUpgrades });
-                      }
-                    }}
-                    disabled={!canAfford}
-                    style={({ pressed }) => [
-                      styles.prestigeUpgradeCard,
-                      { backgroundColor: theme.panel, borderColor: theme.border },
-                      owned && [styles.prestigeUpgradeCardOwned, { backgroundColor: `${upgrade.tint}12` }],
-                      !owned && { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}15` },
-                      pressed && canAfford && { transform: [{ scale: 0.98 }] },
-                    ]}
-                    testID={`upgrade-${upgrade.id}`}
-                  >
-                    {owned && (
-                      <View style={[styles.prestigeUpgradeOwnedBadge, { backgroundColor: upgrade.tint }]}>
-                        <Text style={[styles.prestigeUpgradeOwnedIcon, { color: '#FFFFFF' }]}>✓</Text>
-                      </View>
-                    )}
-                    <View style={styles.prestigeUpgradeCardLeft}>
-                      <Text style={[styles.prestigeUpgradeCardName, { color: theme.text }, owned && { color: upgrade.tint }]}>
-                        {upgrade.name}
-                      </Text>
-                      <Text style={[styles.prestigeUpgradeCardDesc, { color: theme.textMuted }]}>{upgrade.description}</Text>
-                    </View>
-                    <View style={styles.prestigeUpgradeCardRight}>
-                      {owned ? (
-                        <Text style={[styles.prestigeUpgradeCardStatus, { color: upgrade.tint }]}>OWNED</Text>
-                      ) : (
-                        <View style={[styles.prestigeUpgradeCostBadge, { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}25` }]}>
-                          <Text style={[styles.prestigeUpgradeCostText, { color: upgrade.tint }]}>
-                            ★ {upgrade.cost} PP
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {/* Cash out */}
-            {settings.holdToPrestige ? (
-              <HoldButton
-                onHoldComplete={doPrestige}
-                colors={["#A855F7", "#9333EA"]}
-                textColor={canPrestige ? "#001018" : theme.prestige}
-                progressColor="#FFFFFF"
-                disabled={!canPrestige}
-                style={[
-                  styles.cashOutBtn,
-                  { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
-                  !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
-                  prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
-                  canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
-                ]}
-                testID="prestige-button"
-              >
-                {!canPrestige
-                  ? `Reach ${money(PRESTIGE_MIN_BALANCE)} to cash out`
-                  : prestigeArmed
-                  ? `TAP AGAIN — CONFIRM +${prestigeGainAvailable} PP`
-                  : `CASH OUT · +${prestigeGainAvailable} PP`}
-              </HoldButton>
-            ) : (
-              <Pressable
-                onPress={doPrestige}
-                disabled={!canPrestige}
-                style={({ pressed }) => [
-                  styles.cashOutBtn,
-                  styles.cashOutBtnInner,
-                  { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
-                  !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
-                  prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
-                  canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
-                  pressed && { transform: [{ scale: 0.98 }] },
-                ]}
-                testID="prestige-button"
-              >
-                <Text style={[styles.cashOutBtnText, { color: canPrestige ? "#001018" : theme.prestige }]}>
-                  {!canPrestige
-                    ? `Reach ${money(PRESTIGE_MIN_BALANCE)} to cash out`
-                    : prestigeArmed
-                    ? `TAP AGAIN — CONFIRM +${prestigeGainAvailable} PP`
-                    : `CASH OUT · +${prestigeGainAvailable} PP`}
-                </Text>
-              </Pressable>
-            )}
-          </LinearGradient>
-
-          {/* Tree body: 3 columns */}
           <ScrollView
             style={styles.treeBody}
             contentContainerStyle={styles.treeBodyContent}
             showsVerticalScrollIndicator={true}
             indicatorStyle="white"
           >
+            <LinearGradient
+              colors={[theme.bgSoft, theme.bg]}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={styles.treeHeader}
+            >
+              <View style={styles.treeHeaderRow}>
+                <Pressable
+                  onPress={() => { sound.play("click"); setShowTree(false); }}
+                  hitSlop={16}
+                  testID="tree-back"
+                  style={styles.backBtn}
+                >
+                  <Text style={[styles.backBtnText, { color: theme.upgrade }]}>← BACK</Text>
+                </Pressable>
+                <View style={styles.treeHeaderCenter}>
+                  <Text style={[styles.treeTitle, { color: theme.text }]}>PRESTIGE TREE</Text>
+                </View>
+                {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
+                  <Pressable
+                    onPress={() => { sound.play("click"); setShowLegacy(true); }}
+                    hitSlop={12}
+                    style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}25`, marginLeft: 6, borderWidth: 1.5 }]}
+                    testID="open-legacy"
+                  >
+                    <Text style={[styles.iconChipText, { color: theme.legacy }]}>
+                      LEGACY · {compact(legacyPoints)}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+
+              <View style={[styles.rankCard, { backgroundColor: theme.panel, borderColor: theme.border }]}>
+                <View
+                  style={[
+                    styles.rankBadge,
+                    { borderColor: rankMeta.tint, backgroundColor: `${rankMeta.tint}22` },
+                  ]}
+                >
+                  <Text style={[styles.rankBadgeIcon, { color: rankMeta.tint }]}>
+                    {rankMeta.icon}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.rankLabel, { color: theme.textMuted }]}>CURRENT RANK</Text>
+                  <Text style={[styles.rankName, { color: rankMeta.tint }]}>
+                    {rankMeta.name}
+                  </Text>
+                  {nRankMeta ? (
+                    <>
+                      <View style={[styles.rankBar, { backgroundColor: theme.bgSoft }]}>
+                        <View
+                          style={[
+                            styles.rankBarFill,
+                            {
+                              backgroundColor: nRankMeta.tint,
+                              width: Math.min(100, ((totalPrestiges - rankMeta.minPrestiges) / (nRankMeta.minPrestiges - rankMeta.minPrestiges)) * 100).toFixed(1) + "%" as any,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text style={[styles.rankProgress, { color: theme.textMuted }]}>
+                        {totalPrestiges - rankMeta.minPrestiges} / {nRankMeta.minPrestiges - rankMeta.minPrestiges} to {nRankMeta.short}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={[styles.rankProgress, { color: theme.textMuted }]}>Maximum rank achieved</Text>
+                  )}
+                </View>
+              </View>
+
+              <View style={[styles.treeStats, { backgroundColor: theme.panel, borderColor: theme.border }]}>
+                <View style={styles.treeStatCell}>
+                  <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>PP AVAILABLE</Text>
+                  <Text style={[styles.treeStatValue, { color: theme.prestige }]} testID="tree-pp-available">{prestige}</Text>
+                </View>
+                <View style={[styles.treeStatDivider, { backgroundColor: theme.border }]} />
+                <View style={styles.treeStatCell}>
+                  <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>PP SPENT</Text>
+                  <Text style={[styles.treeStatValue, { color: theme.text }]}>{totalSpentPP(skills)}</Text>
+                </View>
+                <View style={[styles.treeStatDivider, { backgroundColor: theme.border }]} />
+                <View style={styles.treeStatCell}>
+                  <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>PROFIT BONUS</Text>
+                  <Text style={[styles.treeStatValue, { color: theme.gain }]}>+{fmtPct(currentBonusPct)}</Text>
+                </View>
+                <View style={[styles.treeStatDivider, { backgroundColor: theme.border }]} />
+                <View style={styles.treeStatCell}>
+                  <Text style={[styles.treeStatLabel, { color: theme.textMuted }]}>CASH-OUTS</Text>
+                  <Text style={[styles.treeStatValue, { color: theme.text }]}>{totalPrestiges}</Text>
+                </View>
+              </View>
+
+              {/* Legacy Progress */}
+              <View style={[styles.legacyProgressSection, { borderTopColor: theme.border }]}>
+                <View style={styles.legacyProgressHeader}>
+                  <Text style={[styles.legacyProgressTitle, { color: theme.text }]}>LEGACY PROGRESS</Text>
+                  <Text style={[styles.legacyProgressSubtitle, { color: theme.textMuted }]}>Unlock at 10,000 total PP</Text>
+                </View>
+                <View style={[styles.legacyProgressBar, { backgroundColor: theme.bgSoft }]}>
+                  <View
+                    style={[
+                      styles.legacyProgressBarFill,
+                      {
+                        width: Math.min(100, (stats.totalPPEarned / LEGACY_UNLOCK_THRESHOLD) * 100).toFixed(0) + "%" as any,
+                        backgroundColor: stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD ? theme.legacy : theme.legacy,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.legacyProgressText, { color: theme.textMuted }]}>
+                  {compact(stats.totalPPEarned)} / {compact(LEGACY_UNLOCK_THRESHOLD)} PP
+                  {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && " · UNLOCKED"}
+                </Text>
+              </View>
+
+              {/* Prestige Explanation */}
+              <View style={[styles.prestigeExplanationSection, { borderTopColor: theme.border, backgroundColor: `${theme.prestige}08` }]}>
+                <View style={styles.prestigeExplanationHeader}>
+                  <Text style={[styles.prestigeExplanationTitle, { color: theme.prestige }]}>WHAT IS PRESTIGE?</Text>
+                  <Pressable
+                    onPress={() => {
+                      sound.play("click");
+                      setShowPrestigeInfo(!showPrestigeInfo);
+                    }}
+                    hitSlop={8}
+                    style={[styles.infoButton, { backgroundColor: `${theme.prestige}18` }]}
+                  >
+                    <Text style={[styles.infoButtonText, { color: theme.prestige }]}>ⓘ</Text>
+                  </Pressable>
+                </View>
+                {showPrestigeInfo && (
+                  <Text style={[styles.prestigeExplanationText, { color: theme.textMuted }]}>
+                    Cash out your run to earn Prestige Points (PP). Each PP gives +{fmtPct(5)} permanent profit bonus.
+                    Use PP to unlock skill tree nodes and prestige upgrades. Your balance resets but upgrades persist.
+                  </Text>
+                )}
+              </View>
+
+              {/* Prestige Upgrades */}
+              <View style={[styles.upgradesSection, { borderTopColor: theme.border }]}>
+                <Text style={[styles.upgradesSectionTitle, { color: theme.text }]}>PRESTIGE UPGRADES</Text>
+                {PRESTIGE_UPGRADES.map((upgrade) => {
+                  const owned = prestigeUpgrades[upgrade.id];
+                  const canAfford = prestige >= upgrade.cost && !owned;
+                  return (
+                    <Pressable
+                      key={upgrade.id}
+                      onPress={() => {
+                        if (canAfford) {
+                          sound.play("upgrade");
+                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+                          const newPrestigeUpgrades = { ...prestigeUpgrades, [upgrade.id]: true };
+                          setPrestige((p) => p - upgrade.cost);
+                          setPrestigeUpgrades(newPrestigeUpgrades);
+                          saveState({ prestigeUpgrades: newPrestigeUpgrades });
+                        }
+                      }}
+                      disabled={!canAfford}
+                      style={({ pressed }) => [
+                        styles.prestigeUpgradeCard,
+                        { backgroundColor: theme.panel, borderColor: theme.border },
+                        owned && [styles.prestigeUpgradeCardOwned, { backgroundColor: `${upgrade.tint}12` }],
+                        !owned && { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}15` },
+                        pressed && canAfford && { transform: [{ scale: 0.98 }] },
+                      ]}
+                      testID={`upgrade-${upgrade.id}`}
+                    >
+                      {owned && (
+                        <View style={[styles.prestigeUpgradeOwnedBadge, { backgroundColor: upgrade.tint }]}>
+                          <Text style={[styles.prestigeUpgradeOwnedIcon, { color: '#FFFFFF' }]}>✓</Text>
+                        </View>
+                      )}
+                      <View style={styles.prestigeUpgradeCardLeft}>
+                        <Text style={[styles.prestigeUpgradeCardName, { color: theme.text }, owned && { color: upgrade.tint }]}>
+                          {upgrade.name}
+                        </Text>
+                        <Text style={[styles.prestigeUpgradeCardDesc, { color: theme.textMuted }]}>{upgrade.description}</Text>
+                      </View>
+                      <View style={styles.prestigeUpgradeCardRight}>
+                        {owned ? (
+                          <Text style={[styles.prestigeUpgradeCardStatus, { color: upgrade.tint }]}>OWNED</Text>
+                        ) : (
+                          <View style={[styles.prestigeUpgradeCostBadge, { borderColor: upgrade.tint, backgroundColor: `${upgrade.tint}25` }]}>
+                            <Text style={[styles.prestigeUpgradeCostText, { color: upgrade.tint }]}>
+                              ★ {upgrade.cost} PP
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              {/* Cash out */}
+              {settings.holdToPrestige ? (
+                <HoldButton
+                  onHoldComplete={doPrestige}
+                  colors={["#A855F7", "#9333EA"]}
+                  textColor={canPrestige ? "#001018" : theme.prestige}
+                  progressColor="#FFFFFF"
+                  disabled={!canPrestige}
+                  style={[
+                    styles.cashOutBtn,
+                    { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
+                    !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
+                    prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
+                    canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
+                  ]}
+                  testID="prestige-button"
+                >
+                  {!canPrestige
+                    ? `Reach ${money(PRESTIGE_MIN_BALANCE)} to cash out`
+                    : prestigeArmed
+                    ? `TAP AGAIN — CONFIRM +${prestigeGainAvailable} PP`
+                    : `CASH OUT · +${prestigeGainAvailable} PP`}
+                </HoldButton>
+              ) : (
+                <Pressable
+                  onPress={doPrestige}
+                  disabled={!canPrestige}
+                  style={({ pressed }) => [
+                    styles.cashOutBtn,
+                    styles.cashOutBtnInner,
+                    { borderColor: theme.prestige, backgroundColor: `${theme.prestige}12` },
+                    !canPrestige && [styles.cashOutBtnDim, { borderColor: theme.border, backgroundColor: theme.bgSoft }],
+                    prestigeArmed && [styles.cashOutBtnArmed, { backgroundColor: theme.prestige, borderColor: theme.prestige }],
+                    canPrestige && !prestigeArmed && { backgroundColor: theme.prestige },
+                    pressed && { transform: [{ scale: 0.98 }] },
+                  ]}
+                  testID="prestige-button"
+                >
+                  <Text style={[styles.cashOutBtnText, { color: canPrestige ? "#001018" : theme.prestige }]}>
+                    {!canPrestige
+                      ? `Reach ${money(PRESTIGE_MIN_BALANCE)} to cash out`
+                      : prestigeArmed
+                      ? `TAP AGAIN — CONFIRM +${prestigeGainAvailable} PP`
+                      : `CASH OUT · +${prestigeGainAvailable} PP`}
+                  </Text>
+                </Pressable>
+              )}
+            </LinearGradient>
+
+            <View style={{ height: 20 }} />
+
+            {/* Tree body: 3 columns */}
             <View style={styles.treeGridRow}>
               <TreeColumn
                 title="AUTOMATION"

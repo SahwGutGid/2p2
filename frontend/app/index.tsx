@@ -198,7 +198,7 @@ const SAVE_KEY = "investmentIdle:v6";
 const LEGACY_KEYS = ["investmentIdle:v5", "investmentIdle:v4", "investmentIdle:v3", "investmentIdle:v2"];
 const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
 
-const PRESTIGE_MIN_BALANCE = 5000;
+const PRESTIGE_MIN_BALANCE = 10000;
 const PRESTIGE_BONUS_PER_POINT = 0.05;
 const computePrestigeGain = (balance: number) => {
   if (balance < PRESTIGE_MIN_BALANCE) return 0;

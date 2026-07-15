@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image as ExpoImage } from "expo-image";
 
 interface FinalUpgradeCelebrationProps {
   visible: boolean;
@@ -72,12 +73,16 @@ export function FinalUpgradeCelebration({
         ]}
       >
         <LinearGradient
-          colors={["#FFD700", "#F59E0B", "#FFD700"]}
+          colors={["#2A1F00", "#1A1400", "#2A1F00"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.trophyGradient}
         >
-          <Text style={styles.trophyIcon}>🏆</Text>
+          <ExpoImage
+            source={require("@/assets/images/trophy.png")}
+            style={styles.trophyIcon}
+            contentFit="contain"
+          />
         </LinearGradient>
       </Animated.View>
 
@@ -125,9 +130,11 @@ const styles = StyleSheet.create({
   trophyGradient: {
     width: 120,
     height: 120,
-    borderRadius: 60,
+    borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 215, 0, 0.3)",
     shadowColor: "#FFD700",
     shadowOpacity: 0.6,
     shadowRadius: 20,
@@ -135,7 +142,8 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   trophyIcon: {
-    fontSize: 64,
+    width: 72,
+    height: 72,
   },
   textContainer: {
     alignItems: "center",

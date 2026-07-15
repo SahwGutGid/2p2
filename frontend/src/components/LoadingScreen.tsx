@@ -9,85 +9,67 @@ interface LoadingScreenProps {
 }
 
 export function LoadingScreen({ onComplete }: LoadingScreenProps) {
-  const logoOpacity = useRef(new Animated.Value(0)).current;
-  const logoScale = useRef(new Animated.Value(0.8)).current;
   const glowOpacity = useRef(new Animated.Value(0)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0.75)).current;
   const textOpacity = useRef(new Animated.Value(0)).current;
+  const subtitleOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Professional startup animation sequence
-    const animationSequence = Animated.sequence([
-      // Fade in and scale up logo
+    const seq = Animated.sequence([
       Animated.parallel([
-        Animated.timing(logoOpacity, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.spring(logoScale, {
-          toValue: 1,
-          friction: 8,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowOpacity, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
+        Animated.timing(glowOpacity, { toValue: 1, duration: 900, useNativeDriver: true }),
+        Animated.timing(logoOpacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.spring(logoScale, { toValue: 1, friction: 7, tension: 35, useNativeDriver: true }),
       ]),
-      // Fade in text after logo
-      Animated.delay(300),
-      Animated.timing(textOpacity, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
+      Animated.delay(200),
+      Animated.timing(textOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.delay(100),
+      Animated.timing(subtitleOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
     ]);
 
-    animationSequence.start(() => {
-      // Signal completion after animation
-      setTimeout(() => {
-        onComplete?.();
-      }, 1000);
+    seq.start(() => {
+      setTimeout(() => onComplete?.(), 900);
     });
 
-    return () => {
-      animationSequence.stop();
-    };
+    return () => seq.stop();
   }, [onComplete]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <LinearGradient
-        colors={["#0F172A", "#1E293B", "#0F172A"]}
+        colors={["#071426", "#0F1F38", "#071426"]}
         style={StyleSheet.absoluteFill}
       />
-      
+
       <View style={styles.content}>
-        {/* Glow effect behind logo */}
+        {/* Radial glow */}
         <Animated.View style={[styles.glow, { opacity: glowOpacity }]} />
-        
+        <Animated.View style={[styles.glowInner, { opacity: glowOpacity }]} />
+
         {/* P2P Logo */}
         <Animated.View
           style={[
             styles.logoContainer,
-            {
-              opacity: logoOpacity,
-              transform: [{ scale: logoScale }],
-            },
+            { opacity: logoOpacity, transform: [{ scale: logoScale }] },
           ]}
         >
           <Image
-            source={require("@/assets/images/p2p-logo.png")}
+            source={require("@/assets/images/22.png")}
             style={styles.logo}
             contentFit="contain"
           />
         </Animated.View>
 
-        {/* Official text */}
+        {/* Tagline */}
         <Animated.View style={[styles.textContainer, { opacity: textOpacity }]}>
-          <Text style={styles.poweredBy}>Powered by P2P</Text>
+          <Text style={styles.tagline}>INVESTMENT IDLE</Text>
+        </Animated.View>
+
+        {/* Powered by */}
+        <Animated.View style={[styles.footerContainer, { opacity: subtitleOpacity }]}>
+          <View style={styles.footerDivider} />
+          <Text style={styles.poweredBy}>Powered by</Text>
           <Text style={styles.website}>p2p.com.mk</Text>
         </Animated.View>
       </View>
@@ -98,7 +80,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: "#071426",
   },
   content: {
     flex: 1,
@@ -108,37 +90,66 @@ const styles = StyleSheet.create({
   },
   glow: {
     position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: "rgba(245, 158, 11, 0.15)",
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: "rgba(245, 158, 11, 0.08)",
     shadowColor: "#F59E0B",
-    shadowOpacity: 0.4,
-    shadowRadius: 40,
+    shadowOpacity: 0.3,
+    shadowRadius: 60,
     shadowOffset: { width: 0, height: 0 },
-    elevation: 8,
+  },
+  glowInner: {
+    position: "absolute",
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: "rgba(245, 158, 11, 0.06)",
+    shadowColor: "#F59E0B",
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
+    shadowOffset: { width: 0, height: 0 },
   },
   logoContainer: {
-    marginBottom: 32,
+    marginBottom: 28,
+    padding: 8,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 160,
+    height: 80,
   },
   textContainer: {
     alignItems: "center",
-    marginTop: 24,
+    marginBottom: 0,
+  },
+  tagline: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#94A3B8",
+    letterSpacing: 3,
+    textTransform: "uppercase",
+  },
+  footerContainer: {
+    position: "absolute",
+    bottom: 40,
+    alignItems: "center",
+  },
+  footerDivider: {
+    width: 40,
+    height: 1,
+    backgroundColor: "rgba(148, 163, 184, 0.2)",
+    marginBottom: 12,
   },
   poweredBy: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#94A3B8",
-    letterSpacing: 1,
-    marginBottom: 8,
+    fontSize: 11,
+    fontWeight: "500",
+    color: "#64748B",
+    letterSpacing: 0.5,
+    marginBottom: 4,
   },
   website: {
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 13,
+    fontWeight: "700",
     color: "#F59E0B",
     letterSpacing: 0.5,
   },

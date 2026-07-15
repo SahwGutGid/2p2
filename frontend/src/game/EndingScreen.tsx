@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { HoldButton } from "@/src/components/HoldButton";
 import { Image as ExpoImage } from "expo-image";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 export type CompletionStats = {
   balance: number;
@@ -23,15 +23,18 @@ export type CompletionStats = {
 };
 
 const C = {
-  bg: "#0F172A",
-  card: "#1E293B",
+  bg: "#071426",
+  card: "#0F2038",
+  cardElevated: "#162840",
   accent: "#F59E0B",
-  accentDeep: "#F59E0B",
   success: "#00C896",
   white: "#FFFFFF",
   text: "#F1F5F9",
-  textMuted: "#94A3B8",
-  border: "#334155",
+  textMuted: "#64748B",
+  textSecondary: "#94A3B8",
+  border: "rgba(255,255,255,0.08)",
+  borderAccent: "rgba(245,158,11,0.25)",
+  gold: "#FFD700",
 };
 
 export function EndingScreen({
@@ -43,42 +46,43 @@ export function EndingScreen({
   onReplay: () => void;
   onContinue: () => void;
 }) {
-  const iconScale = useRef(new Animated.Value(0)).current;
-  const iconOpacity = useRef(new Animated.Value(0)).current;
+  const trophyScale = useRef(new Animated.Value(0)).current;
+  const trophyOpacity = useRef(new Animated.Value(0)).current;
+  const glowOpacity = useRef(new Animated.Value(0)).current;
   const titleOpacity = useRef(new Animated.Value(0)).current;
-  const titleSlide = useRef(new Animated.Value(12)).current;
+  const titleSlide = useRef(new Animated.Value(16)).current;
   const statsOpacity = useRef(new Animated.Value(0)).current;
-  const statsSlide = useRef(new Animated.Value(16)).current;
+  const statsSlide = useRef(new Animated.Value(20)).current;
   const buttonOpacity = useRef(new Animated.Value(0)).current;
-  const buttonScale = useRef(new Animated.Value(0.95)).current;
-  const pressScale = useRef(new Animated.Value(1)).current;
+  const buttonScale = useRef(new Animated.Value(0.93)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(iconScale, { toValue: 1, friction: 5, tension: 50, useNativeDriver: true }),
-      Animated.timing(iconOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.spring(trophyScale, { toValue: 1, friction: 4, tension: 45, useNativeDriver: true }),
+      Animated.timing(trophyOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.timing(glowOpacity, { toValue: 1, duration: 1000, useNativeDriver: true }),
     ]).start();
 
     const t1 = setTimeout(() => {
       Animated.parallel([
-        Animated.timing(titleOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-        Animated.timing(titleSlide, { toValue: 0, duration: 500, useNativeDriver: true }),
+        Animated.timing(titleOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(titleSlide, { toValue: 0, duration: 600, useNativeDriver: true }),
       ]).start();
-    }, 300);
+    }, 350);
 
     const t2 = setTimeout(() => {
       Animated.parallel([
         Animated.timing(statsOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
         Animated.timing(statsSlide, { toValue: 0, duration: 500, useNativeDriver: true }),
       ]).start();
-    }, 600);
+    }, 700);
 
     const t3 = setTimeout(() => {
       Animated.parallel([
         Animated.spring(buttonScale, { toValue: 1, friction: 4, tension: 40, useNativeDriver: true }),
         Animated.timing(buttonOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       ]).start();
-    }, 1100);
+    }, 1200);
 
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
@@ -96,132 +100,146 @@ export function EndingScreen({
     ["Total Play Time", formatTimeDetailed(stats.activePlayTimeMs)],
   ];
 
-  const handlePressIn = () => {
-    Animated.spring(pressScale, { toValue: 0.97, friction: 8, tension: 100, useNativeDriver: true }).start();
-  };
-  const handlePressOut = () => {
-    Animated.spring(pressScale, { toValue: 1, friction: 8, tension: 100, useNativeDriver: true }).start();
-  };
-
   return (
     <SafeAreaView style={EndingStyles.root} edges={["top", "bottom"]}>
-      <View style={EndingStyles.root}>
-        <LinearGradient colors={[C.bg, "#1E293B", C.bg]} style={EndingStyles.gradient} />
-        <ScrollView
-          style={EndingStyles.scrollView}
-          contentContainerStyle={EndingStyles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={EndingStyles.content}>
-            <Animated.View style={[EndingStyles.titleWrap, { opacity: iconOpacity }]}>
-              <Animated.View
-                style={[
-                  EndingStyles.iconContainer,
-                  {
-                    opacity: iconOpacity,
-                    transform: [{ scale: iconScale }],
-                  },
-                ]}
-              >
-                <Text style={EndingStyles.icon}>✓</Text>
-              </Animated.View>
-            </Animated.View>
+      <LinearGradient colors={[C.bg, "#0F1F38", C.bg]} style={EndingStyles.gradient} />
+      <ScrollView
+        style={EndingStyles.scrollView}
+        contentContainerStyle={EndingStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={EndingStyles.content}>
 
+          {/* Trophy */}
+          <View style={EndingStyles.trophySection}>
+            <Animated.View style={[EndingStyles.glowRing, { opacity: glowOpacity }]} />
+            <Animated.View style={[EndingStyles.glowRingInner, { opacity: glowOpacity }]} />
             <Animated.View
               style={[
-                EndingStyles.titleSection,
-                {
-                  opacity: titleOpacity,
-                  transform: [{ translateY: titleSlide }],
-                },
+                EndingStyles.trophyContainer,
+                { opacity: trophyOpacity, transform: [{ scale: trophyScale }] },
               ]}
             >
-              <ExpoImage
-                source={require("@/assets/images/p2p-logo.png")}
-                style={EndingStyles.endingLogo}
-                contentFit="contain"
-              />
-              <Text style={EndingStyles.eyebrow}>GAME COMPLETE</Text>
-              <Text style={EndingStyles.title}>Portfolio Mastered</Text>
-              <Text style={EndingStyles.subtitle}>
-                You've completed the investment journey.{"\n"}
-                Your final portfolio stands as a testament to your strategy.
-              </Text>
-            </Animated.View>
-
-            <Animated.View
-              style={[
-                EndingStyles.statsCard,
-                {
-                  opacity: statsOpacity,
-                  transform: [{ translateY: statsSlide }],
-                },
-              ]}
-            >
-              <Text style={EndingStyles.statsHeader}>FINAL STATISTICS</Text>
-              {statRows.map(([label, value]) => (
-                <View key={label} style={EndingStyles.statRow}>
-                  <Text style={EndingStyles.statLabel}>{label}</Text>
-                  <Text style={EndingStyles.statValue}>{value}</Text>
-                </View>
-              ))}
-            </Animated.View>
-
-            <Animated.View
-              style={[
-                EndingStyles.buttonContainer,
-                {
-                  opacity: buttonOpacity,
-                  transform: [{ scale: Animated.multiply(buttonScale, pressScale) }],
-                },
-              ]}
-            >
-              {/* Continue Current Run - Safe Option */}
-              <Pressable
-                onPress={onContinue}
-                style={({ pressed }) => [
-                  EndingStyles.continueBtn,
-                  pressed && EndingStyles.continueBtnPressed,
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Continue current run"
+              <LinearGradient
+                colors={["#2A1F00", "#1A1400"]}
+                style={EndingStyles.trophyBg}
               >
-                <LinearGradient
-                  colors={["#00C896", "#22C55E"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={EndingStyles.continueBtnGradient}
-                >
-                  <Text style={EndingStyles.continueBtnText}>CONTINUE CURRENT RUN</Text>
-                </LinearGradient>
-              </Pressable>
-              
-              <Text style={EndingStyles.buttonDivider}>OR</Text>
-              
-              {/* Restart Run - Destructive Hold Button */}
-              <HoldButton
-                onHoldComplete={onReplay}
-                colors={["#DC2626", "#EF4444"]}
-                textColor="#FFFFFF"
-                progressColor="#FFFFFF"
-                style={EndingStyles.restartBtn}
-              >
-                RESTART RUN
-              </HoldButton>
-              
-              <Text style={EndingStyles.replayHint}>
-                Restart will reset all progress. Your completion record is saved.
-              </Text>
-              
-              {/* Official P2P Branding */}
-              <View style={EndingStyles.brandingContainer}>
-                <Text style={EndingStyles.poweredBy}>Powered by P2P</Text>
-                <Text style={EndingStyles.website}>p2p.com.mk</Text>
-              </View>
+                <ExpoImage
+                  source={require("@/assets/images/trophy.png")}
+                  style={EndingStyles.trophyImage}
+                  contentFit="contain"
+                />
+              </LinearGradient>
             </Animated.View>
           </View>
-        </ScrollView>
-      </View>
+
+          {/* Title Section */}
+          <Animated.View
+            style={[
+              EndingStyles.titleSection,
+              { opacity: titleOpacity, transform: [{ translateY: titleSlide }] },
+            ]}
+          >
+            <Text style={EndingStyles.eyebrow}>GAME COMPLETE</Text>
+            <Text style={EndingStyles.title}>Portfolio Mastered</Text>
+            <Text style={EndingStyles.subtitle}>
+              You've completed the investment journey.{"\n"}
+              Your final portfolio stands as a testament to your strategy.
+            </Text>
+
+            {/* P2P Branding */}
+            <View style={EndingStyles.brandCard}>
+              <ExpoImage
+                source={require("@/assets/images/22.png")}
+                style={EndingStyles.brandLogo}
+                contentFit="contain"
+              />
+              <View style={EndingStyles.brandTextGroup}>
+                <Text style={EndingStyles.brandTitle}>Official P2P Experience</Text>
+                <Text style={EndingStyles.brandWebsite}>p2p.com.mk</Text>
+              </View>
+            </View>
+          </Animated.View>
+
+          {/* Stats Card */}
+          <Animated.View
+            style={[
+              EndingStyles.statsCard,
+              { opacity: statsOpacity, transform: [{ translateY: statsSlide }] },
+            ]}
+          >
+            <Text style={EndingStyles.statsHeader}>FINAL STATISTICS</Text>
+            {statRows.map(([label, value], i) => (
+              <View
+                key={label}
+                style={[
+                  EndingStyles.statRow,
+                  i === statRows.length - 1 && EndingStyles.statRowLast,
+                ]}
+              >
+                <Text style={EndingStyles.statLabel}>{label}</Text>
+                <Text style={EndingStyles.statValue}>{value}</Text>
+              </View>
+            ))}
+          </Animated.View>
+
+          {/* Buttons */}
+          <Animated.View
+            style={[
+              EndingStyles.buttonContainer,
+              {
+                opacity: buttonOpacity,
+                transform: [{ scale: buttonScale }],
+              },
+            ]}
+          >
+            <Pressable
+              onPress={onContinue}
+              style={({ pressed }) => [
+                EndingStyles.continueBtn,
+                pressed && EndingStyles.continueBtnPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Continue current run"
+            >
+              <LinearGradient
+                colors={["#00C896", "#00A878"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={EndingStyles.continueBtnGradient}
+              >
+                <Text style={EndingStyles.continueBtnText}>CONTINUE CURRENT RUN</Text>
+              </LinearGradient>
+            </Pressable>
+
+            <View style={EndingStyles.dividerRow}>
+              <View style={EndingStyles.dividerLine} />
+              <Text style={EndingStyles.dividerText}>OR</Text>
+              <View style={EndingStyles.dividerLine} />
+            </View>
+
+            <HoldButton
+              onHoldComplete={onReplay}
+              colors={["#DC2626", "#EF4444"]}
+              textColor="#FFFFFF"
+              progressColor="#FFFFFF"
+              style={EndingStyles.restartBtn}
+            >
+              RESTART RUN
+            </HoldButton>
+
+            <Text style={EndingStyles.replayHint}>
+              Restart will reset all progress. Your completion record is saved.
+            </Text>
+
+            <View style={EndingStyles.footerBranding}>
+              <Text style={EndingStyles.footerPoweredBy}>Powered by P2P</Text>
+              <Text style={EndingStyles.footerWebsite}>p2p.com.mk</Text>
+            </View>
+          </Animated.View>
+
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -233,153 +251,238 @@ const EndingStyles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     alignItems: "center",
-    justifyContent: "center",
     paddingHorizontal: 20,
     paddingVertical: 32,
-    minHeight: "100%",
   },
   content: {
     alignItems: "center",
     maxWidth: 440,
     width: "100%",
   },
-  titleWrap: { alignItems: "center", marginBottom: 24 },
-  iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: C.success,
+
+  // Trophy
+  trophySection: {
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: C.success,
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    marginBottom: 28,
+    height: 140,
   },
-  icon: { fontSize: 36, fontWeight: "700", color: "#FFFFFF" },
-  titleSection: { alignItems: "center", marginBottom: 32 },
-  endingLogo: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
-    opacity: 0.9,
+  glowRing: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(255, 215, 0, 0.06)",
+    shadowColor: "#FFD700",
+    shadowOpacity: 0.5,
+    shadowRadius: 40,
+    shadowOffset: { width: 0, height: 0 },
   },
+  glowRingInner: {
+    position: "absolute",
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: "rgba(245, 158, 11, 0.08)",
+    shadowColor: "#F59E0B",
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  trophyContainer: {
+    shadowColor: "#FFD700",
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 10,
+  },
+  trophyBg: {
+    width: 100,
+    height: 100,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 215, 0, 0.3)",
+  },
+  trophyImage: {
+    width: 60,
+    height: 60,
+  },
+
+  // Title
+  titleSection: { alignItems: "center", marginBottom: 28 },
   eyebrow: {
     fontSize: 11,
     fontWeight: "700",
     color: C.accent,
-    letterSpacing: 2.5,
+    letterSpacing: 3,
     marginBottom: 10,
     textTransform: "uppercase",
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "700",
     color: C.text,
     textAlign: "center",
-    lineHeight: 36,
-    marginBottom: 14,
-    letterSpacing: -0.3,
+    lineHeight: 38,
+    marginBottom: 12,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 15,
-    color: C.textMuted,
+    color: C.textSecondary,
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: 23,
     maxWidth: 320,
+    marginBottom: 24,
   },
+  brandCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: C.card,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: C.borderAccent,
+    gap: 12,
+  },
+  brandLogo: {
+    width: 56,
+    height: 28,
+  },
+  brandTextGroup: {
+    flex: 1,
+  },
+  brandTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: C.text,
+    marginBottom: 2,
+  },
+  brandWebsite: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: C.accent,
+  },
+
+  // Stats
   statsCard: {
     width: "100%",
     backgroundColor: C.card,
     borderRadius: 16,
-    padding: 24,
+    padding: 20,
     borderWidth: 1,
     borderColor: C.border,
-    marginBottom: 28,
+    marginBottom: 24,
     shadowColor: "#000000",
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   statsHeader: {
     fontSize: 11,
     fontWeight: "700",
     color: C.textMuted,
-    marginBottom: 18,
-    letterSpacing: 1.5,
+    marginBottom: 16,
+    letterSpacing: 2,
     textTransform: "uppercase",
   },
   statRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 11,
     borderBottomWidth: 1,
     borderBottomColor: C.border,
   },
-  statLabel: { fontSize: 14, color: C.textMuted, fontWeight: "500" },
-  statValue: { fontSize: 15, color: C.accent, fontWeight: "600" },
+  statRowLast: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
+  },
+  statLabel: { fontSize: 13, color: C.textSecondary, fontWeight: "500" },
+  statValue: { fontSize: 14, color: C.accent, fontWeight: "700" },
+
+  // Buttons
   buttonContainer: {
     alignItems: "center",
     width: "100%",
-    paddingBottom: 40,
-    paddingTop: 16,
+    paddingBottom: 16,
   },
   continueBtn: {
-    paddingVertical: 18,
-    paddingHorizontal: 48,
+    width: "100%",
     borderRadius: 14,
-    minWidth: 200,
+    overflow: "hidden",
     marginBottom: 16,
+    shadowColor: "#00C896",
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
   continueBtnPressed: {
-    transform: [{ scale: 0.97 }],
+    transform: [{ scale: 0.98 }],
   },
   continueBtnGradient: {
     paddingVertical: 18,
-    paddingHorizontal: 48,
     alignItems: "center",
     borderRadius: 14,
-    minWidth: 200,
   },
-  continueBtnText: { fontSize: 16, fontWeight: "700", color: "#FFFFFF", letterSpacing: 1 },
-  buttonDivider: {
-    fontSize: 12,
-    fontWeight: "600",
+  continueBtnText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 1,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 16,
+    gap: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: C.border,
+  },
+  dividerText: {
+    fontSize: 11,
+    fontWeight: "700",
     color: C.textMuted,
-    marginVertical: 12,
     letterSpacing: 2,
   },
   restartBtn: {
-    marginBottom: 16,
+    width: "100%",
+    marginBottom: 0,
   },
-  replayBtnGradient: {
-    paddingVertical: 18,
-    paddingHorizontal: 48,
-    alignItems: "center",
-    borderRadius: 14,
-    minWidth: 200,
+  replayHint: {
+    fontSize: 12,
+    color: C.textMuted,
+    marginTop: 14,
+    textAlign: "center",
+    lineHeight: 18,
+    paddingHorizontal: 12,
   },
-  replayBtnText: { fontSize: 16, fontWeight: "700", color: "#FFFFFF", letterSpacing: 1 },
-  replayHint: { fontSize: 12, color: C.textMuted, marginTop: 16, textAlign: "center", lineHeight: 18, paddingHorizontal: 20 },
-  brandingContainer: {
+  footerBranding: {
     alignItems: "center",
-    marginTop: 16,
-    paddingTop: 16,
+    marginTop: 20,
+    paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: C.border,
+    width: "100%",
   },
-  poweredBy: {
-    fontSize: 12,
-    fontWeight: "600",
+  footerPoweredBy: {
+    fontSize: 11,
+    fontWeight: "500",
     color: C.textMuted,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     marginBottom: 4,
   },
-  website: {
-    fontSize: 14,
+  footerWebsite: {
+    fontSize: 13,
     fontWeight: "700",
     color: C.accent,
     letterSpacing: 0.5,

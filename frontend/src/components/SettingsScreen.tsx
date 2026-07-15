@@ -81,11 +81,13 @@ export function SettingsScreen({
         {/* Official P2P Branding Card */}
         <View style={styles.brandingCard}>
           <ExpoImage
-            source={require("@/assets/images/p2p-logo.png")}
+            source={require("@/assets/images/22.png")}
             style={styles.brandingLogo}
             contentFit="contain"
           />
-          <Text style={styles.brandingTitle}>Official P2P Experience</Text>
+          <View style={styles.brandingDivider} />
+          <Text style={styles.brandingTitle}>Investment Idle</Text>
+          <Text style={styles.brandingSubtitle}>An Official P2P Experience</Text>
           <Text style={styles.brandingWebsite}>p2p.com.mk</Text>
         </View>
 
@@ -126,7 +128,12 @@ export function SettingsScreen({
 
         {/* Footer Branding */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Powered by P2P • p2p.com.mk</Text>
+          <ExpoImage
+            source={require("@/assets/images/22.png")}
+            style={styles.footerLogo}
+            contentFit="contain"
+          />
+          <Text style={styles.footerText}>p2p.com.mk</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -186,21 +193,33 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   brandingLogo: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
-    opacity: 0.9,
+    width: 120,
+    height: 60,
+    marginBottom: 0,
+  },
+  brandingDivider: {
+    width: 40,
+    height: 1,
+    backgroundColor: C.border,
+    marginVertical: 16,
   },
   brandingTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "700",
     color: C.text,
-    marginBottom: 8,
-    letterSpacing: 0.5,
+    marginBottom: 4,
+    letterSpacing: 0.3,
+  },
+  brandingSubtitle: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: C.textMuted,
+    marginBottom: 10,
+    letterSpacing: 0.3,
   },
   brandingWebsite: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "700",
     color: C.accent,
     letterSpacing: 0.5,
   },
@@ -283,9 +302,15 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: "center",
-    paddingTop: 16,
+    paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: C.border,
+    gap: 8,
+  },
+  footerLogo: {
+    width: 72,
+    height: 36,
+    opacity: 0.6,
   },
   footerText: {
     fontSize: 12,

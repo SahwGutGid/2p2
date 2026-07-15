@@ -1383,11 +1383,6 @@ export default function Index() {
               </Pressable>
               <View style={styles.treeHeaderCenter}>
                 <Text style={[styles.treeTitle, { color: theme.text }]}>PRESTIGE TREE</Text>
-                <ExpoImage
-                  source={require("@/assets/images/p2p-logo.png")}
-                  style={styles.treeHeaderLogo}
-                  contentFit="contain"
-                />
               </View>
               {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
                 <Pressable
@@ -1711,11 +1706,6 @@ export default function Index() {
               <Text style={[styles.legacyTitle, { color: theme.text }, isUltimateOwned && { color: theme.legacy }]}>
                 {isUltimateOwned ? "THE ULTIMATE INVESTOR" : "LEGACY ENDGAME"}
               </Text>
-              <ExpoImage
-                source={require("@/assets/images/p2p-logo.png")}
-                style={styles.legacyHeaderLogo}
-                contentFit="contain"
-              />
             </View>
           </View>
 
@@ -1763,7 +1753,12 @@ export default function Index() {
 
           {isUltimateOwned && (
             <View style={[styles.ultimateBanner, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}12` }]}>
-              <Text style={[styles.ultimateBannerText, { color: theme.legacy }]}>🏆 GAME COMPLETE 🏆</Text>
+              <ExpoImage
+                source={require("@/assets/images/trophy.png")}
+                style={styles.ultimateTrophyIcon}
+                contentFit="contain"
+              />
+              <Text style={[styles.ultimateBannerText, { color: theme.legacy }]}>GAME COMPLETE</Text>
               <Text style={[styles.ultimateBannerSub, { color: theme.text }]}>You have achieved the Ultimate Investor rank</Text>
               <Pressable
                 onPress={() => {
@@ -2006,26 +2001,14 @@ export default function Index() {
         start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}
         style={styles.header}
       >
-        {/* Subtle P2P Watermark */}
-        <ExpoImage
-          source={require("@/assets/images/p2p-logo.png")}
-          style={styles.headerWatermark}
-          contentFit="contain"
-        />
         <View style={styles.headerTopRow}>
-          <Pressable
-            onPress={handleSecretTap}
-            hitSlop={8}
-            testID="secret-tap-target"
-            accessibilityLabel="Portfolio Balance"
-          >
-            <Text style={[styles.balanceLabel, { color: theme.textMuted }]}>PORTFOLIO BALANCE</Text>
-          </Pressable>
-          <ExpoImage
-            source={require("@/assets/images/p2p-logo.png")}
-            style={styles.headerLogo}
-            contentFit="contain"
-          />
+          <View style={styles.headerLeftGroup}>
+            <ExpoImage
+              source={require("@/assets/images/22.png")}
+              style={styles.headerLogo}
+              contentFit="contain"
+            />
+          </View>
           <View style={styles.headerRightRow}>
             <Pressable
               onPress={toggleMusic}
@@ -2057,6 +2040,21 @@ export default function Index() {
             </Pressable>
           </View>
         </View>
+
+        <Pressable
+          onPress={handleSecretTap}
+          hitSlop={8}
+          testID="secret-tap-target"
+          accessibilityLabel="Portfolio Balance"
+          style={styles.balanceLabelRow}
+        >
+          <ExpoImage
+            source={require("@/assets/images/banknote.png")}
+            style={styles.balanceLabelIcon}
+            contentFit="contain"
+          />
+          <Text style={[styles.balanceLabel, { color: theme.textMuted }]}>PORTFOLIO BALANCE</Text>
+        </Pressable>
 
         <Animated.View style={[styles.balanceRow, balanceStyle]}>
           <LinearGradient
@@ -2169,11 +2167,13 @@ export default function Index() {
           <>
             <View style={styles.sectionHeaderRow}>
               <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>ACTIVE INVESTMENTS</Text>
-              <ExpoImage
-                source={require("@/assets/images/p2p-logo.png")}
-                style={styles.sectionLogo}
-                contentFit="contain"
-              />
+              <View style={[styles.sectionBadge, { backgroundColor: `${theme.upgrade}18`, borderColor: theme.upgrade }]}>
+                <ExpoImage
+                  source={require("@/assets/images/banknote.png")}
+                  style={styles.sectionBadgeIcon}
+                  contentFit="contain"
+                />
+              </View>
             </View>
             {actives.map((a) => {
               const pkg = packages.find((p) => p.id === a.pkgId);
@@ -2224,11 +2224,13 @@ export default function Index() {
           <Text style={[styles.sectionTitle, actives.length > 0 && { marginTop: 20 }, { color: theme.textMuted }]}>
             INVESTMENT PACKAGES
           </Text>
-          <ExpoImage
-            source={require("@/assets/images/p2p-logo.png")}
-            style={styles.sectionLogo}
-            contentFit="contain"
-          />
+          <View style={[styles.sectionBadge, { backgroundColor: `${theme.money}18`, borderColor: theme.money }]}>
+            <ExpoImage
+              source={require("@/assets/images/banknote.png")}
+              style={styles.sectionBadgeIcon}
+              contentFit="contain"
+            />
+          </View>
         </View>
 
         {packages.map((pkg) => {
@@ -2304,11 +2306,6 @@ export default function Index() {
 
         <View style={styles.sectionHeaderRow}>
           <Text style={[styles.sectionTitle, { marginTop: 24 }, { color: theme.textMuted }]}>UPGRADES</Text>
-          <ExpoImage
-            source={require("@/assets/images/p2p-logo.png")}
-            style={styles.sectionLogo}
-            contentFit="contain"
-          />
         </View>
 
         {UPGRADES.map((u) => {
@@ -2427,17 +2424,24 @@ export default function Index() {
           >
             {canInvest ? (
               <LinearGradient
-                colors={[theme.upgrade, theme.upgrade]}
+                colors={[theme.upgrade, theme.upgradeDark]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.investBtnGradient}
               >
-                <View style={styles.investContent}>
-                  <Text style={[styles.investLabel, { color: '#FFFFFF' }]} testID="invest-label">
-                    {ctaLabel}
-                  </Text>
-                  <Text style={[styles.investSub, { color: '#FFFFFF' }]}>
-                    {ctaSub}
-                  </Text>
+                <View style={styles.investContentRow}>
+                  <ExpoImage
+                    source={require("@/assets/images/banknote.png")}
+                    style={styles.investBtnIcon}
+                    contentFit="contain"
+                  />
+                  <View style={styles.investContent}>
+                    <Text style={[styles.investLabel, { color: '#FFFFFF' }]} testID="invest-label">
+                      {ctaLabel}
+                    </Text>
+                    <Text style={[styles.investSub, { color: 'rgba(255,255,255,0.8)' }]}>
+                      {ctaSub}
+                    </Text>
+                  </View>
                 </View>
               </LinearGradient>
             ) : (
@@ -2454,7 +2458,14 @@ export default function Index() {
         </Animated.View>
         
         {/* Footer Branding */}
-        <Text style={styles.footerBranding}>Powered by P2P • p2p.com.mk</Text>
+        <View style={styles.footerBrandingRow}>
+          <ExpoImage
+            source={require("@/assets/images/22.png")}
+            style={styles.footerBrandingLogo}
+            contentFit="contain"
+          />
+          <Text style={styles.footerBranding}>p2p.com.mk</Text>
+        </View>
       </View>
       </Animated.View>
 
@@ -2697,24 +2708,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "nowrap", gap: 8 },
+  headerLeftGroup: { flexDirection: "row", alignItems: "center", flexShrink: 0 },
   headerRightRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, gap: 6 },
-  balanceLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 1.5, flexShrink: 0 },
-  headerLogo: { width: 24, height: 24 },
-  headerWatermark: {
-    position: "absolute",
-    right: 20,
-    top: 20,
-    width: 60,
-    height: 60,
-    opacity: 0.03,
-  },
+  balanceLabelRow: { flexDirection: "row", alignItems: "center", marginTop: 16, gap: 6 },
+  balanceLabelIcon: { width: 16, height: 16, opacity: 0.7 },
+  balanceLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 1.5 },
+  headerLogo: { width: 72, height: 36 },
   iconChip: {
     paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8,
     borderWidth: 1, flexShrink: 1,
   },
   iconChipText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
 
-  balanceRow: { position: "relative", marginTop: 10, flexDirection: "row", alignItems: "flex-start", flexWrap: "nowrap" },
+  balanceRow: { position: "relative", marginTop: 6, flexDirection: "row", alignItems: "flex-start", flexWrap: "nowrap" },
   balance: { fontSize: 34, fontWeight: "700", letterSpacing: -0.8, flexShrink: 1, numberOfLines: 1 },
   floatingProfit: {
     position: "absolute", right: 0, top: 4,
@@ -2752,9 +2758,17 @@ const styles = StyleSheet.create({
 
   list: { flex: 1 },
   listContent: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 100 },
-  sectionTitle: { fontSize: 12, fontWeight: "700", letterSpacing: 1, marginBottom: 14, marginLeft: 2, textTransform: "uppercase" },
+  sectionTitle: { fontSize: 12, fontWeight: "700", letterSpacing: 1, marginBottom: 0, marginLeft: 2, textTransform: "uppercase" },
   sectionHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
-  sectionLogo: { width: 16, height: 16, opacity: 0.6 },
+  sectionBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionBadgeIcon: { width: 16, height: 16 },
 
   activeCard: {
     borderRadius: 14,
@@ -2889,12 +2903,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 14, paddingBottom: 18,
     borderTopWidth: 1,
   },
+  footerBrandingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    gap: 8,
+  },
+  footerBrandingLogo: {
+    width: 40,
+    height: 20,
+    opacity: 0.5,
+  },
   footerBranding: {
     fontSize: 10,
     fontWeight: "600",
-    color: "#94A3B8",
-    textAlign: "center",
-    marginTop: 12,
+    color: "#64748B",
     letterSpacing: 0.5,
   },
   investBtn: {
@@ -2911,6 +2935,8 @@ const styles = StyleSheet.create({
     borderWidth: 1, shadowOpacity: 0,
     backgroundColor: "transparent",
   },
+  investContentRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
+  investBtnIcon: { width: 24, height: 24, opacity: 0.9 },
   investContent: { alignItems: "center", justifyContent: "center", paddingVertical: 8 },
   investLabel: { fontSize: 16, fontWeight: "700", letterSpacing: 0.5, numberOfLines: 1 },
   investSub: { fontSize: 12, fontWeight: "600", marginTop: 3, opacity: 0.85 },
@@ -2927,12 +2953,6 @@ const styles = StyleSheet.create({
   treeHeaderCenter: {
     flexDirection: "column",
     alignItems: "center",
-  },
-  treeHeaderLogo: {
-    width: 20,
-    height: 20,
-    marginTop: 4,
-    opacity: 0.7,
   },
   backBtn: { paddingVertical: 4, paddingRight: 8, flexShrink: 0 },
   backBtnText: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3 },
@@ -3064,12 +3084,6 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
   },
-  legacyHeaderLogo: {
-    width: 20,
-    height: 20,
-    marginTop: 4,
-    opacity: 0.7,
-  },
   legacyTitle: { fontSize: 16, fontWeight: "700", letterSpacing: 0.5, flexShrink: 1, textAlign: "center", numberOfLines: 1 },
   legacyStats: {
     flexDirection: "row", alignItems: "center",
@@ -3083,12 +3097,18 @@ const styles = StyleSheet.create({
   legacyStatLabel: { fontSize: 8, fontWeight: "700", letterSpacing: 0.2, textTransform: "uppercase", marginBottom: 2, textAlign: "center", lineHeight: 10 },
   legacyStatValue: { fontSize: 14, fontWeight: "700", textAlign: "center", numberOfLines: 1, lineHeight: 16 },
   ultimateBanner: {
-    marginTop: 14, padding: 12, borderRadius: 12,
+    marginTop: 14, padding: 16, borderRadius: 14,
     borderWidth: 1,
     alignItems: "center",
+    gap: 6,
   },
-  ultimateBannerText: { fontSize: 13, fontWeight: "600", letterSpacing: 0.5, numberOfLines: 1 },
-  ultimateBannerSub: { fontSize: 11, fontWeight: "500", marginTop: 4 },
+  ultimateTrophyIcon: {
+    width: 36,
+    height: 36,
+    marginBottom: 4,
+  },
+  ultimateBannerText: { fontSize: 13, fontWeight: "700", letterSpacing: 1.5, numberOfLines: 1 },
+  ultimateBannerSub: { fontSize: 11, fontWeight: "500", marginTop: 2 },
   viewEndingBtn: {
     marginTop: 12,
     height: 44,

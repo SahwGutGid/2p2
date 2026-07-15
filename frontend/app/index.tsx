@@ -1304,7 +1304,20 @@ export default function Index() {
     };
 
     const handleReplay = () => {
-      const comp = completionStats;
+      // Take a fresh snapshot from current live stats
+      const comp: CompletionStats = {
+        balance,
+        totalPrestiges: totalPrestiges,
+        totalPPEarned: stats.totalPPEarned,
+        investmentsCompleted: stats.investmentsCompleted,
+        upgradesPurchased: stats.upgradesPurchased,
+        accelerateUses: stats.accelerateUses,
+        activePlayTimeMs: stats.activePlayTimeMs,
+        highestBalance: stats.highestBalance,
+        totalMoneyEarned: stats.totalMoneyEarned,
+        legacyUpgradesOwned: Object.values(legacyUpgrades).filter(Boolean).length,
+        completedAt: Date.now(),
+      };
       // Wipe save but preserve completion data
       const freshSave: SaveData = {
         ...defaultSave(),

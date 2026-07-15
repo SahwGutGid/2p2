@@ -172,7 +172,7 @@ export type SkillNode = {
 //  - Silver/Gold tiers pull heavier PP so mid-late runs stay meaningful.
 //  - No node is a "must-have"; each path independently valuable.
 export const SKILLS: SkillNode[] = [
-  // ─── AUTOMATION (5 nodes) ─────────────────────────────────────
+  // ─── AUTOMATION (10 nodes) ─────────────────────────────────────
   {
     id: "auto-reinvest",
     name: "Auto-Reinvest",
@@ -223,8 +223,58 @@ export const SKILLS: SkillNode[] = [
     baseCost: 60, costGrowth: 1, maxLevel: 1,
     prereqs: [{ id: "auto-fill", level: 1 }], requiredRank: "platinum", tint: "#F87171",
   },
+  {
+    id: "auto-upgrade",
+    name: "Automated Upgrades",
+    short: "Auto-Upgrades",
+    description: "Automatically purchase the next affordable skill tree upgrade when PP is available.",
+    effect: () => "Auto-buy skills",
+    path: "automation", row: 5,
+    baseCost: 80, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "smart-select", level: 1 }], requiredRank: "platinum", tint: "#F87171",
+  },
+  {
+    id: "batch-processor",
+    name: "Batch Processing",
+    short: "Batch Process",
+    description: "Investment completions process 25% faster, reducing queue delays.",
+    effect: () => "25% faster completions",
+    path: "automation", row: 6,
+    baseCost: 100, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "offline-loop", level: 1 }], requiredRank: "diamond", tint: "#EF4444",
+  },
+  {
+    id: "algorithmic-trading",
+    name: "Algorithmic Trading",
+    short: "Algo Trading",
+    description: "Auto-invest selects optimal packages 15% more efficiently.",
+    effect: () => "15% better selection",
+    path: "automation", row: 7,
+    baseCost: 150, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "auto-upgrade", level: 1 }], requiredRank: "diamond", tint: "#DC2626",
+  },
+  {
+    id: "quantum-automation",
+    name: "Quantum Automation",
+    short: "Quantum",
+    description: "All automation systems operate 20% faster.",
+    effect: () => "20% faster automation",
+    path: "automation", row: 8,
+    baseCost: 250, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "batch-processor", level: 1 }], requiredRank: "legend", tint: "#F87171",
+  },
+  {
+    id: "autonomous-portfolio",
+    name: "Autonomous Portfolio",
+    short: "Autonomous",
+    description: "Auto-invest triggers 30% more frequently when slots are available.",
+    effect: () => "30% more frequent",
+    path: "automation", row: 9,
+    baseCost: 400, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "algorithmic-trading", level: 1 }], requiredRank: "legend", tint: "#EF4444",
+  },
 
-  // ─── BONUS (6 nodes) ──────────────────────────────────────────
+  // ─── BONUS (10 nodes) ──────────────────────────────────────────
   {
     id: "profit-boost",
     name: "Compound Yield",
@@ -288,8 +338,48 @@ export const SKILLS: SkillNode[] = [
     baseCost: 25, costGrowth: 1.6, maxLevel: 5,
     prereqs: [{ id: "passive-mult", level: 3 }], requiredRank: "gold", tint: "#22C55E",
   },
+  {
+    id: "market-insight",
+    name: "Market Insight",
+    short: "Market Insight",
+    description: "Market event rewards increased by 25% and negative events reduced by 20%.",
+    effect: () => "25% better events",
+    path: "bonus", row: 6,
+    baseCost: 40, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "slot-power", level: 3 }], requiredRank: "gold", tint: "#00C896",
+  },
+  {
+    id: "compound-interest",
+    name: "Compound Interest",
+    short: "Compound Interest",
+    description: "Savings account interest compounds 50% more frequently.",
+    effect: () => "50% faster compounding",
+    path: "bonus", row: 7,
+    baseCost: 60, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "starting-cash", level: 3 }], requiredRank: "platinum", tint: "#22C55E",
+  },
+  {
+    id: "wealth-multiplier",
+    name: "Wealth Multiplier",
+    short: "Wealth Mult",
+    description: "All profit bonuses multiplied by 1.5x.",
+    effect: () => "1.5× all bonuses",
+    path: "bonus", row: 8,
+    baseCost: 120, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "market-insight", level: 1 }], requiredRank: "diamond", tint: "#00C896",
+  },
+  {
+    id: "fortune-favor",
+    name: "Fortune's Favor",
+    short: "Fortune",
+    description: "10% chance to double profits on investment completions.",
+    effect: () => "10% chance 2× profit",
+    path: "bonus", row: 9,
+    baseCost: 200, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "compound-interest", level: 1 }], requiredRank: "legend", tint: "#22C55E",
+  },
 
-  // ─── MONEY METHODS (7 nodes) ──────────────────────────────────
+  // ─── MONEY METHODS (10 nodes) ──────────────────────────────────
   {
     id: "savings",
     name: "Savings Account",
@@ -363,6 +453,36 @@ export const SKILLS: SkillNode[] = [
     baseCost: 200, costGrowth: 1, maxLevel: 1,
     prereqs: [{ id: "super-contract", level: 1 }], requiredRank: "legend", tint: "#3B82F6",
   },
+  {
+    id: "banking-network",
+    name: "Global Banking Network",
+    short: "Banking Net",
+    description: "Investment costs reduced by 10%.",
+    effect: () => "10% cheaper investments",
+    path: "money", row: 7,
+    baseCost: 150, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "whale-mult", level: 1 }], requiredRank: "diamond", tint: "#60A5FA",
+  },
+  {
+    id: "investment-fund",
+    name: "Hedge Fund Strategy",
+    short: "Hedge Fund",
+    description: "Passive income increased by 25%.",
+    effect: () => "25% more passive",
+    path: "money", row: 8,
+    baseCost: 250, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "banking-network", level: 1 }], requiredRank: "legend", tint: "#3B82F6",
+  },
+  {
+    id: "capital-mastery",
+    name: "Capital Mastery",
+    short: "Capital Mastery",
+    description: "All profits increased by 15%.",
+    effect: () => "15% more profit",
+    path: "money", row: 9,
+    baseCost: 350, costGrowth: 1, maxLevel: 1,
+    prereqs: [{ id: "investment-fund", level: 1 }], requiredRank: "legend", tint: "#60A5FA",
+  },
 
   // ─── ENDGAME (Legend-only chain in the Money column) ──────────
   {
@@ -371,9 +491,9 @@ export const SKILLS: SkillNode[] = [
     short: "Ascendant",
     description: "All investment profits tripled — the market bends to your will.",
     effect: () => "All profits ×3",
-    path: "money", row: 7,
+    path: "money", row: 10,
     baseCost: 800, costGrowth: 1, maxLevel: 1,
-    prereqs: [{ id: "legend-bonus", level: 1 }], requiredRank: "legend", tint: "#7C3AED",
+    prereqs: [{ id: "capital-mastery", level: 1 }], requiredRank: "legend", tint: "#7C3AED",
   },
   {
     id: "endgame-costs",
@@ -381,7 +501,7 @@ export const SKILLS: SkillNode[] = [
     short: "Enlightened",
     description: "Every investment costs 50% less.",
     effect: () => "Pkg costs −50%",
-    path: "money", row: 8,
+    path: "money", row: 11,
     baseCost: 1200, costGrowth: 1, maxLevel: 1,
     prereqs: [{ id: "endgame-profit", level: 1 }], requiredRank: "legend", tint: "#A855F7",
   },
@@ -391,7 +511,7 @@ export const SKILLS: SkillNode[] = [
     short: "Infinite Yield",
     description: "Passive income and savings interest quintupled.",
     effect: () => "Passive ×5",
-    path: "money", row: 9,
+    path: "money", row: 12,
     baseCost: 1500, costGrowth: 1, maxLevel: 1,
     prereqs: [{ id: "endgame-costs", level: 1 }], requiredRank: "legend", tint: "#C084FC",
   },
@@ -401,7 +521,7 @@ export const SKILLS: SkillNode[] = [
     short: "Market Dom",
     description: "All upgrade costs reduced by 75%. You have beaten the market.",
     effect: () => "Upgrade costs −75%",
-    path: "money", row: 10,
+    path: "money", row: 13,
     baseCost: 3000, costGrowth: 1, maxLevel: 1,
     prereqs: [{ id: "endgame-passive", level: 1 }], requiredRank: "legend", tint: "#7C3AED",
   },
@@ -445,6 +565,20 @@ export type TreeEffects = {
   autoAccelStrength: number;  // 0 disabled, 0.33/0.66/1 else
   offlineLoop: boolean;
   smartSelect: boolean;
+  autoUpgrade: boolean;
+  batchProcessor: boolean;
+  algoTrading: boolean;
+  quantumAutomation: boolean;
+  autonomousPortfolio: boolean;
+  // Bonus effects
+  marketInsight: boolean;
+  compoundInterest: boolean;
+  wealthMultiplier: boolean;
+  fortuneFavor: boolean;
+  // Money effects
+  bankingNetwork: boolean;
+  investmentFund: boolean;
+  capitalMastery: boolean;
   // Content unlocks
   contractsUnlocked: boolean;
   legendaryUnlocked: boolean;
@@ -479,6 +613,18 @@ export const deriveTreeEffects = (levels: SkillLevels): TreeEffects => {
     autoAccelStrength: autoAccelStr[lvl(levels, "auto-accel")] ?? 0,
     offlineLoop:      lvl(levels, "offline-loop") >= 1,
     smartSelect:      lvl(levels, "smart-select") >= 1,
+    autoUpgrade:      lvl(levels, "auto-upgrade") >= 1,
+    batchProcessor:   lvl(levels, "batch-processor") >= 1,
+    algoTrading:      lvl(levels, "algorithmic-trading") >= 1,
+    quantumAutomation: lvl(levels, "quantum-automation") >= 1,
+    autonomousPortfolio: lvl(levels, "autonomous-portfolio") >= 1,
+    marketInsight:    lvl(levels, "market-insight") >= 1,
+    compoundInterest: lvl(levels, "compound-interest") >= 1,
+    wealthMultiplier: lvl(levels, "wealth-multiplier") >= 1,
+    fortuneFavor:     lvl(levels, "fortune-favor") >= 1,
+    bankingNetwork:   lvl(levels, "banking-network") >= 1,
+    investmentFund:   lvl(levels, "investment-fund") >= 1,
+    capitalMastery:   lvl(levels, "capital-mastery") >= 1,
     contractsUnlocked: lvl(levels, "contracts") >= 1,
     legendaryUnlocked: lvl(levels, "super-contract") >= 1,
     whaleBonus:       lvl(levels, "whale-mult") >= 1 ? 0.5 : 0,

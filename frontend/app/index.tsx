@@ -192,6 +192,7 @@ type SaveData = {
   gameComplete: boolean;
   endingPending: boolean;
   completionStats: CompletionStats | null;
+  runTimeMs: number;
 };
 const SAVE_KEY = "investmentIdle:v6";
 const LEGACY_KEYS = ["investmentIdle:v5", "investmentIdle:v4", "investmentIdle:v3", "investmentIdle:v2"];
@@ -235,6 +236,7 @@ const defaultSave = (): SaveData => ({
   gameComplete: false,
   endingPending: false,
   completionStats: null,
+  runTimeMs: 0,
 });
 
 const prestigeBonus = (prestige: number) => 1 + PRESTIGE_BONUS_PER_POINT * prestige;
@@ -366,6 +368,7 @@ export default function Index() {
 
   // Features state
   const [stats, setStats] = useState<Stats>(defaultStats());
+  const [runTimeMs, setRunTimeMs] = useState<number>(0);
   const [unlockedAchievements, setUnlockedAchievements] = useState<AchievementId[]>([]);
   const [activeMarket, setActiveMarket] = useState<ActiveMarketEvent | null>(null);
   const [lastMarketRollAt, setLastMarketRollAt] = useState<number>(Date.now());
@@ -575,11 +578,11 @@ export default function Index() {
 
   // Live access to volatile values from stable callbacks (avoids stale closures).
   const stateRef = useRef({
-    balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats,
+    balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats, runTimeMs,
   });
   useEffect(() => {
-    stateRef.current = { balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats };
-  }, [balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats]);
+    stateRef.current = { balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats, runTimeMs };
+  }, [balance, selectedId, levels, actives, prestige, treeEffects, packages, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats, runTimeMs]);
 
   // -------- Persistence --------
   const saveState = useCallback(async (data: Partial<SaveData>) => {
@@ -589,13 +592,13 @@ export default function Index() {
         prestige, totalPrestiges, skills,
         stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings,
         prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete,
-        gameComplete, endingPending, completionStats,
+        gameComplete, endingPending, completionStats, runTimeMs,
         lastSeenAt: Date.now(),
         ...data,
       };
       await AsyncStorage.setItem(SAVE_KEY, JSON.stringify(merged));
     } catch {}
-  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats]);
+  }, [balance, selectedId, levels, actives, musicEnabled, prestige, totalPrestiges, skills, stats, unlockedAchievements, activeMarket, lastMarketRollAt, settings, prestigeUpgrades, legacyPoints, legacyUpgrades, onboardingComplete, gameComplete, endingPending, completionStats, runTimeMs]);
 
   // Load (migrate v2/v3/v4 → v5)
   useEffect(() => {
@@ -654,6 +657,7 @@ export default function Index() {
             gameComplete: parsed.gameComplete ?? false,
             endingPending: parsed.endingPending ?? false,
             completionStats: parsed.completionStats ?? null,
+            runTimeMs: parsed.runTimeMs ?? 0,
             settings: { ...defaultSettings(), ...(parsed.settings ?? {}) },
           };
         }
@@ -773,6 +777,7 @@ export default function Index() {
         setGameComplete(saved.gameComplete ?? false);
         setEndingPending(saved.endingPending ?? false);
         setCompletionStats(saved.completionStats ?? null);
+        setRunTimeMs(saved.runTimeMs ?? 0);
         if (passiveEarned > 0.01 || (savedTree.savingsRatePerSec > 0 && elapsed > 1000)) {
           setOfflineGain(simBal - (saved.balance ?? 100));
         }
@@ -822,6 +827,14 @@ export default function Index() {
   useEffect(() => {
     const interval = setInterval(() => {
       setStats((s) => ({ ...s, activePlayTimeMs: s.activePlayTimeMs + 1000 }));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Run timer — tracks time spent on current run only
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRunTimeMs((t) => t + 1000);
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -1314,7 +1327,7 @@ export default function Index() {
         investmentsCompleted: stats.investmentsCompleted,
         upgradesPurchased: stats.upgradesPurchased,
         accelerateUses: stats.accelerateUses,
-        activePlayTimeMs: stats.activePlayTimeMs,
+        activePlayTimeMs: runTimeMs,
         highestBalance: stats.highestBalance,
         totalMoneyEarned: stats.totalMoneyEarned,
         legacyUpgradesOwned: Object.values(legacyUpgrades).filter(Boolean).length,
@@ -1338,6 +1351,7 @@ export default function Index() {
         setTotalPrestiges(0);
         setSkills({});
         setStats(defaultStats());
+        setRunTimeMs(0);
         setUnlockedAchievements([]);
         setActiveMarket(null);
         setLastMarketRollAt(Date.now());
@@ -1706,7 +1720,7 @@ export default function Index() {
           investmentsCompleted: stats.investmentsCompleted,
           upgradesPurchased: stats.upgradesPurchased,
           accelerateUses: stats.accelerateUses,
-          activePlayTimeMs: stats.activePlayTimeMs,
+          activePlayTimeMs: runTimeMs,
           highestBalance: stats.highestBalance,
           totalMoneyEarned: stats.totalMoneyEarned,
           legacyUpgradesOwned: Object.values(newLegacyUpgrades).filter(Boolean).length,
@@ -1817,7 +1831,7 @@ export default function Index() {
                     investmentsCompleted: stats.investmentsCompleted,
                     upgradesPurchased: stats.upgradesPurchased,
                     accelerateUses: stats.accelerateUses,
-                    activePlayTimeMs: stats.activePlayTimeMs,
+                    activePlayTimeMs: runTimeMs,
                     highestBalance: stats.highestBalance,
                     totalMoneyEarned: stats.totalMoneyEarned,
                     legacyUpgradesOwned: Object.values(legacyUpgrades).filter(Boolean).length,

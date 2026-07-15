@@ -2505,13 +2505,22 @@ export default function Index() {
                 </View>
               </LinearGradient>
             ) : (
-              <View style={styles.investContent}>
-                <Text style={[styles.investLabel, { color: theme.loss }]} testID="invest-label">
-                  {ctaLabel}
-                </Text>
-                <Text style={[styles.investSub, { color: theme.textMuted }]}>
-                  {ctaSub}
-                </Text>
+              <View style={[styles.investBtnGradient, { backgroundColor: "rgba(0,0,0,0.3)" }]}>
+                <View style={styles.investContentRow}>
+                  <ExpoImage
+                    source={require("@/assets/images/banknote.png")}
+                    style={styles.investBtnIcon}
+                    contentFit="contain"
+                  />
+                  <View style={styles.investContent}>
+                    <Text style={[styles.investLabel, { color: theme.loss }]} testID="invest-label">
+                      {ctaLabel}
+                    </Text>
+                    <Text style={[styles.investSub, { color: theme.textMuted }]}>
+                      {ctaSub}
+                    </Text>
+                  </View>
+                </View>
               </View>
             )}
           </Pressable>
@@ -2983,9 +2992,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   investBtn: {
-    height: 56, borderRadius: 14,
+    height: 56, width: "100%", borderRadius: 14,
     justifyContent: "center", alignItems: "center",
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
   },
   investBtnGradient: {
     flex: 1,
@@ -2994,7 +3005,8 @@ const styles = StyleSheet.create({
   },
   investBtnDisabled: {
     borderWidth: 1, shadowOpacity: 0,
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(0,0,0,0.3)",
+    borderColor: "rgba(255,255,255,0.1)",
   },
   investContentRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
   investBtnIcon: { width: 24, height: 24, opacity: 0.9 },

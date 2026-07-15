@@ -78,7 +78,6 @@ export function useBackgroundMusic(enabled: boolean, volume: number = DEFAULT_VO
       const p = playerRef.current;
       if (!p) return;
       startedRef.current = true;
-      if (!enabled) return;
       try {
         p.seekTo(0);
         p.play();

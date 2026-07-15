@@ -324,7 +324,6 @@ const baseAccelReductionMs = (remaining: number) =>
 
 // ============================================================
 export default function Index() {
-  const sound = useSoundEngine();
   const [showTree, setShowTree] = useState(false);
   const [showPrestigeInfo, setShowPrestigeInfo] = useState(false);
   const [showLegacyInfo, setShowLegacyInfo] = useState(false);
@@ -373,6 +372,16 @@ export default function Index() {
   const [activeMarket, setActiveMarket] = useState<ActiveMarketEvent | null>(null);
   const [lastMarketRollAt, setLastMarketRollAt] = useState<number>(Date.now());
   const [settings, setSettings] = useState<Settings>(defaultSettings());
+
+  // Sound and haptics
+  const sound = useSoundEngine(settings.sfx);
+
+  // Helper to trigger haptics only if enabled in settings
+  const triggerHaptic = useCallback(async (hapticFn: () => Promise<void>) => {
+    if (settings.haptics) {
+      await hapticFn().catch(() => {});
+    }
+  }, [settings.haptics]);
 
   // Prestige upgrades state
   const [prestigeUpgrades, setPrestigeUpgrades] = useState<Record<PrestigeUpgradeId, boolean>>({ foundation: false });
@@ -843,9 +852,9 @@ export default function Index() {
   useEffect(() => {
     if (endingPending && completionStats) {
       sound.play("victory");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
     }
-  }, [endingPending]);
+  }, [endingPending, sound, triggerHaptic]);
 
   // Global ticker for progress + countdown display
   useEffect(() => {
@@ -869,10 +878,10 @@ export default function Index() {
       setBalance((b) => (b < cheapestCost(treeEffects) ? bail : b));
       setBailoutNotice(true);
       sound.play("upgrade");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+      triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning));
     }, 700);
     return () => clearTimeout(t);
-  }, [balance, actives.length, levels.passive, ready, sound, treeEffects]);
+  }, [balance, actives.length, levels.passive, ready, sound, treeEffects, triggerHaptic]);
 
   // Rank-up detection
   const prevRankRef = useRef<Rank>("bronze");
@@ -881,11 +890,11 @@ export default function Index() {
     if (RANK_META[rank].minPrestiges > RANK_META[prevRankRef.current].minPrestiges) {
       setRankUpBanner(rank);
       sound.play("upgrade");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
       setTimeout(() => setRankUpBanner(null), 6000);
     }
     prevRankRef.current = rank;
-  }, [rank, ready, sound]);
+  }, [rank, ready, sound, triggerHaptic]);
 
   useEffect(() => {
     return () => {
@@ -929,7 +938,7 @@ export default function Index() {
       }));
 
       sound.play("investComplete");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
 
       balancePulse.value = withSequence(
         withTiming(1.1, { duration: 160, easing: Easing.out(Easing.quad) }),
@@ -989,9 +998,9 @@ export default function Index() {
     }
 
     return true;
-  }, [completeInvestment, onboardingComplete]);
+  }, [completeInvestment, onboardingComplete, triggerHaptic]);
 
-  const invest = () => {
+  const invest = useCallback(() => {
     kickMusicOnce();
     const state = stateRef.current;
     const slots = slotCount(state.levels.slots);
@@ -999,16 +1008,16 @@ export default function Index() {
     const selected = state.packages.find((p) => p.id === state.selectedId) ?? state.packages[0];
     if (!hasFreeSlot || state.balance < effectivePkgCost(selected, state.treeEffects)) {
       sound.play("error");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
       doShake();
       return;
     }
     sound.play("investStart");
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    triggerHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
     flash.value = 0.55;
     flash.value = withTiming(0, { duration: 600, easing: Easing.out(Easing.quad) });
     investPkg(selected);
-  };
+  }, [sound, triggerHaptic]);
 
   const ACCELERATE_COOLDOWN_MS = 80;
   const accelerate = (runId: string, opts: { silent?: boolean; strength?: number } = {}) => {
@@ -1036,7 +1045,7 @@ export default function Index() {
 
     if (!opts.silent) {
       sound.play("click");
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      triggerHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
       setStats((s) => ({ ...s, accelerateUses: s.accelerateUses + 1 }));
     }
   };
@@ -1079,19 +1088,19 @@ export default function Index() {
     }
   }, [ready, actives.length, balance, treeEffects.autoReinvest, treeEffects.autoFill, treeEffects.smartSelect, pickAutoPackage, investPkg, levels.slots, legacyUpgrades]);
 
-  const buyUpgrade = (u: Upgrade) => {
+  const buyUpgrade = useCallback((u: Upgrade) => {
     kickMusicOnce();
     const level = levels[u.id];
     if (level >= u.maxLevel) return;
     const cost = upgradeCost(u, level);
     if (balance < cost) {
       sound.play("error");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
       doShake();
       return;
     }
     sound.play("upgrade");
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    triggerHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
     setBalance((b) => b - cost);
     setLevels((l) => ({ ...l, [u.id]: l[u.id] + 1 }));
     setStats((s) => ({ ...s, upgradesPurchased: s.upgradesPurchased + 1 }));
@@ -1101,9 +1110,9 @@ export default function Index() {
       setCelebrationBanner("First Upgrade Purchased!");
       setTimeout(() => setCelebrationBanner(null), 3000);
     }
-  };
+  }, [balance, levels, sound, triggerHaptic, onboardingComplete]);
 
-  const buySkill = (node: SkillNode) => {
+  const buySkill = useCallback((node: SkillNode) => {
     kickMusicOnce();
     const level = skills[node.id] ?? 0;
     if (level >= node.maxLevel) return;
@@ -1123,17 +1132,17 @@ export default function Index() {
     setPrestige((p) => p - cost);
     setSkills((s) => ({ ...s, [node.id]: (s[node.id] ?? 0) + 1 }));
     sound.play("upgrade");
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-  };
+    triggerHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+  }, [skills, prestigeUpgrades, rank, prestige, sound, triggerHaptic]);
 
-  const toggleMusic = () => {
+  const toggleMusic = useCallback(() => {
     setMusicEnabled((v) => {
       const next = !v;
       if (next) music.kick();
       return next;
     });
-    Haptics.selectionAsync().catch(() => {});
-  };
+    triggerHaptic(() => Haptics.selectionAsync());
+  }, [triggerHaptic]);
 
   // ---------- Developer menu (hidden gesture) ----------
   const DEBUG_PASSWORD = "1337";
@@ -1154,7 +1163,7 @@ export default function Index() {
       setDebugMoneyInput("");
       setDebugPPInput("");
       setShowDebug(true);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+      triggerHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));
     }
   };
 
@@ -1162,10 +1171,10 @@ export default function Index() {
     if (debugPassword === DEBUG_PASSWORD) {
       setDebugAuthed(true);
       setDebugPwError(false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
     } else {
       setDebugPwError(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
     }
   };
 
@@ -1188,7 +1197,7 @@ export default function Index() {
     if (amount <= 0) return;
     setBalance((b) => b + amount);
     setDebugMoneyInput("");
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    triggerHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
   };
 
   const devAddPP = () => {
@@ -1196,23 +1205,23 @@ export default function Index() {
     if (amount <= 0) return;
     setPrestige((p) => p + amount);
     setDebugPPInput("");
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    triggerHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
   };
 
   const prestigeGainAvailable = computePrestigeGain(balance);
   const canPrestige = prestigeGainAvailable > 0;
 
-  const doPrestige = () => {
+  const doPrestige = useCallback(() => {
     kickMusicOnce();
     if (!canPrestige) {
       sound.play("error");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
       doShake();
       return;
     }
     if (!prestigeArmed) {
       setPrestigeArmed(true);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      triggerHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
       setTimeout(() => setPrestigeArmed(false), 5000);
       return;
     }
@@ -1254,11 +1263,11 @@ export default function Index() {
     }
 
     sound.play("upgrade");
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
     balancePulse.value = withSequence(
       withTiming(1.2, { duration: 220 }), withTiming(1, { duration: 320 })
     );
-  };
+  }, [canPrestige, prestigeArmed, prestigeGainAvailable, treeEffects, totalPrestiges, stats, sound, triggerHaptic, saveState]);
 
   // -------- Animated styles --------
   const floatStyle = useAnimatedStyle(() => ({
@@ -1418,7 +1427,7 @@ export default function Index() {
             >
               <View style={styles.treeHeaderRow}>
                 <Pressable
-                  onPress={() => { sound.play("click"); setShowTree(false); }}
+                  onPress={() => { sound.play("click"); triggerHaptic(() => Haptics.selectionAsync()); setShowTree(false); }}
                   hitSlop={16}
                   testID="tree-back"
                   style={styles.backBtn}
@@ -1430,7 +1439,7 @@ export default function Index() {
                 </View>
                 {stats.totalPPEarned >= LEGACY_UNLOCK_THRESHOLD && (
                   <Pressable
-                    onPress={() => { sound.play("click"); setShowLegacy(true); }}
+                    onPress={() => { sound.play("click"); triggerHaptic(() => Haptics.selectionAsync()); setShowLegacy(true); }}
                     hitSlop={12}
                     style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}25`, marginLeft: 6, borderWidth: 1.5 }]}
                     testID="open-legacy"
@@ -1533,6 +1542,7 @@ export default function Index() {
                   <Pressable
                     onPress={() => {
                       sound.play("click");
+                      triggerHaptic(() => Haptics.selectionAsync());
                       setShowPrestigeInfo(!showPrestigeInfo);
                     }}
                     hitSlop={8}
@@ -1561,7 +1571,7 @@ export default function Index() {
                       onPress={() => {
                         if (canAfford) {
                           sound.play("upgrade");
-                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+                          triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
                           const newPrestigeUpgrades = { ...prestigeUpgrades, [upgrade.id]: true };
                           setPrestige((p) => p - upgrade.cost);
                           setPrestigeUpgrades(newPrestigeUpgrades);
@@ -1738,7 +1748,7 @@ export default function Index() {
         setEndingPending(true);
         setCompletionStats(compStats);
         sound.play("victory");
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        triggerHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
         saveState({
           legacyPoints: newLegacyPoints,
           legacyUpgrades: newLegacyUpgrades,
@@ -1764,7 +1774,7 @@ export default function Index() {
         <View style={[styles.legacyHeader, { borderBottomColor: theme.border }]}>
           <View style={styles.legacyHeaderRow}>
             <Pressable
-              onPress={() => { sound.play("click"); setShowLegacy(false); }}
+              onPress={() => { sound.play("click"); triggerHaptic(() => Haptics.selectionAsync()); setShowLegacy(false); }}
               hitSlop={16}
               testID="legacy-back"
               style={styles.backBtn}
@@ -1804,6 +1814,7 @@ export default function Index() {
               <Pressable
                 onPress={() => {
                   sound.play("click");
+                  triggerHaptic(() => Haptics.selectionAsync());
                   setShowLegacyInfo(!showLegacyInfo);
                 }}
                 hitSlop={8}
@@ -2103,7 +2114,7 @@ export default function Index() {
               </Text>
             </Pressable>
             <Pressable
-              onPress={() => { sound.play("click"); setShowTree(true); }}
+              onPress={() => { sound.play("click"); triggerHaptic(() => Haptics.selectionAsync()); setShowTree(true); }}
               hitSlop={12}
               style={[styles.iconChip, { borderColor: rankMeta.tint, backgroundColor: `${rankMeta.tint}18`, marginLeft: 6 }]}
               testID="open-tree"
@@ -2113,7 +2124,7 @@ export default function Index() {
               </Text>
             </Pressable>
             <Pressable
-              onPress={() => { sound.play("click"); setShowSettings(true); }}
+              onPress={() => { sound.play("click"); triggerHaptic(() => Haptics.selectionAsync()); setShowSettings(true); }}
               hitSlop={12}
               style={[styles.iconChip, { borderColor: theme.border, backgroundColor: theme.bgSoft, marginLeft: 6 }]}
               testID="open-settings"
@@ -2330,7 +2341,7 @@ export default function Index() {
                 onPress={() => {
                   kickMusicOnce();
                   sound.play("click");
-                  Haptics.selectionAsync().catch(() => {});
+                  triggerHaptic(() => Haptics.selectionAsync());
                   setSelectedId(pkg.id);
                 }}
                 style={({ pressed }) => [

@@ -35,7 +35,7 @@ const VOLUMES: Record<SoundEvent, number> = {
   victory: 0.8,
 };
 
-export function useSoundEngine() {
+export function useSoundEngine(enabled: boolean = true) {
   // Keep player instances alive across re-renders.
   const playersRef = useRef<Partial<Record<SoundEvent, ReturnType<typeof createAudioPlayer>>>>({});
 
@@ -70,6 +70,7 @@ export function useSoundEngine() {
   return useMemo(
     () => ({
       play(event: SoundEvent) {
+        if (!enabled) return;
         const player = playersRef.current[event];
         if (!player) return;
         try {
@@ -81,6 +82,6 @@ export function useSoundEngine() {
         }
       },
     }),
-    []
+    [enabled]
   );
 }

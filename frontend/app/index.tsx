@@ -362,9 +362,6 @@ export default function Index() {
   // Loading screen state
   const [showLoading, setShowLoading] = useState(true);
 
-  // Celebration banners for early game milestones
-  const [celebrationBanner, setCelebrationBanner] = useState<string | null>(null);
-
   // Features state
   const [stats, setStats] = useState<Stats>(defaultStats());
   const [runTimeMs, setRunTimeMs] = useState<number>(0);
@@ -991,14 +988,8 @@ export default function Index() {
     setActives((list) => [...list, a]);
     finishRefs.current[a.runId] = setTimeout(() => completeInvestment(a.runId), dur);
 
-    // Early game milestone: First investment
-    if (state.actives.length === 0 && !onboardingComplete) {
-      setCelebrationBanner("First Investment Started!");
-      setTimeout(() => setCelebrationBanner(null), 3000);
-    }
-
     return true;
-  }, [completeInvestment, onboardingComplete, triggerHaptic]);
+  }, [completeInvestment, triggerHaptic]);
 
   const invest = useCallback(() => {
     kickMusicOnce();
@@ -1104,13 +1095,7 @@ export default function Index() {
     setBalance((b) => b - cost);
     setLevels((l) => ({ ...l, [u.id]: l[u.id] + 1 }));
     setStats((s) => ({ ...s, upgradesPurchased: s.upgradesPurchased + 1 }));
-
-    // Early game milestone: First upgrade
-    if (level === 0 && !onboardingComplete) {
-      setCelebrationBanner("First Upgrade Purchased!");
-      setTimeout(() => setCelebrationBanner(null), 3000);
-    }
-  }, [balance, levels, sound, triggerHaptic, onboardingComplete]);
+  }, [balance, levels, sound, triggerHaptic]);
 
   const buySkill = useCallback((node: SkillNode) => {
     kickMusicOnce();
@@ -2069,24 +2054,6 @@ export default function Index() {
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, styles.flashOverlay, flashStyle]}
       />
-
-      {/* Celebration Banner */}
-      {celebrationBanner && (
-        <Animated.View
-          style={[
-            StyleSheet.absoluteFill,
-            styles.celebrationOverlay,
-          ]}
-        >
-          <LinearGradient
-            colors={[`${theme.upgrade}30`, `${theme.upgrade}10`, `${theme.upgrade}30`]}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.celebrationContent}>
-            <Text style={styles.celebrationText}>{celebrationBanner}</Text>
-          </View>
-        </Animated.View>
-      )}
 
       {/* HEADER */}
       <LinearGradient
@@ -3408,26 +3375,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     lineHeight: 16,
-  },
-
-  // Celebration banner
-  celebrationOverlay: {
-    zIndex: 100,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  celebrationContent: {
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 2,
-    shadowOpacity: 0.1, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 }, elevation: 3,
-  },
-  celebrationText: {
-    fontSize: 18,
-    fontWeight: "600",
-    letterSpacing: 0.3,
-    textAlign: "center",
   },
 
   cashOutBtn: {

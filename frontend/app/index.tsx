@@ -1300,6 +1300,7 @@ export default function Index() {
     const handleContinue = () => {
       // Simply dismiss the ending screen and continue playing
       setEndingPending(false);
+      setGameComplete(false);
     };
 
     const handleReplay = () => {

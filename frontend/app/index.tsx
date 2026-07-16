@@ -360,7 +360,7 @@ const computeProfitPct = (
   m *= 1 + 0.06 * yieldLevel;
   m *= prestigeBonus(prestige);
   m *= t.profitMult;
-  if (hasFoundation) m *= 1.5;
+  if (hasFoundation) m *= 3;
   m *= t.endgameProfitMult;
   // Legacy upgrade multipliers
   if (legacyUpgrades["investors-foundation"]) m *= 1.3;
@@ -391,7 +391,7 @@ const computeProfitPct = (
 const computeDuration = (pkg: Pkg, turbo: number, t: TreeEffects, market: ActiveMarketEvent | null = null, hasFoundation: boolean = false, legacyUpgrades: Record<LegacyUpgradeId, boolean> = {} as Record<LegacyUpgradeId, boolean>) => {
   const turboRed = Math.min(0.60, 0.05 * turbo);
   let d = pkg.durationMs * t.durationMult * (1 - turboRed);
-  if (hasFoundation) d /= 1.5;
+  if (hasFoundation) d /= 2;
   // Legacy upgrade speed bonuses
   if (legacyUpgrades["investors-foundation"]) d /= 1.2;
   if (legacyUpgrades["global-network"]) d /= 1.3;

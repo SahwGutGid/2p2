@@ -48,18 +48,19 @@ export function formatCurrency(n: number): string {
 /**
  * Format percentage with K/M/B/T suffixes for large values
  * Examples: 150 → "150%", 15000 → "15K%", 15000000 → "15M%"
+ * Always rounds to whole numbers for cleaner display
  */
 export function formatPercent(n: number): string {
   if (!isFinite(n)) return "∞%";
   const sign = n < 0 ? "-" : "";
   const abs = Math.abs(n);
   
-  // For normal percentages, just format without suffix
+  // For normal percentages, round to whole number
   if (abs < 1000) {
-    return `${sign}${abs.toFixed(abs >= 100 ? 0 : 1)}%`;
+    return `${sign}${Math.round(abs)}%`;
   }
   
-  // For large percentages, use suffixes
+  // For large percentages, use suffixes with whole numbers
   for (const u of UNITS) {
     if (abs >= u.v) {
       const value = abs / u.v;
@@ -67,7 +68,7 @@ export function formatPercent(n: number): string {
       return `${sign}${value.toFixed(decimals)}${u.s}%`;
     }
   }
-  return `${sign}${Math.floor(abs)}%`;
+  return `${sign}${Math.round(abs)}%`;
 }
 
 /**

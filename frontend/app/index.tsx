@@ -59,6 +59,14 @@ import {
   type AchievementId,
   type ActiveMarketEvent,
   type Stats,
+  getNewsForProgression,
+  NEWS_ROTATION_INTERVAL_MS,
+  type NewsItem,
+  getLeaderboard,
+  LEADERBOARD_CATEGORIES,
+  LEADERBOARD_REFRESH_INTERVAL_MS,
+  type LeaderboardCategory,
+  type LeaderboardData,
 } from "@/src/game/features";
 import { formatCurrency, formatNumber, formatDuration, formatSeconds, formatPercent } from "@/src/utils/format";
 import { getTheme, type ThemeColors } from "@/src/utils/theme";
@@ -99,43 +107,43 @@ type Pkg = {
 
 const BASE_PACKAGES: Pkg[] = [
   // Consumer Lending (Early Game - Available from start)
-  { id: "micro-loan", name: "Micro Loan", tag: "Low risk", category: "consumer", cost: 10, durationMs: 10000, profitPct: 0.50, tint: "#5EE1B0" },
-  { id: "personal-loan", name: "Personal Loan", tag: "Low risk", category: "consumer", cost: 50, durationMs: 20000, profitPct: 0.80, tint: "#5EE1B0" },
-  { id: "consumer-credit", name: "Consumer Credit Bundle", tag: "Medium", category: "consumer", cost: 200, durationMs: 45000, profitPct: 1.20, tint: "#5EE1B0" },
+  { id: "micro-loan", name: "Micro Loan", tag: "Low risk", category: "consumer", cost: 10, durationMs: 10000, profitPct: 0.30, tint: "#5EE1B0" },
+  { id: "personal-loan", name: "Personal Loan", tag: "Low risk", category: "consumer", cost: 50, durationMs: 20000, profitPct: 0.50, tint: "#5EE1B0" },
+  { id: "consumer-credit", name: "Consumer Credit Bundle", tag: "Medium", category: "consumer", cost: 200, durationMs: 45000, profitPct: 0.80, tint: "#5EE1B0" },
   
   // Business Financing (Early-Mid Game - Unlock via Prestige)
-  { id: "small-business", name: "Small Business Loan", tag: "Medium", category: "business", cost: 500, durationMs: 90000, profitPct: 1.50, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "business-expansion", name: "Business Expansion Fund", tag: "Medium", category: "business", cost: 2000, durationMs: 180000, profitPct: 2.00, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "commercial-financing", name: "Commercial Financing", tag: "High", category: "business", cost: 8000, durationMs: 300000, profitPct: 2.50, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "small-business", name: "Small Business Loan", tag: "Medium", category: "business", cost: 500, durationMs: 90000, profitPct: 1.00, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "business-expansion", name: "Business Expansion Fund", tag: "Medium", category: "business", cost: 2000, durationMs: 180000, profitPct: 1.30, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "commercial-financing", name: "Commercial Financing", tag: "High", category: "business", cost: 8000, durationMs: 300000, profitPct: 1.60, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
   
   // Diversified Portfolios (Mid Game - Unlock via Prestige)
-  { id: "credit-portfolio", name: "Credit Portfolio", tag: "Low risk", category: "diversified", cost: 1500, durationMs: 480000, profitPct: 2.80, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "diversified-loan", name: "Diversified Loan Portfolio", tag: "Medium", category: "diversified", cost: 5000, durationMs: 720000, profitPct: 3.50, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "international-credit", name: "International Credit Portfolio", tag: "High", category: "diversified", cost: 15000, durationMs: 1080000, profitPct: 4.20, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "credit-portfolio", name: "Credit Portfolio", tag: "Low risk", category: "diversified", cost: 1500, durationMs: 480000, profitPct: 1.80, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "diversified-loan", name: "Diversified Loan Portfolio", tag: "Medium", category: "diversified", cost: 5000, durationMs: 720000, profitPct: 2.20, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "international-credit", name: "International Credit Portfolio", tag: "High", category: "diversified", cost: 15000, durationMs: 1080000, profitPct: 2.60, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
   
   // Property Investments (Mid-Late Game - Unlock via Prestige)
-  { id: "mortgage-portfolio", name: "Mortgage Portfolio", tag: "Low risk", category: "property", cost: 3000, durationMs: 1800000, profitPct: 4.50, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "commercial-property", name: "Commercial Property Fund", tag: "Medium", category: "property", cost: 10000, durationMs: 2700000, profitPct: 5.50, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "real-estate-dev", name: "Real Estate Development", tag: "High", category: "property", cost: 30000, durationMs: 3600000, profitPct: 6.50, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "mortgage-portfolio", name: "Mortgage Portfolio", tag: "Low risk", category: "property", cost: 3000, durationMs: 1800000, profitPct: 3.00, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "commercial-property", name: "Commercial Property Fund", tag: "Medium", category: "property", cost: 10000, durationMs: 2700000, profitPct: 3.50, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "real-estate-dev", name: "Real Estate Development", tag: "High", category: "property", cost: 30000, durationMs: 3600000, profitPct: 4.00, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
   
   // Sector Funds (Late Game - Unlock via Prestige)
-  { id: "renewable-energy", name: "Renewable Energy Fund", tag: "Growth", category: "sector", cost: 8000, durationMs: 5400000, profitPct: 7.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "healthcare-growth", name: "Healthcare Growth Fund", tag: "Growth", category: "sector", cost: 25000, durationMs: 7200000, profitPct: 8.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "tech-venture", name: "Technology Venture Fund", tag: "High", category: "sector", cost: 75000, durationMs: 10800000, profitPct: 9.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "ai-infrastructure", name: "AI Infrastructure Fund", tag: "Very high", category: "sector", cost: 200000, durationMs: 14400000, profitPct: 10.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "renewable-energy", name: "Renewable Energy Fund", tag: "Growth", category: "sector", cost: 8000, durationMs: 5400000, profitPct: 4.50, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "healthcare-growth", name: "Healthcare Growth Fund", tag: "Growth", category: "sector", cost: 25000, durationMs: 7200000, profitPct: 5.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "tech-venture", name: "Technology Venture Fund", tag: "High", category: "sector", cost: 75000, durationMs: 10800000, profitPct: 5.50, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "ai-infrastructure", name: "AI Infrastructure Fund", tag: "Very high", category: "sector", cost: 200000, durationMs: 14400000, profitPct: 6.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
   
   // Institutional Investments (End Game - Unlock via Prestige)
-  { id: "corporate-bond", name: "Corporate Bond Portfolio", tag: "Low risk", category: "institutional", cost: 50000, durationMs: 21600000, profitPct: 11.00, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "private-equity", name: "Private Equity Portfolio", tag: "High", category: "institutional", cost: 150000, durationMs: 28800000, profitPct: 13.00, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "institutional-growth", name: "Institutional Growth Fund", tag: "High", category: "institutional", cost: 500000, durationMs: 36000000, profitPct: 15.00, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "global-investment", name: "Global Investment Portfolio", tag: "Very high", category: "institutional", cost: 1500000, durationMs: 43200000, profitPct: 17.00, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "corporate-bond", name: "Corporate Bond Portfolio", tag: "Low risk", category: "institutional", cost: 50000, durationMs: 21600000, profitPct: 6.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "private-equity", name: "Private Equity Portfolio", tag: "High", category: "institutional", cost: 150000, durationMs: 28800000, profitPct: 7.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "institutional-growth", name: "Institutional Growth Fund", tag: "High", category: "institutional", cost: 500000, durationMs: 36000000, profitPct: 8.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "global-investment", name: "Global Investment Portfolio", tag: "Very high", category: "institutional", cost: 1500000, durationMs: 43200000, profitPct: 9.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
   
   // Premium P2P Packages (Late End Game - Unlock via Prestige)
-  { id: "p2p-max-3", name: "P2P MAX 3", tag: "Premium", category: "premium", cost: 100000, durationMs: 1800000, profitPct: 8.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
-  { id: "p2p-max-6", name: "P2P MAX 6", tag: "Premium", category: "premium", cost: 300000, durationMs: 3600000, profitPct: 10.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
-  { id: "p2p-max-12", name: "P2P MAX 12", tag: "Premium", category: "premium", cost: 800000, durationMs: 7200000, profitPct: 12.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
-  { id: "p2p-max-24", name: "P2P MAX 24", tag: "Premium", category: "premium", cost: 2000000, durationMs: 14400000, profitPct: 14.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
-  { id: "p2p-safe", name: "P2P SAFE", tag: "Premium", category: "premium", cost: 5000000, durationMs: 36000000, profitPct: 16.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-3", name: "P2P MAX 3", tag: "Premium", category: "premium", cost: 100000, durationMs: 1800000, profitPct: 5.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-6", name: "P2P MAX 6", tag: "Premium", category: "premium", cost: 300000, durationMs: 3600000, profitPct: 6.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-12", name: "P2P MAX 12", tag: "Premium", category: "premium", cost: 800000, durationMs: 7200000, profitPct: 7.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-24", name: "P2P MAX 24", tag: "Premium", category: "premium", cost: 2000000, durationMs: 14400000, profitPct: 8.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-safe", name: "P2P SAFE", tag: "Premium", category: "premium", cost: 5000000, durationMs: 36000000, profitPct: 9.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
 ];
 
 const getPackages = (t: TreeEffects): Pkg[] =>
@@ -197,10 +205,10 @@ type Upgrade = {
   baseCost: number; costGrowth: number; maxLevel: number; tint: string;
 };
 const UPGRADES: Upgrade[] = [
-  { id: "yield",   name: "Yield Boost",     description: "Increases profit multiplier by 8% per level",       effect: (l) => `+${fmtPct(l * 8)} profit`,               baseCost: 15,  costGrowth: 1.55, maxLevel: 15, tint: "#00FF88" },
-  { id: "turbo",   name: "Turbo Trades",    description: "Reduces investment duration by 6% per level",     effect: (l) => `-${fmtPct(Math.min(72, l * 6))} time`,     baseCost: 25,  costGrowth: 1.6,  maxLevel: 12, tint: "#00E5FF" },
+  { id: "yield",   name: "Yield Boost",     description: "Increases profit multiplier by 6% per level",       effect: (l) => `+${fmtPct(l * 6)} profit`,               baseCost: 15,  costGrowth: 1.55, maxLevel: 15, tint: "#00FF88" },
+  { id: "turbo",   name: "Turbo Trades",    description: "Reduces investment duration by 5% per level",     effect: (l) => `-${fmtPct(Math.min(60, l * 5))} time`,     baseCost: 25,  costGrowth: 1.6,  maxLevel: 12, tint: "#00E5FF" },
   { id: "passive", name: "Passive Yield",   description: "Generates $1.00/sec passive income per level",   effect: (l) => `+$${(l * 1.0).toFixed(2)}/sec`,                baseCost: 40,  costGrowth: 1.5,  maxLevel: 25, tint: "#FFB84D" },
-  { id: "lucky",   name: "Lucky Streak",    description: "Adds 4% chance for 2× profit per level",        effect: (l) => `${fmtPct(Math.min(60, l * 4))} x2`,        baseCost: 100, costGrowth: 1.7,  maxLevel: 15, tint: "#FF6EC7" },
+  { id: "lucky",   name: "Lucky Streak",    description: "Adds 3% chance for 2× profit per level",        effect: (l) => `${fmtPct(Math.min(45, l * 3))} x2`,        baseCost: 100, costGrowth: 1.7,  maxLevel: 15, tint: "#FF6EC7" },
   { id: "slots",   name: "Portfolio Slots", description: "Adds 1 concurrent investment slot per level",    effect: (l) => `${l + 1} slot${l === 0 ? "" : "s"}`,           baseCost: 300, costGrowth: 2.5,  maxLevel: 4,  tint: "#00E5FF" },
 ];
 const upgradeCost = (u: Upgrade, level: number) =>
@@ -340,16 +348,16 @@ const computeProfitPct = (
   legacyUpgrades: Record<LegacyUpgradeId, boolean> = {} as Record<LegacyUpgradeId, boolean>,
 ) => {
   let m = pkg.profitPct;
-  m *= 1 + 0.08 * yieldLevel;
+  m *= 1 + 0.06 * yieldLevel;
   m *= prestigeBonus(prestige);
   m *= t.profitMult;
-  if (hasFoundation) m *= 2;
+  if (hasFoundation) m *= 1.5;
   m *= t.endgameProfitMult;
   // Legacy upgrade multipliers
-  if (legacyUpgrades["investors-foundation"]) m *= 1.5;
-  if (legacyUpgrades["corporate-empire"]) m *= 1.25;
-  if (legacyUpgrades["global-network"]) m *= 2;
-  if (legacyUpgrades["ultimate-investor"]) m *= 3;
+  if (legacyUpgrades["investors-foundation"]) m *= 1.3;
+  if (legacyUpgrades["corporate-empire"]) m *= 1.15;
+  if (legacyUpgrades["global-network"]) m *= 1.5;
+  if (legacyUpgrades["ultimate-investor"]) m *= 2;
   // Market event bonuses
   if (market) {
     const ev = MARKET_EVENTS.find((e) => e.id === market.id);
@@ -372,12 +380,12 @@ const computeProfitPct = (
 };
 
 const computeDuration = (pkg: Pkg, turbo: number, t: TreeEffects, market: ActiveMarketEvent | null = null, hasFoundation: boolean = false, legacyUpgrades: Record<LegacyUpgradeId, boolean> = {} as Record<LegacyUpgradeId, boolean>) => {
-  const turboRed = Math.min(0.72, 0.06 * turbo);
+  const turboRed = Math.min(0.60, 0.05 * turbo);
   let d = pkg.durationMs * t.durationMult * (1 - turboRed);
   if (hasFoundation) d /= 1.5;
   // Legacy upgrade speed bonuses
-  if (legacyUpgrades["investors-foundation"]) d /= 1.25;
-  if (legacyUpgrades["global-network"]) d /= 1.5;
+  if (legacyUpgrades["investors-foundation"]) d /= 1.2;
+  if (legacyUpgrades["global-network"]) d /= 1.3;
   if (market) {
     const ev = MARKET_EVENTS.find((e) => e.id === market.id);
     if (ev?.durMult) d *= ev.durMult;
@@ -387,11 +395,11 @@ const computeDuration = (pkg: Pkg, turbo: number, t: TreeEffects, market: Active
 
 const computePassiveRate = (passiveLvl: number, t: TreeEffects, legacyUpgrades: Record<LegacyUpgradeId, boolean> = {} as Record<LegacyUpgradeId, boolean>) => {
   let rate = 1.0 * passiveLvl * t.passiveMult * t.endgamePassiveMult;
-  if (legacyUpgrades["corporate-empire"]) rate += 277.78; // +$1M/h
+  if (legacyUpgrades["corporate-empire"]) rate += 138.89; // +$500K/h
   return rate;
 };
 
-const luckyChance = (level: number) => Math.min(0.6, 0.03 * level);
+const luckyChance = (level: number) => Math.min(0.45, 0.03 * level);
 const slotCount = (level: number) => 1 + level;
 
 let runIdCounter = 0;
@@ -448,6 +456,18 @@ export default function Index() {
   const [activeMarket, setActiveMarket] = useState<ActiveMarketEvent | null>(null);
   const [lastMarketRollAt, setLastMarketRollAt] = useState<number>(Date.now());
   const [settings, setSettings] = useState<Settings>(defaultSettings());
+  
+  // News Feed state
+  const [currentNews, setCurrentNews] = useState<NewsItem | null>(null);
+  const [newsIndex, setNewsIndex] = useState(0);
+  
+  // Leaderboards state
+  const [showLeaderboards, setShowLeaderboards] = useState(false);
+  const [leaderboardCategory, setLeaderboardCategory] = useState<LeaderboardCategory>("money");
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardData | null>(null);
+  
+  // Market event notification state
+  const [showMarketBanner, setShowMarketBanner] = useState(false);
 
   // Sound and haptics
   const sound = useSoundEngine(settings.sfx);
@@ -924,13 +944,82 @@ export default function Index() {
     return () => clearInterval(interval);
   }, []);
 
-  // Run timer — tracks time spent on current run only
+  // News Feed rotation
   useEffect(() => {
+    if (!ready) return;
+    
+    // Get unlocked categories
+    const unlockedCategories: string[] = [];
+    if (treeEffects.businessUnlocked) unlockedCategories.push("business");
+    if (treeEffects.diversifiedUnlocked) unlockedCategories.push("diversified");
+    if (treeEffects.propertyUnlocked) unlockedCategories.push("property");
+    if (treeEffects.sectorUnlocked) unlockedCategories.push("sector");
+    if (treeEffects.institutionalUnlocked) unlockedCategories.push("institutional");
+    if (treeEffects.premiumUnlocked) unlockedCategories.push("premium");
+    
+    const hasLegacy = legacyPoints > 0;
+    const newsItems = getNewsForProgression(totalPrestiges, unlockedCategories, hasLegacy);
+    
+    if (newsItems.length === 0) return;
+    
+    // Set initial news
+    setCurrentNews(newsItems[0]);
+    setNewsIndex(0);
+    
+    // Rotate news
     const interval = setInterval(() => {
-      setRunTimeMs((t) => t + 1000);
-    }, 1000);
+      setNewsIndex((prev) => {
+        const nextIndex = (prev + 1) % newsItems.length;
+        setCurrentNews(newsItems[nextIndex]);
+        return nextIndex;
+      });
+    }, NEWS_ROTATION_INTERVAL_MS);
+    
     return () => clearInterval(interval);
-  }, []);
+  }, [ready, totalPrestiges, treeEffects, legacyPoints]);
+  
+  // Leaderboards refresh
+  useEffect(() => {
+    if (!ready) return;
+    
+    const refreshLeaderboard = () => {
+      let playerValue: number;
+      switch (leaderboardCategory) {
+        case "money":
+          playerValue = balance;
+          break;
+        case "playtime":
+          playerValue = stats.activePlayTimeMs;
+          break;
+        case "prestige":
+          playerValue = prestige;
+          break;
+        case "legacy":
+          playerValue = legacyPoints;
+          break;
+      }
+      setLeaderboardData(getLeaderboard(leaderboardCategory, playerValue));
+    };
+    
+    refreshLeaderboard();
+    const interval = setInterval(refreshLeaderboard, LEADERBOARD_REFRESH_INTERVAL_MS);
+    
+    return () => clearInterval(interval);
+  }, [ready, leaderboardCategory, balance, stats.activePlayTimeMs, prestige, legacyPoints]);
+  
+  // Market event notification banner
+  useEffect(() => {
+    if (!ready) return;
+    if (!activeMarket) {
+      setShowMarketBanner(false);
+      return;
+    }
+    
+    setShowMarketBanner(true);
+    const timeout = setTimeout(() => setShowMarketBanner(false), 5000);
+    
+    return () => clearTimeout(timeout);
+  }, [ready, activeMarket]);
 
   // Play victory sound when ending screen first appears
   useEffect(() => {
@@ -2185,6 +2274,14 @@ export default function Index() {
             >
               <Text style={[styles.iconChipText, { color: theme.text }]}>⚙</Text>
             </Pressable>
+            <Pressable
+              onPress={() => { sound.play("click"); triggerHaptic(() => Haptics.selectionAsync()); setShowLeaderboards(true); }}
+              hitSlop={12}
+              style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}18`, marginLeft: 6 }]}
+              testID="open-leaderboards"
+            >
+              <Text style={[styles.iconChipText, { color: theme.legacy }]}>🏆</Text>
+            </Pressable>
           </View>
         </View>
 
@@ -2286,6 +2383,29 @@ export default function Index() {
             <Text style={[styles.bannerText, { color: theme.prestige }]}>
               +{prestigeCelebrate} PP earned — run #{totalPrestiges}
             </Text>
+          </View>
+        )}
+        {showMarketBanner && activeMarket && (() => {
+          const event = MARKET_EVENTS.find(e => e.id === activeMarket.id);
+          if (!event) return null;
+          const remainingMs = Math.max(0, activeMarket.endsAt - Date.now());
+          return (
+            <View style={[styles.banner, { backgroundColor: `${event.tint}22`, borderColor: event.tint }]} testID="market-banner">
+              <Text style={[styles.bannerText, { color: event.tint }]}>
+                {event.name} — {event.tag} · {formatDuration(remainingMs)} remaining
+              </Text>
+              <Pressable onPress={() => setShowMarketBanner(false)} hitSlop={12}>
+                <Text style={[styles.bannerDismiss, { color: event.tint }]}>Dismiss</Text>
+              </Pressable>
+            </View>
+          );
+        })()}
+
+        {/* News Feed Ticker */}
+        {currentNews && (
+          <View style={[styles.newsTicker, { backgroundColor: `${theme.info}08`, borderColor: theme.info }]}>
+            <Text style={[styles.newsIcon]}>{currentNews.icon}</Text>
+            <Text style={[styles.newsText, { color: theme.textMuted }]}>{currentNews.headline}</Text>
           </View>
         )}
 
@@ -2788,6 +2908,66 @@ export default function Index() {
         settings={settings}
         onSettingChange={(key, value) => setSettings({ ...settings, [key]: value })}
       />
+
+      {/* Leaderboards Screen */}
+      {showLeaderboards && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+          <View style={[styles.leaderboardPanel, { backgroundColor: theme.panel, borderColor: theme.border }]}>
+            <View style={styles.leaderboardHeader}>
+              <Text style={[styles.leaderboardTitle, { color: theme.text }]}>🏆 Global Leaderboards</Text>
+              <Pressable onPress={() => setShowLeaderboards(false)} hitSlop={12}>
+                <Text style={[styles.leaderboardClose, { color: theme.textMuted }]}>✕</Text>
+              </Pressable>
+            </View>
+            
+            {/* Category tabs */}
+            <View style={styles.leaderboardTabs}>
+              {LEADERBOARD_CATEGORIES.map((cat) => (
+                <Pressable
+                  key={cat.id}
+                  onPress={() => setLeaderboardCategory(cat.id)}
+                  style={({ pressed }) => [
+                    styles.leaderboardTab,
+                    { backgroundColor: leaderboardCategory === cat.id ? `${theme.legacy}18` : theme.bgSoft, borderColor: leaderboardCategory === cat.id ? theme.legacy : theme.border },
+                    pressed && { opacity: 0.8 }
+                  ]}
+                >
+                  <Text style={[styles.leaderboardTabText, { color: leaderboardCategory === cat.id ? theme.legacy : theme.textMuted }]}>
+                    {cat.icon} {cat.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            
+            {/* Leaderboard content */}
+            {leaderboardData && (
+              <View style={styles.leaderboardContent}>
+                <View style={styles.leaderboardPlayerRank}>
+                  <Text style={[styles.leaderboardPlayerRankText, { color: theme.text }]}>
+                    Your Rank: #{leaderboardData.playerRank}
+                  </Text>
+                </View>
+                
+                {leaderboardData.entries.map((entry) => (
+                  <View key={entry.rank} style={[styles.leaderboardEntry, { backgroundColor: entry.isPlayer ? `${theme.legacy}12` : theme.bgSoft, borderColor: entry.isPlayer ? theme.legacy : theme.border }]}>
+                    <Text style={[styles.leaderboardRank, { color: entry.isPlayer ? theme.legacy : theme.textMuted }]}>
+                      #{entry.rank}
+                    </Text>
+                    <Text style={[styles.leaderboardName, { color: entry.isPlayer ? theme.legacy : theme.text, fontWeight: entry.isPlayer ? '700' : '400' }]}>
+                      {entry.name}
+                    </Text>
+                    <Text style={[styles.leaderboardValue, { color: theme.text }]}>
+                      {leaderboardCategory === 'money' ? formatCurrency(entry.value) :
+                       leaderboardCategory === 'playtime' ? formatDuration(entry.value) :
+                       formatNumber(entry.value)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -3216,6 +3396,115 @@ const styles = StyleSheet.create({
   },
   legacyProgressBarFill: { height: "100%", borderRadius: 4 },
   legacyProgressText: { fontSize: 11, fontWeight: "500", marginTop: 4 },
+
+  // News Feed Ticker
+  newsTicker: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 12,
+  },
+  newsIcon: {
+    fontSize: 16,
+    marginRight: 10,
+  },
+  newsText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "500",
+    lineHeight: 16,
+  },
+
+  // Leaderboards Panel
+  leaderboardPanel: {
+    position: "absolute",
+    top: 60,
+    left: 20,
+    right: 20,
+    bottom: 60,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 20,
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 12,
+  },
+  leaderboardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  leaderboardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  leaderboardClose: {
+    fontSize: 20,
+    fontWeight: "700",
+    paddingHorizontal: 8,
+  },
+  leaderboardTabs: {
+    flexDirection: "row",
+    marginBottom: 16,
+    gap: 8,
+  },
+  leaderboardTab: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  leaderboardTabText: {
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.3,
+  },
+  leaderboardContent: {
+    flex: 1,
+  },
+  leaderboardPlayerRank: {
+    alignItems: "center",
+    paddingVertical: 12,
+    marginBottom: 12,
+    borderRadius: 10,
+    backgroundColor: "rgba(0,0,0,0.04)",
+  },
+  leaderboardPlayerRankText: {
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  leaderboardEntry: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  leaderboardRank: {
+    fontSize: 14,
+    fontWeight: "700",
+    width: 40,
+  },
+  leaderboardName: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  leaderboardValue: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
 
   prestigeExplanationSection: {
     marginTop: 16, paddingTop: 16, borderTopWidth: 1,

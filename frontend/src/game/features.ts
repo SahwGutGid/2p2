@@ -11,7 +11,12 @@ export type MarketEventId =
   | "stimulus"
   | "inflation"
   | "crypto_rally"
-  | "recession";
+  | "recession"
+  | "investor_rush"
+  | "business_expansion"
+  | "economic_recovery"
+  | "market_slowdown"
+  | "economic_uncertainty";
 
 export type MarketEvent = {
   id: MarketEventId;
@@ -30,14 +35,26 @@ export type MarketEvent = {
 };
 
 export const MARKET_EVENTS: MarketEvent[] = [
-  { id: "bull",         name: "Bull Market",       tag: "Global +25%",   description: "Optimism rules — every profit +25%.",         tint: "#00FF88", durationMs: 60000, weight: 20, profitMult: 1.25 },
-  { id: "bear",         name: "Bear Market",       tag: "Global -15%",   description: "Fear spreads — profits drop 15%.",            tint: "#FF4D4D", durationMs: 45000, weight: 15, profitMult: 0.85 },
-  { id: "tech_boom",    name: "Tech Boom",         tag: "Growth ×1.6",   description: "Growth Fund and Crypto surge +60%.",          tint: "#00E5FF", durationMs: 60000, weight: 14, pkgBoost: { growth: 0.6, crypto: 0.6 } },
-  { id: "housing_boom", name: "Housing Boom",      tag: "Real Estate +80%", description: "Real Estate and Momentum lead the pack.",  tint: "#FFB84D", durationMs: 60000, weight: 14, pkgBoost: { realestate: 0.8, momentum: 0.5 } },
-  { id: "stimulus",     name: "Gov. Stimulus",     tag: "Cash Grant",    description: "A one-off cash injection lands in your account.", tint: "#FFD54F", durationMs: 30000, weight: 12, oneShotBalanceAdd: 250 },
-  { id: "inflation",    name: "Inflation Spike",   tag: "Costs +15%",    description: "Everything costs 15% more.",                  tint: "#FF6EC7", durationMs: 60000, weight: 10, costMult: 1.15 },
-  { id: "crypto_rally", name: "Crypto Rally",      tag: "Crypto ×2",     description: "Crypto rockets +100% profit.",                tint: "#B9F2FF", durationMs: 45000, weight: 8,  pkgBoost: { crypto: 1.0 } },
-  { id: "recession",    name: "Recession",         tag: "Slower +20%",   description: "Deals take 20% longer.",                      tint: "#FF4D4D", durationMs: 45000, weight: 7,  durMult: 1.2 },
+  // Positive events (more common)
+  { id: "bull",         name: "Bull Market 📈",       tag: "Global +25%",   description: "Optimism rules — every profit +25%.",         tint: "#00FF88", durationMs: 60000, weight: 18, profitMult: 1.25 },
+  { id: "investor_rush", name: "Investor Rush 💰",     tag: "Speed +30%",    description: "Investor activity surges — investments complete 30% faster.", tint: "#FFD700", durationMs: 45000, weight: 16, durMult: 0.7 },
+  { id: "tech_boom",    name: "Technology Boom 🚀",   tag: "Tech ×1.5",     description: "Technology investments surge +50%.",          tint: "#00E5FF", durationMs: 60000, weight: 15, pkgBoost: { "tech-venture": 0.5, "ai-infrastructure": 0.5 } },
+  { id: "business_expansion", name: "Business Expansion 🏢", tag: "Business +40%", description: "Business financing opportunities expand.", tint: "#60A5FA", durationMs: 60000, weight: 14, pkgBoost: { "small-business": 0.4, "business-expansion": 0.4, "commercial-financing": 0.4 } },
+  { id: "economic_recovery", name: "Economic Recovery 🌎", tag: "Global +15%",   description: "Global economy strengthens — all investments +15%.", tint: "#22C55E", durationMs: 90000, weight: 12, profitMult: 1.15 },
+  
+  // Existing positive events
+  { id: "stimulus",     name: "Gov. Stimulus",     tag: "Cash Grant",    description: "A one-off cash injection lands in your account.", tint: "#FFD54F", durationMs: 30000, weight: 10, oneShotBalanceAdd: 250 },
+  { id: "crypto_rally", name: "Crypto Rally",      tag: "Crypto ×2",     description: "Crypto rockets +100% profit.",                tint: "#B9F2FF", durationMs: 45000, weight: 8,  pkgBoost: { "crypto": 1.0 } },
+  { id: "housing_boom", name: "Housing Boom",      tag: "Real Estate +80%", description: "Real Estate investments lead the pack.",  tint: "#FFB84D", durationMs: 60000, weight: 12, pkgBoost: { "mortgage-portfolio": 0.8, "commercial-property": 0.6, "real-estate-dev": 0.6 } },
+  
+  // Negative events (less common, never stop progression)
+  { id: "market_slowdown", name: "Market Slowdown 📉", tag: "Efficiency -10%", description: "Market activity slows slightly — 10% less efficient.", tint: "#FF6B6B", durationMs: 45000, weight: 8, profitMult: 0.9 },
+  { id: "economic_uncertainty", name: "Economic Uncertainty ⚠️", tag: "Risk -15%", description: "Uncertainty affects some investments — 15% reduced returns.", tint: "#FF8C42", durationMs: 60000, weight: 6, profitMult: 0.85 },
+  
+  // Existing negative events (reduced weight)
+  { id: "bear",         name: "Bear Market",       tag: "Global -15%",   description: "Fear spreads — profits drop 15%.",            tint: "#FF4D4D", durationMs: 45000, weight: 5, profitMult: 0.85 },
+  { id: "inflation",    name: "Inflation Spike",   tag: "Costs +15%",    description: "Everything costs 15% more.",                  tint: "#FF6EC7", durationMs: 60000, weight: 4, costMult: 1.15 },
+  { id: "recession",    name: "Recession",         tag: "Slower +20%",   description: "Deals take 20% longer.",                      tint: "#FF4D4D", durationMs: 45000, weight: 3, durMult: 1.2 },
 ];
 
 const TOTAL_WEIGHT = MARKET_EVENTS.reduce((a, e) => a + e.weight, 0);
@@ -134,4 +151,181 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: "secret_speedrun", name: "Speed Prestige",   description: "First prestige within 5 minutes.",         hidden: true, reward: { type: "pp", amount: 5 },     test: () => false }, // manually granted
 ];
 
-export const achievementById = (id: AchievementId) => ACHIEVEMENTS.find((a) => a.id === id);
+// ==================== NEWS FEED ====================
+
+export type NewsCategory = "early" | "mid" | "late" | "endgame" | "milestone";
+
+export type NewsItem = {
+  id: string;
+  category: NewsCategory;
+  headline: string;
+  timestamp: number;
+  icon: string;
+};
+
+export const NEWS_ITEMS: NewsItem[] = [
+  // Early game news
+  { id: "early-1", category: "early", headline: "New investors are entering the market as consumer lending continues growing.", icon: "📈", timestamp: 0 },
+  { id: "early-2", category: "early", headline: "Small businesses are looking for new funding opportunities.", icon: "🏢", timestamp: 0 },
+  { id: "early-3", category: "early", headline: "Beginner investors are discovering the power of diversified portfolios.", icon: "💼", timestamp: 0 },
+  { id: "early-4", category: "early", headline: "Consumer credit markets show steady growth in early trading.", icon: "💳", timestamp: 0 },
+  { id: "early-5", category: "early", headline: "Financial advisors recommend starting with micro-loans for new investors.", icon: "🎯", timestamp: 0 },
+  
+  // Mid game news
+  { id: "mid-1", category: "mid", headline: "Business financing reaches record levels as companies expand.", icon: "📊", timestamp: 0 },
+  { id: "mid-2", category: "mid", headline: "Real estate investments become increasingly popular among mid-tier investors.", icon: "🏠", timestamp: 0 },
+  { id: "mid-3", category: "mid", headline: "Credit portfolios are attracting institutional attention.", icon: "🏦", timestamp: 0 },
+  { id: "mid-4", category: "mid", headline: "Diversified loan portfolios show strong quarterly performance.", icon: "📈", timestamp: 0 },
+  { id: "mid-5", category: "mid", headline: "International credit markets open new opportunities for investors.", icon: "🌍", timestamp: 0 },
+  
+  // Late game news
+  { id: "late-1", category: "late", headline: "Global investment firms are entering new markets.", icon: "🌐", timestamp: 0 },
+  { id: "late-2", category: "late", headline: "Technology and infrastructure funds reach historic highs.", icon: "🚀", timestamp: 0 },
+  { id: "late-3", category: "late", headline: "Major institutions are partnering with advanced investors.", icon: "🤝", timestamp: 0 },
+  { id: "late-4", category: "late", headline: "Healthcare growth funds outperform market expectations.", icon: "🏥", timestamp: 0 },
+  { id: "late-5", category: "late", headline: "AI infrastructure investments drive sector-wide growth.", icon: "🤖", timestamp: 0 },
+  
+  // Endgame news
+  { id: "endgame-1", category: "endgame", headline: "Your investment company has become a major global financial player.", icon: "🏆", timestamp: 0 },
+  { id: "endgame-2", category: "endgame", headline: "Legacy investors are shaping the future of the financial world.", icon: "👑", timestamp: 0 },
+  { id: "endgame-3", category: "endgame", headline: "The next generation of investors follows your success.", icon: "🌟", timestamp: 0 },
+  { id: "endgame-4", category: "endgame", headline: "Global investment networks recognize your market dominance.", icon: "🌎", timestamp: 0 },
+  { id: "endgame-5", category: "endgame", headline: "Premium P2P investments set new industry standards.", icon: "💎", timestamp: 0 },
+  
+  // Milestone news
+  { id: "milestone-1", category: "milestone", headline: "First prestige achieved! Welcome to the silver tier.", icon: "⭐", timestamp: 0 },
+  { id: "milestone-2", category: "milestone", headline: "Business financing unlocked! New opportunities await.", icon: "🔓", timestamp: 0 },
+  { id: "milestone-3", category: "milestone", headline: "Legacy system unlocked! Endgame progression begins.", icon: "🎖️", timestamp: 0 },
+  { id: "milestone-4", category: "milestone", headline: "Premium P2P access granted! Ultimate investments available.", icon: "💰", timestamp: 0 },
+];
+
+export const getNewsForProgression = (totalPrestiges: number, unlockedCategories: string[], hasLegacy: boolean): NewsItem[] => {
+  const news: NewsItem[] = [];
+  
+  // Determine progression stage
+  let stage: NewsCategory = "early";
+  if (totalPrestiges >= 50) stage = "late";
+  else if (totalPrestiges >= 8) stage = "mid";
+  else if (hasLegacy) stage = "endgame";
+  
+  // Add news based on stage
+  news.push(...NEWS_ITEMS.filter(n => n.category === stage));
+  
+  // Add milestone news based on unlocks
+  if (unlockedCategories.includes("business")) {
+    news.push(NEWS_ITEMS.find(n => n.id === "milestone-2")!);
+  }
+  if (hasLegacy) {
+    news.push(NEWS_ITEMS.find(n => n.id === "milestone-3")!);
+  }
+  if (unlockedCategories.includes("premium")) {
+    news.push(NEWS_ITEMS.find(n => n.id === "milestone-4")!);
+  }
+  
+  // Add timestamps
+  return news.map(n => ({ ...n, timestamp: Date.now() }));
+};
+
+export const NEWS_ROTATION_INTERVAL_MS = 8000; // Rotate news every 8 seconds
+
+// ==================== LEADERBOARDS ====================
+
+export type LeaderboardCategory = "money" | "playtime" | "prestige" | "legacy";
+
+export type LeaderboardEntry = {
+  rank: number;
+  name: string;
+  value: number;
+  isPlayer: boolean;
+};
+
+export type LeaderboardData = {
+  category: LeaderboardCategory;
+  entries: LeaderboardEntry[];
+  playerRank: number;
+  lastUpdated: number;
+};
+
+// Simulated leaderboard data (in production, this would come from a backend)
+const generateSimulatedLeaderboard = (category: LeaderboardCategory, playerValue: number): LeaderboardData => {
+  const entries: LeaderboardEntry[] = [];
+  const names = ["Alpha Capital", "Quantum Investments", "Global Holdings", "Apex Wealth", "Nexus Finance", "Stellar Capital", "Prime Investments", "Vertex Wealth", "Apex Trading", "Nova Capital"];
+  
+  // Generate values based on category
+  let baseValue: number;
+  let multiplier: number;
+  
+  switch (category) {
+    case "money":
+      baseValue = 1e9; // Start at 1B
+      multiplier = 2.5;
+      break;
+    case "playtime":
+      baseValue = 3600000 * 100; // Start at 100 hours
+      multiplier = 1.8;
+      break;
+    case "prestige":
+      baseValue = 100; // Start at 100 PP
+      multiplier = 2.2;
+      break;
+    case "legacy":
+      baseValue = 100; // Start at 100 LP
+      multiplier = 2.0;
+      break;
+  }
+  
+  // Generate entries
+  for (let i = 0; i < 10; i++) {
+    const value = baseValue * Math.pow(multiplier, 9 - i);
+    entries.push({
+      rank: i + 1,
+      name: names[i],
+      value: Math.floor(value),
+      isPlayer: false,
+    });
+  }
+  
+  // Insert player at appropriate position
+  let playerRank = entries.length + 1;
+  for (let i = 0; i < entries.length; i++) {
+    if (playerValue >= entries[i].value) {
+      entries.splice(i, 0, {
+        rank: i + 1,
+        name: "You",
+        value: playerValue,
+        isPlayer: true,
+      });
+      playerRank = i + 1;
+      // Re-rank remaining entries
+      for (let j = i + 1; j < entries.length; j++) {
+        entries[j].rank = j + 1;
+      }
+      break;
+    }
+  }
+  
+  // Keep only top 10
+  if (entries.length > 10) {
+    entries.length = 10;
+  }
+  
+  return {
+    category,
+    entries,
+    playerRank,
+    lastUpdated: Date.now(),
+  };
+};
+
+export const getLeaderboard = (category: LeaderboardCategory, playerValue: number): LeaderboardData => {
+  return generateSimulatedLeaderboard(category, playerValue);
+};
+
+export const LEADERBOARD_CATEGORIES: { id: LeaderboardCategory; name: string; icon: string }[] = [
+  { id: "money", name: "Total Money", icon: "💰" },
+  { id: "playtime", name: "Play Time", icon: "⏱️" },
+  { id: "prestige", name: "Prestige Points", icon: "⭐" },
+  { id: "legacy", name: "Legacy Points", icon: "🏆" },
+];
+
+export const LEADERBOARD_REFRESH_INTERVAL_MS = 30000; // Refresh every 30 seconds

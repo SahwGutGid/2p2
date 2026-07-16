@@ -2253,23 +2253,23 @@ export default function Index() {
               testID="music-toggle"
             >
               <Text style={[styles.iconChipText, { color: theme.text }]}>
-                {musicEnabled ? "MUSIC ON" : "MUSIC OFF"}
+                {musicEnabled ? "🎵" : "🔇"}
               </Text>
             </Pressable>
             <Pressable
               onPress={() => { sound.play("click"); triggerHaptic(() => Haptics.selectionAsync()); setShowTree(true); }}
               hitSlop={12}
-              style={[styles.iconChip, { borderColor: rankMeta.tint, backgroundColor: `${rankMeta.tint}18`, marginLeft: 6 }]}
+              style={[styles.iconChip, { borderColor: rankMeta.tint, backgroundColor: `${rankMeta.tint}18`, marginLeft: 4 }]}
               testID="open-tree"
             >
               <Text style={[styles.iconChipText, { color: rankMeta.tint }]}>
-                {rankMeta.short.toUpperCase()} · TREE
+                {rankMeta.short.toUpperCase()}
               </Text>
             </Pressable>
             <Pressable
               onPress={() => { sound.play("click"); triggerHaptic(() => Haptics.selectionAsync()); setShowSettings(true); }}
               hitSlop={12}
-              style={[styles.iconChip, { borderColor: theme.border, backgroundColor: theme.bgSoft, marginLeft: 6 }]}
+              style={[styles.iconChip, { borderColor: theme.border, backgroundColor: theme.bgSoft, marginLeft: 4 }]}
               testID="open-settings"
             >
               <Text style={[styles.iconChipText, { color: theme.text }]}>⚙</Text>
@@ -2277,7 +2277,7 @@ export default function Index() {
             <Pressable
               onPress={() => { sound.play("click"); triggerHaptic(() => Haptics.selectionAsync()); setShowLeaderboards(true); }}
               hitSlop={12}
-              style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}18`, marginLeft: 6 }]}
+              style={[styles.iconChip, { borderColor: theme.legacy, backgroundColor: `${theme.legacy}18`, marginLeft: 4 }]}
               testID="open-leaderboards"
             >
               <Text style={[styles.iconChipText, { color: theme.legacy }]}>🏆</Text>
@@ -3120,11 +3120,11 @@ const styles = StyleSheet.create({
   balanceLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 1.5 },
   headerLogo: { width: 80, height: 40 },
   iconChip: {
-    paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 6, borderRadius: 8,
     borderWidth: 1, flexShrink: 1,
-    minWidth: 70,
+    minWidth: 36,
   },
-  iconChipText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5, textAlign: "center" },
+  iconChipText: { fontSize: 14, fontWeight: "700", letterSpacing: 0.5, textAlign: "center" },
 
   balanceRow: { position: "relative", marginTop: 6, flexDirection: "row", alignItems: "flex-start", flexWrap: "nowrap", paddingHorizontal: 4 },
   balance: { fontSize: 34, fontWeight: "700", letterSpacing: -0.8, flexShrink: 1, marginRight: 8 },

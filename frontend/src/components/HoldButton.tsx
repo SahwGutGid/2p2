@@ -136,15 +136,19 @@ export function HoldButton({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 18,
-    paddingHorizontal: 48,
+    paddingVertical: 20,
+    paddingHorizontal: 52,
     alignItems: "center",
-    borderRadius: 14,
-    minWidth: 200,
+    borderRadius: 16,
+    minWidth: 220,
     overflow: "hidden",
+    shadowOpacity: 0.15, shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 }, elevation: 8,
   },
   disabled: {
     opacity: 0.5,
+    shadowOpacity: 0.05, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   pressed: {
     transform: [{ scale: 0.97 }],
@@ -154,13 +158,13 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    opacity: 0.3,
+    opacity: 0.25,
   },
   content: {
     alignItems: "center",
   },
   text: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
     letterSpacing: 1,
   },

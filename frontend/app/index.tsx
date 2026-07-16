@@ -561,7 +561,7 @@ export default function Index() {
     if (prestige > 0) {
       return {
         title: "Build Wealth",
-        description: `Reach ${money(PRESTIGE_MIN_BALANCE)} to prestige and earn more PP.`,
+        description: `Reach ${money(PRESTIGE_MIN_BALANCE)} to prestige and earn permanent bonuses.`,
         progress: `${money(balance)} / ${money(PRESTIGE_MIN_BALANCE)}`,
         color: theme.gain,
       };
@@ -2170,7 +2170,7 @@ export default function Index() {
               Welcome back — earned {money(offlineGain)} while away
             </Text>
             <Pressable onPress={() => setOfflineGain(0)} hitSlop={12}>
-              <Text style={[styles.bannerDismiss, { color: theme.gain }]}>OK</Text>
+              <Text style={[styles.bannerDismiss, { color: theme.gain }]}>Dismiss</Text>
             </Pressable>
           </View>
         )}
@@ -2180,7 +2180,7 @@ export default function Index() {
               Stimulus received — {money(treeEffects.bailoutAmount)} added
             </Text>
             <Pressable onPress={() => setBailoutNotice(false)} hitSlop={12}>
-              <Text style={[styles.bannerDismiss, { color: theme.info }]}>OK</Text>
+              <Text style={[styles.bannerDismiss, { color: theme.info }]}>Dismiss</Text>
             </Pressable>
           </View>
         )}
@@ -2190,7 +2190,7 @@ export default function Index() {
               Rank up! Welcome, {RANK_META[rankUpBanner].name}
             </Text>
             <Pressable onPress={() => setRankUpBanner(null)} hitSlop={12}>
-              <Text style={[styles.bannerDismiss, { color: RANK_META[rankUpBanner].tint }]}>OK</Text>
+              <Text style={[styles.bannerDismiss, { color: RANK_META[rankUpBanner].tint }]}>Dismiss</Text>
             </Pressable>
           </View>
         )}
@@ -2775,7 +2775,7 @@ const styles = StyleSheet.create({
   loaderText: { fontSize: 14, fontWeight: "700" },
 
   header: {
-    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 20,
+    paddingHorizontal: 24, paddingTop: 20, paddingBottom: 20,
     borderBottomWidth: 1,
   },
   headerTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "nowrap", gap: 8 },
@@ -2784,7 +2784,7 @@ const styles = StyleSheet.create({
   balanceLabelRow: { flexDirection: "row", alignItems: "center", marginTop: 16, gap: 6 },
   balanceLabelIcon: { width: 16, height: 16, opacity: 0.7 },
   balanceLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 1.5 },
-  headerLogo: { width: 72, height: 36 },
+  headerLogo: { width: 80, height: 40 },
   iconChip: {
     paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8,
     borderWidth: 1, flexShrink: 1,
@@ -2829,33 +2829,33 @@ const styles = StyleSheet.create({
   bannerDismiss: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5, marginLeft: 12 },
 
   list: { flex: 1 },
-  listContent: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 120 },
+  listContent: { paddingHorizontal: 24, paddingTop: 22, paddingBottom: 120 },
   sectionTitle: { fontSize: 12, fontWeight: "700", letterSpacing: 1, marginBottom: 0, marginLeft: 2, textTransform: "uppercase" },
   sectionHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
   sectionBadge: {
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
     borderRadius: 8,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  sectionBadgeIcon: { width: 16, height: 16 },
+  sectionBadgeIcon: { width: 18, height: 18 },
 
   activeCard: {
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 14, marginBottom: 12, overflow: "hidden",
-    shadowOpacity: 0.06, shadowRadius: 12,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    padding: 16, marginBottom: 14, overflow: "hidden",
+    shadowOpacity: 0.08, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
   activeHeaderRow: { flexDirection: "row", alignItems: "center" },
   activeIcon: {
-    width: 44, height: 44, borderRadius: 10, borderWidth: 1,
+    width: 48, height: 48, borderRadius: 10, borderWidth: 1,
     alignItems: "center", justifyContent: "center", marginRight: 12,
     flexShrink: 0,
   },
-  activeIconText: { fontSize: 11, fontWeight: "700", lineHeight: 13 },
+  activeIconText: { fontSize: 12, fontWeight: "700", lineHeight: 14 },
   activeName: { fontSize: 14, fontWeight: "600", flexShrink: 1 },
   activeMeta: { fontSize: 11, fontWeight: "600", marginTop: 2 },
   activeCountdown: { fontSize: 14, fontWeight: "700", letterSpacing: 0.2, flexShrink: 0, marginLeft: 10 },
@@ -2865,34 +2865,36 @@ const styles = StyleSheet.create({
   },
   activeBarFill: { height: "100%", borderRadius: 3 },
   accelerateBtn: {
-    marginTop: 10, height: 48, borderRadius: 10,
-    borderWidth: 1, overflow: "hidden",
+    marginTop: 10, height: 52, borderRadius: 12,
+    borderWidth: 0, overflow: "hidden",
     alignItems: "center", justifyContent: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    shadowOpacity: 0.08, shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 }, elevation: 4,
   },
-  accelerateText: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5 },
-  accelerateHint: { fontSize: 10, fontWeight: "600", marginTop: 2 },
+  accelerateText: { fontSize: 14, fontWeight: "700", letterSpacing: 0.5 },
+  accelerateHint: { fontSize: 11, fontWeight: "600", marginTop: 2 },
 
   card: {
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 16, marginBottom: 12, position: "relative", overflow: "hidden",
-    shadowOpacity: 0.05, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    padding: 18, marginBottom: 14, position: "relative", overflow: "hidden",
+    shadowOpacity: 0.06, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
   cardSelected: {
     borderWidth: 2,
-    shadowOpacity: 0.2, shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 }, elevation: 4,
+    shadowOpacity: 0.25, shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 }, elevation: 6,
   },
   cardLocked: { opacity: 0.6 },
   cardRow: { flexDirection: "row", alignItems: "flex-start" },
   cardIcon: {
-    width: 52, height: 52, borderRadius: 10, borderWidth: 1,
+    width: 56, height: 56, borderRadius: 10, borderWidth: 1,
     alignItems: "center", justifyContent: "center", marginRight: 12,
     flexShrink: 0,
   },
-  cardIconText: { fontSize: 12, fontWeight: "700", letterSpacing: 0.3, lineHeight: 14 },
+  cardIconText: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3, lineHeight: 15 },
   cardMain: { flex: 1, minWidth: 0 },
   cardTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
   cardTitle: { fontSize: 14, fontWeight: "600", flexShrink: 1, marginRight: 8, lineHeight: 18 },
@@ -2933,20 +2935,20 @@ const styles = StyleSheet.create({
   },
 
   upgradeCard: {
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 16, marginBottom: 12,
-    shadowOpacity: 0.05, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    padding: 18, marginBottom: 14,
+    shadowOpacity: 0.06, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
   upgradeCardDim: { opacity: 0.6 },
   upgradeRow: { flexDirection: "row", alignItems: "center" },
   upgradeBadge: {
-    minWidth: 48, height: 48, borderRadius: 10, borderWidth: 1,
+    minWidth: 52, height: 52, borderRadius: 10, borderWidth: 1,
     alignItems: "center", justifyContent: "center", marginRight: 12, paddingHorizontal: 6,
     flexShrink: 0,
   },
-  upgradeBadgeLevel: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3, lineHeight: 15 },
+  upgradeBadgeLevel: { fontSize: 14, fontWeight: "700", letterSpacing: 0.3, lineHeight: 16 },
   upgradeMain: { flex: 1, minWidth: 0, marginRight: 10 },
   upgradeName: { fontSize: 14, fontWeight: "600", flexShrink: 1, lineHeight: 18 },
   upgradeDesc: { fontSize: 12, fontWeight: "500", marginTop: 2 },
@@ -2961,10 +2963,10 @@ const styles = StyleSheet.create({
   maxedText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.3 },
 
   prestigeSummary: {
-    borderRadius: 14, borderWidth: 1,
-    padding: 16, overflow: "hidden",
-    shadowOpacity: 0.05, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    borderRadius: 16, borderWidth: 1,
+    padding: 18, overflow: "hidden",
+    shadowOpacity: 0.06, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
   prestigeSummaryRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   prestigeSummaryTitle: { fontSize: 14, fontWeight: "700", flexShrink: 1, lineHeight: 18 },
@@ -2983,9 +2985,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   footerBrandingLogo: {
-    width: 40,
-    height: 20,
-    opacity: 0.5,
+    width: 48,
+    height: 24,
+    opacity: 0.6,
   },
   footerBranding: {
     fontSize: 10,
@@ -2994,11 +2996,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   investBtn: {
-    height: 56, width: "100%", borderRadius: 14,
+    height: 60, width: "100%", borderRadius: 16,
     justifyContent: "center", alignItems: "center",
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderWidth: 0,
+    shadowOpacity: 0.15, shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 }, elevation: 8,
   },
   investBtnGradient: {
     flex: 1,
@@ -3006,15 +3009,15 @@ const styles = StyleSheet.create({
     justifyContent: "center", alignItems: "center",
   },
   investBtnDisabled: {
-    borderWidth: 1, shadowOpacity: 0,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    borderColor: "rgba(255,255,255,0.1)",
+    shadowOpacity: 0.05, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    backgroundColor: "rgba(0,0,0,0.08)",
   },
-  investContentRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
-  investBtnIcon: { width: 24, height: 24, opacity: 0.9 },
-  investContent: { alignItems: "center", justifyContent: "center", paddingVertical: 8 },
-  investLabel: { fontSize: 16, fontWeight: "700", letterSpacing: 0.5 },
-  investSub: { fontSize: 12, fontWeight: "600", marginTop: 3, opacity: 0.85 },
+  investContentRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 },
+  investBtnIcon: { width: 28, height: 28, opacity: 0.95 },
+  investContent: { alignItems: "center", justifyContent: "center", paddingVertical: 4 },
+  investLabel: { fontSize: 17, fontWeight: "700", letterSpacing: 0.5 },
+  investSub: { fontSize: 13, fontWeight: "600", marginTop: 2, opacity: 0.9 },
 
   // Prestige tree screen
   treeHeader: {
@@ -3035,10 +3038,10 @@ const styles = StyleSheet.create({
 
   rankCard: {
     flexDirection: "row", alignItems: "center",
-    borderRadius: 14, padding: 16,
+    borderRadius: 16, padding: 18,
     borderWidth: 1,
-    shadowOpacity: 0.05, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    shadowOpacity: 0.06, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
   rankBadge: {
     width: 52, height: 52, borderRadius: 12, borderWidth: 2,
@@ -3122,11 +3125,11 @@ const styles = StyleSheet.create({
   upgradesSectionTitle: { fontSize: 13, fontWeight: "600", letterSpacing: 0.5, marginBottom: 10 },
   prestigeUpgradeCard: {
     flexDirection: "row", alignItems: "center",
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 16, marginBottom: 12,
-    shadowOpacity: 0.05, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    padding: 18, marginBottom: 14,
+    shadowOpacity: 0.06, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
   prestigeUpgradeCardOwned: {},
   prestigeUpgradeCardLeft: { flex: 1, minWidth: 0 },
@@ -3186,26 +3189,28 @@ const styles = StyleSheet.create({
   ultimateBannerSub: { fontSize: 11, fontWeight: "500", marginTop: 2 },
   viewEndingBtn: {
     marginTop: 12,
-    height: 44,
-    borderRadius: 10,
-    borderWidth: 1,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 0,
     alignItems: "center", justifyContent: "center",
-    paddingHorizontal: 24, overflow: "hidden",
+    paddingHorizontal: 28, overflow: "hidden",
+    shadowOpacity: 0.1, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 }, elevation: 6,
   },
   viewEndingBtnText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
     letterSpacing: 0.5,
   },
   legacyBody: { flex: 1 },
-  legacyBodyContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 120 },
+  legacyBodyContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 120 },
   legacyCard: {
     flexDirection: "row", alignItems: "center",
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 16, marginBottom: 12,
-    shadowOpacity: 0.05, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    padding: 18, marginBottom: 14,
+    shadowOpacity: 0.06, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
   legacyCardOwned: {},
   legacyCardFinal: {
@@ -3392,22 +3397,24 @@ const styles = StyleSheet.create({
   },
 
   cashOutBtn: {
-    marginTop: 14, height: 56, borderRadius: 14,
+    marginTop: 14, height: 60, borderRadius: 16,
     alignItems: "center", justifyContent: "center",
-    borderWidth: 1, overflow: "hidden",
-    paddingHorizontal: 16,
+    borderWidth: 0, overflow: "hidden",
+    paddingHorizontal: 20,
+    shadowOpacity: 0.15, shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 }, elevation: 8,
   },
   cashOutBtnGradient: {
     position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
   },
   cashOutBtnDim: {},
   cashOutBtnArmed: {},
-  cashOutBtnInner: { alignItems: "center", justifyContent: "center" },
-  cashOutBtnText: { fontSize: 13, fontWeight: "700", letterSpacing: 0.3 },
-  cashOutBtnSub: { fontSize: 11, fontWeight: "600", marginTop: 2 },
+  cashOutBtnInner: { alignItems: "center", justifyContent: "center", paddingHorizontal: 8 },
+  cashOutBtnText: { fontSize: 15, fontWeight: "700", letterSpacing: 0.4 },
+  cashOutBtnSub: { fontSize: 12, fontWeight: "600", marginTop: 2 },
 
   treeBody: { flex: 1 },
-  treeBodyContent: { paddingHorizontal: 8, paddingTop: 16, paddingBottom: 120 },
+  treeBodyContent: { paddingHorizontal: 12, paddingTop: 16, paddingBottom: 120 },
   treeGridRow: { flexDirection: "row", alignItems: "flex-start" },
   treeCol: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 4 },
   treeColHeader: {
@@ -3453,11 +3460,11 @@ const styles = StyleSheet.create({
     padding: 24, zIndex: 100,
   },
   debugCard: {
-    width: "100%", maxWidth: 360,
-    borderRadius: 12, borderWidth: 1,
-    padding: 20,
-    shadowOpacity: 0.1, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 }, elevation: 3,
+    width: "100%", maxWidth: 380,
+    borderRadius: 16, borderWidth: 1,
+    padding: 24,
+    shadowOpacity: 0.3, shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 }, elevation: 12,
   },
   debugHeader: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
@@ -3468,7 +3475,7 @@ const styles = StyleSheet.create({
     fontSize: 14, fontWeight: "600", letterSpacing: 0.5,
   },
   debugCloseBtn: {
-    width: 36, height: 36, borderRadius: 8,
+    width: 36, height: 36, borderRadius: 10,
     alignItems: "center", justifyContent: "center",
     borderWidth: 1,
   },

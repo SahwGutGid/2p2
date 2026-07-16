@@ -81,30 +81,111 @@ const C = {
 };
 
 // ---------- Packages ----------
+type PackageCategory = "consumer" | "business" | "diversified" | "property" | "sector" | "institutional" | "premium";
+
 type Pkg = {
   id: string;
   name: string;
   tag: string;
+  category: PackageCategory;
   cost: number;
   durationMs: number;
   profitPct: number;
   tint: string;
   unlocked?: (t: TreeEffects) => boolean; // gated packages
+  unlockRequirement?: string; // display text for locked packages
+  isPremium?: boolean; // special styling for premium packages
 };
 
 const BASE_PACKAGES: Pkg[] = [
-  { id: "starter",    name: "Starter Bond",         tag: "Low risk",       cost: 10,     durationMs: 2500,   profitPct: 0.18, tint: "#5EE1B0" },
-  { id: "growth",     name: "Growth Fund",          tag: "Medium",         cost: 50,     durationMs: 6000,   profitPct: 0.32, tint: "#00E5FF" },
-  { id: "momentum",   name: "Momentum Pool",        tag: "High",           cost: 200,    durationMs: 15000,  profitPct: 0.60, tint: "#FFB84D" },
-  { id: "realestate", name: "Real Estate REIT",     tag: "Housing",        cost: 600,    durationMs: 25000,  profitPct: 0.85, tint: "#FFD54F" },
-  { id: "crypto",     name: "Crypto Vault",         tag: "Volatile",       cost: 2500,   durationMs: 40000,  profitPct: 1.30, tint: "#B9F2FF" },
-  { id: "whale",      name: "Whale Vault",          tag: "Very high risk", cost: 1000,   durationMs: 50000,  profitPct: 1.40, tint: "#FF6EC7" },
-  { id: "contract",   name: "Long-Term Contract",   tag: "Contract",       cost: 10000,  durationMs: 240000, profitPct: 4.5,  tint: "#FFD54F", unlocked: (t) => t.contractsUnlocked },
-  { id: "legendary",  name: "Legendary Contract",   tag: "Legendary",      cost: 100000, durationMs: 720000, profitPct: 10.0, tint: "#B9F2FF", unlocked: (t) => t.legendaryUnlocked },
+  // Consumer Lending (Early Game - Available from start)
+  { id: "micro-loan", name: "Micro Loan", tag: "Low risk", category: "consumer", cost: 10, durationMs: 10000, profitPct: 0.15, tint: "#5EE1B0" },
+  { id: "personal-loan", name: "Personal Loan", tag: "Low risk", category: "consumer", cost: 50, durationMs: 20000, profitPct: 0.25, tint: "#5EE1B0" },
+  { id: "consumer-credit", name: "Consumer Credit Bundle", tag: "Medium", category: "consumer", cost: 200, durationMs: 45000, profitPct: 0.40, tint: "#5EE1B0" },
+  
+  // Business Financing (Early-Mid Game - Unlock via Prestige)
+  { id: "small-business", name: "Small Business Loan", tag: "Medium", category: "business", cost: 500, durationMs: 90000, profitPct: 0.55, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "business-expansion", name: "Business Expansion Fund", tag: "Medium", category: "business", cost: 2000, durationMs: 180000, profitPct: 0.75, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "commercial-financing", name: "Commercial Financing", tag: "High", category: "business", cost: 8000, durationMs: 300000, profitPct: 1.00, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  
+  // Diversified Portfolios (Mid Game - Unlock via Prestige)
+  { id: "credit-portfolio", name: "Credit Portfolio", tag: "Low risk", category: "diversified", cost: 1500, durationMs: 480000, profitPct: 1.20, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "diversified-loan", name: "Diversified Loan Portfolio", tag: "Medium", category: "diversified", cost: 5000, durationMs: 720000, profitPct: 1.50, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "international-credit", name: "International Credit Portfolio", tag: "High", category: "diversified", cost: 15000, durationMs: 1080000, profitPct: 1.80, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  
+  // Property Investments (Mid-Late Game - Unlock via Prestige)
+  { id: "mortgage-portfolio", name: "Mortgage Portfolio", tag: "Low risk", category: "property", cost: 3000, durationMs: 1800000, profitPct: 2.00, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "commercial-property", name: "Commercial Property Fund", tag: "Medium", category: "property", cost: 10000, durationMs: 2700000, profitPct: 2.50, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "real-estate-dev", name: "Real Estate Development", tag: "High", category: "property", cost: 30000, durationMs: 3600000, profitPct: 3.00, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  
+  // Sector Funds (Late Game - Unlock via Prestige)
+  { id: "renewable-energy", name: "Renewable Energy Fund", tag: "Growth", category: "sector", cost: 8000, durationMs: 5400000, profitPct: 3.50, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "healthcare-growth", name: "Healthcare Growth Fund", tag: "Growth", category: "sector", cost: 25000, durationMs: 7200000, profitPct: 4.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "tech-venture", name: "Technology Venture Fund", tag: "High", category: "sector", cost: 75000, durationMs: 10800000, profitPct: 4.50, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "ai-infrastructure", name: "AI Infrastructure Fund", tag: "Very high", category: "sector", cost: 200000, durationMs: 14400000, profitPct: 5.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  
+  // Institutional Investments (End Game - Unlock via Prestige)
+  { id: "corporate-bond", name: "Corporate Bond Portfolio", tag: "Low risk", category: "institutional", cost: 50000, durationMs: 21600000, profitPct: 5.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "private-equity", name: "Private Equity Portfolio", tag: "High", category: "institutional", cost: 150000, durationMs: 28800000, profitPct: 6.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "institutional-growth", name: "Institutional Growth Fund", tag: "High", category: "institutional", cost: 500000, durationMs: 36000000, profitPct: 7.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "global-investment", name: "Global Investment Portfolio", tag: "Very high", category: "institutional", cost: 1500000, durationMs: 43200000, profitPct: 8.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  
+  // Premium P2P Packages (Late End Game - Unlock via Prestige)
+  { id: "p2p-max-3", name: "P2P MAX 3", tag: "Premium", category: "premium", cost: 100000, durationMs: 1800000, profitPct: 4.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-6", name: "P2P MAX 6", tag: "Premium", category: "premium", cost: 300000, durationMs: 3600000, profitPct: 5.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-12", name: "P2P MAX 12", tag: "Premium", category: "premium", cost: 800000, durationMs: 7200000, profitPct: 6.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-24", name: "P2P MAX 24", tag: "Premium", category: "premium", cost: 2000000, durationMs: 14400000, profitPct: 7.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-safe", name: "P2P SAFE", tag: "Premium", category: "premium", cost: 5000000, durationMs: 36000000, profitPct: 8.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
 ];
 
 const getPackages = (t: TreeEffects): Pkg[] =>
   BASE_PACKAGES.filter((p) => !p.unlocked || p.unlocked(t));
+
+const getAllPackages = (): Pkg[] => BASE_PACKAGES;
+
+const groupPackagesByCategory = (pkgs: Pkg[]): Record<PackageCategory, Pkg[]> => {
+  const groups: Record<PackageCategory, Pkg[]> = {
+    consumer: [],
+    business: [],
+    diversified: [],
+    property: [],
+    sector: [],
+    institutional: [],
+    premium: [],
+  };
+  for (const pkg of pkgs) {
+    groups[pkg.category].push(pkg);
+  }
+  return groups;
+};
+
+const CATEGORY_NAMES: Record<PackageCategory, string> = {
+  consumer: "Consumer Lending",
+  business: "Business Financing",
+  diversified: "Diversified Portfolios",
+  property: "Property Investments",
+  sector: "Sector Funds",
+  institutional: "Institutional Investments",
+  premium: "Premium P2P",
+};
+
+const CATEGORY_ORDER: PackageCategory[] = ["consumer", "business", "diversified", "property", "sector", "institutional", "premium"];
+
+// Package ID migration for save compatibility
+const PACKAGE_ID_MIGRATION: Record<string, string> = {
+  "starter": "micro-loan",
+  "growth": "personal-loan",
+  "momentum": "consumer-credit",
+  "realestate": "mortgage-portfolio",
+  "crypto": "renewable-energy",
+  "whale": "tech-venture",
+  "contract": "corporate-bond",
+  "legendary": "global-investment",
+};
+
+const migratePackageId = (oldId: string): string => {
+  return PACKAGE_ID_MIGRATION[oldId] || oldId;
+};
 
 const cheapestCost = (t: TreeEffects) => getPackages(t)[0].cost;
 
@@ -208,7 +289,7 @@ const computePrestigeGain = (balance: number) => {
 const defaultSave = (): SaveData => ({
   v: 6,
   balance: 100,
-  selectedId: BASE_PACKAGES[0].id,
+  selectedId: "micro-loan",
   levels: { yield: 0, turbo: 0, passive: 0, lucky: 0, slots: 0 },
   actives: [],
   lastSeenAt: Date.now(),
@@ -287,8 +368,6 @@ const computeProfitPct = (
     }
   }
   m *= 1 + t.slotSynergyPct * Math.max(0, filledSlots - 1);
-  if (pkg.id === "whale") m *= 1 + t.whaleBonus;
-  if (pkg.id === "legendary") m *= 1 + t.legendaryBonus;
   return m;
 };
 
@@ -642,11 +721,19 @@ export default function Index() {
         let saved: SaveData = defaultSave();
         if (raw) {
           const parsed = JSON.parse(raw) as Partial<SaveData>;
+          // Migrate old package IDs to new ones
+          const migratedSelectedId = parsed.selectedId ? migratePackageId(parsed.selectedId) : "micro-loan";
+          const migratedActives = (parsed.actives ?? []).map((a: any) => ({
+            ...a,
+            pkgId: migratePackageId(a.pkgId),
+          }));
+          
           saved = {
             ...defaultSave(),
             ...parsed,
+            selectedId: migratedSelectedId,
             levels: { ...defaultSave().levels, ...(parsed.levels ?? {}) },
-            actives: (parsed.actives ?? []) as ActiveInvestment[],
+            actives: migratedActives as ActiveInvestment[],
             skills: parsed.skills ?? {},
             prestigeUpgrades: parsed.prestigeUpgrades ?? { foundation: false },
             legacyPoints: parsed.legacyPoints ?? 0,
@@ -1218,7 +1305,7 @@ export default function Index() {
     setBalance(start);
     setDisplayBalance(start);
     displayStartRef.current = { from: start, to: start, start: 0 };
-    setSelectedId(BASE_PACKAGES[0].id);
+    setSelectedId("micro-loan");
     setLevels({ yield: 0, turbo: 0, passive: 0, lucky: 0, slots: 0 });
     setPrestige((p) => p + gain);
     setTotalPrestiges((t) => t + 1);
@@ -2293,74 +2380,109 @@ export default function Index() {
           </View>
         </View>
 
-        {packages.map((pkg) => {
-          const affordable = balance >= pkg.cost;
-          const isSelected = pkg.id === selectedId;
-          const disabled = !affordable;
-          const effPct = computeProfitPct(pkg, levels.yield, prestige, treeEffects, Math.max(1, actives.length + 1), null, prestigeUpgrades.foundation, legacyUpgrades);
-          const effDur = computeDuration(pkg, levels.turbo, treeEffects, null, prestigeUpgrades.foundation, legacyUpgrades);
-          const projectedProfit = pkg.cost * effPct;
-          const roi = `+${fmtPct(effPct * 100)}`;
+        {CATEGORY_ORDER.map((category) => {
+          const allPkgs = getAllPackages();
+          const categoryPkgs = allPkgs.filter((p) => p.category === category);
+          const hasUnlocked = categoryPkgs.some((p) => !p.unlocked || p.unlocked(treeEffects));
+          
+          if (!hasUnlocked && categoryPkgs.every((p) => p.unlocked)) {
+            // Skip categories where all packages are locked and none are unlocked
+            return null;
+          }
+
           return (
-            <Animated.View key={pkg.id} style={isSelected ? selectedPulseStyle : undefined}>
-              <Pressable
-                disabled={disabled}
-                onPress={() => {
-                  kickMusicOnce();
-                  sound.play("click");
-                  triggerHaptic(() => Haptics.selectionAsync());
-                  setSelectedId(pkg.id);
-                }}
-                style={({ pressed }) => [
-                  styles.card,
-                  { backgroundColor: theme.panel, borderColor: theme.border },
-                  isSelected && [styles.cardSelected, { borderColor: theme.upgrade, shadowColor: theme.upgrade }],
-                  !affordable && styles.cardLocked,
-                  pressed && !disabled && { transform: [{ scale: 0.99 }] },
-                ]}
-                testID={`package-${pkg.id}`}
-              >
-                {isSelected && !disabled && (
-                  <LinearGradient
-                    colors={[`${theme.upgrade}14`, `${theme.upgrade}04`]}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                    pointerEvents="none"
-                  />
-                )}
-                <View style={styles.cardRow}>
-                  <View style={[styles.cardIcon, { backgroundColor: `${pkg.tint}22`, borderColor: pkg.tint }]}>
-                    <Text style={[styles.cardIconText, { color: pkg.tint }]}>{roi}</Text>
-                  </View>
-                  <View style={styles.cardMain}>
-                    <View style={styles.cardTitleRow}>
-                      <Text style={[styles.cardTitle, { color: theme.text }]}>{pkg.name}</Text>
-                      {!affordable ? (
-                        <View style={[styles.badgeLoss, { borderColor: theme.loss, backgroundColor: `${theme.loss}08` }]}><Text style={[styles.badgeLossText, { color: theme.loss }]}>LOCKED</Text></View>
-                      ) : (
-                        <View style={[styles.badgeTag, { borderColor: theme.upgrade, backgroundColor: `${theme.upgrade}08` }]}><Text style={[styles.badgeTagText, { color: theme.upgrade }]}>{pkg.tag}</Text></View>
+            <View key={category} style={{ marginTop: category === "consumer" ? 0 : 24 }}>
+              <View style={styles.categoryHeader}>
+                <Text style={[styles.categoryTitle, { color: theme.text }]}>{CATEGORY_NAMES[category]}</Text>
+              </View>
+              {categoryPkgs.map((pkg) => {
+                const isUnlocked = !pkg.unlocked || pkg.unlocked(treeEffects);
+                const affordable = balance >= pkg.cost;
+                const isSelected = pkg.id === selectedId;
+                const disabled = !affordable || !isUnlocked;
+                const effPct = computeProfitPct(pkg, levels.yield, prestige, treeEffects, Math.max(1, actives.length + 1), null, prestigeUpgrades.foundation, legacyUpgrades);
+                const effDur = computeDuration(pkg, levels.turbo, treeEffects, null, prestigeUpgrades.foundation, legacyUpgrades);
+                const projectedProfit = pkg.cost * effPct;
+                const roi = `+${fmtPct(effPct * 100)}`;
+                
+                return (
+                  <Animated.View key={pkg.id} style={isSelected ? selectedPulseStyle : undefined}>
+                    <Pressable
+                      disabled={disabled}
+                      onPress={() => {
+                        if (!isUnlocked) return;
+                        kickMusicOnce();
+                        sound.play("click");
+                        triggerHaptic(() => Haptics.selectionAsync());
+                        setSelectedId(pkg.id);
+                      }}
+                      style={({ pressed }) => [
+                        styles.card,
+                        { backgroundColor: theme.panel, borderColor: theme.border },
+                        isSelected && [styles.cardSelected, { borderColor: theme.upgrade, shadowColor: theme.upgrade }],
+                        !isUnlocked && styles.cardLocked,
+                        isUnlocked && !affordable && styles.cardLocked,
+                        pkg.isPremium && { borderColor: pkg.tint, borderWidth: 2 },
+                        pressed && !disabled && { transform: [{ scale: 0.99 }] },
+                      ]}
+                      testID={`package-${pkg.id}`}
+                    >
+                      {isSelected && !disabled && (
+                        <LinearGradient
+                          colors={[`${theme.upgrade}14`, `${theme.upgrade}04`]}
+                          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                          style={StyleSheet.absoluteFill}
+                          pointerEvents="none"
+                        />
                       )}
-                    </View>
-                    <View style={styles.cardMetaRow}>
-                      <View style={styles.metaCell}>
-                        <Text style={[styles.metaLabel, { color: theme.textMuted }]}>Cost</Text>
-                        <Text style={[styles.metaValue, { color: theme.text }]}>{money(pkg.cost)}</Text>
+                      {pkg.isPremium && (
+                        <LinearGradient
+                          colors={[`${pkg.tint}12`, `${pkg.tint}04`]}
+                          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                          style={StyleSheet.absoluteFill}
+                          pointerEvents="none"
+                        />
+                      )}
+                      <View style={styles.cardRow}>
+                        <View style={[styles.cardIcon, { backgroundColor: `${pkg.tint}22`, borderColor: pkg.tint }]}>
+                          <Text style={[styles.cardIconText, { color: pkg.tint }]}>{roi}</Text>
+                        </View>
+                        <View style={styles.cardMain}>
+                          <View style={styles.cardTitleRow}>
+                            <Text style={[styles.cardTitle, { color: theme.text }, pkg.isPremium && { color: pkg.tint }]}>{pkg.name}</Text>
+                            {!isUnlocked ? (
+                              <View style={[styles.badgeLoss, { borderColor: theme.loss, backgroundColor: `${theme.loss}08` }]}><Text style={[styles.badgeLossText, { color: theme.loss }]}>{pkg.unlockRequirement || "LOCKED"}</Text></View>
+                            ) : !affordable ? (
+                              <View style={[styles.badgeLoss, { borderColor: theme.loss, backgroundColor: `${theme.loss}08` }]}><Text style={[styles.badgeLossText, { color: theme.loss }]}>LOCKED</Text></View>
+                            ) : (
+                              <View style={[styles.badgeTag, { borderColor: theme.upgrade, backgroundColor: `${theme.upgrade}08` }]}><Text style={[styles.badgeTagText, { color: theme.upgrade }]}>{pkg.tag}</Text></View>
+                            )}
+                          </View>
+                          <View style={styles.cardMetaRow}>
+                            <View style={styles.metaCell}>
+                              <Text style={[styles.metaLabel, { color: theme.textMuted }]}>Cost</Text>
+                              <Text style={[styles.metaValue, { color: theme.text }]}>{money(pkg.cost)}</Text>
+                            </View>
+                            <View style={styles.metaCell}>
+                              <Text style={[styles.metaLabel, { color: theme.textMuted }]}>Duration</Text>
+                              <Text style={[styles.metaValue, { color: theme.text }]}>{fmtDuration(effDur)}</Text>
+                            </View>
+                          </View>
+                          {isUnlocked && (
+                            <View style={[styles.cardProfitSection, { borderTopColor: theme.border }]}>
+                              <View style={styles.cardProfitRow}>
+                                <Text style={[styles.cardProfitLabel, { color: theme.textMuted }]}>Profit</Text>
+                                <Text style={[styles.cardProfitValue, { color: theme.gain }]}>+{money(projectedProfit)}</Text>
+                              </View>
+                            </View>
+                          )}
+                        </View>
                       </View>
-                      <View style={styles.metaCell}>
-                        <Text style={[styles.metaLabel, { color: theme.textMuted }]}>Duration</Text>
-                        <Text style={[styles.metaValue, { color: theme.text }]}>{fmtDuration(effDur)}</Text>
-                      </View>
-                    </View>
-                    <View style={[styles.cardProfitSection, { borderTopColor: theme.border }]}>
-                      <View style={styles.cardProfitRow}>
-                        <Text style={[styles.cardProfitLabel, { color: theme.textMuted }]}>Profit</Text>
-                        <Text style={[styles.cardProfitValue, { color: theme.gain }]}>+{money(projectedProfit)}</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </Pressable>
-            </Animated.View>
+                    </Pressable>
+                  </Animated.View>
+                );
+              })}
+            </View>
           );
         })}
 
@@ -2874,6 +2996,18 @@ const styles = StyleSheet.create({
   },
   accelerateText: { fontSize: 14, fontWeight: "700", letterSpacing: 0.5 },
   accelerateHint: { fontSize: 11, fontWeight: "600", marginTop: 2 },
+
+  categoryHeader: {
+    marginTop: 24,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  categoryTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
 
   card: {
     borderRadius: 16,

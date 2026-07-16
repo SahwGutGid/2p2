@@ -125,7 +125,7 @@ export function EndingScreen({
             <Text style={S.eyebrow}>GAME COMPLETE</Text>
             <Text style={S.title}>Portfolio Mastered</Text>
             <Text style={S.subtitle}>
-              You've completed the investment journey.{"\n"}Your final portfolio stands as a testament to your strategy.
+              You&apos;ve completed the investment journey.{"\n"}Your final portfolio stands as a testament to your strategy.
             </Text>
 
             {/* P2P Branding strip */}

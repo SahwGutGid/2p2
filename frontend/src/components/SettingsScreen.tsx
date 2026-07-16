@@ -12,6 +12,7 @@ interface SettingsScreenProps {
     haptics: boolean;
     notifications: boolean;
     holdToPrestige: boolean;
+    autoReinvest: boolean;
   };
   onSettingChange: (key: string, value: boolean) => void;
 }
@@ -136,6 +137,13 @@ export function SettingsScreen({
               {/* Gameplay */}
               <View style={styles.settingsCard}>
                 <Text style={styles.sectionTitle}>GAMEPLAY</Text>
+
+                <SettingToggle
+                  label="Auto Reinvest"
+                  description="Automatically restart completed investments when funds are available. Requires Automated Reinvestment skill."
+                  value={settings.autoReinvest}
+                  onToggle={() => onSettingChange("autoReinvest", !settings.autoReinvest)}
+                />
 
                 <SettingToggle
                   label="Hold to Prestige"

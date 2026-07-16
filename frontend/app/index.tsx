@@ -207,9 +207,9 @@ type Upgrade = {
 };
 const UPGRADES: Upgrade[] = [
   { id: "yield",   name: "Yield Boost",     description: "Increases profit multiplier by 6% per level",       effect: (l) => `+${fmtPct(l * 6)} profit`,               baseCost: 15,  costGrowth: 1.55, maxLevel: 15, tint: "#00FF88" },
-  { id: "turbo",   name: "Turbo Trades",    description: "Reduces investment duration by 5% per level",     effect: (l) => `-${fmtPct(Math.min(60, l * 5))} time`,     baseCost: 25,  costGrowth: 1.6,  maxLevel: 12, tint: "#00E5FF" },
+  { id: "turbo",   name: "Turbo Trades",    description: "Reduces investment duration by 2.73% per level",     effect: (l) => `-${fmtPct(Math.min(60, l * 2.73))} time`,     baseCost: 25,  costGrowth: 1.6,  maxLevel: 12, tint: "#00E5FF" },
   { id: "passive", name: "Passive Yield",   description: "Generates $1.00/sec passive income per level",   effect: (l) => `+$${(l * 1.0).toFixed(2)}/sec`,                baseCost: 40,  costGrowth: 1.5,  maxLevel: 25, tint: "#FFB84D" },
-  { id: "lucky",   name: "Lucky Streak",    description: "Adds 3% chance for 2× profit per level",        effect: (l) => `${fmtPct(Math.min(45, l * 3))} x2`,        baseCost: 100, costGrowth: 1.7,  maxLevel: 15, tint: "#FF6EC7" },
+  { id: "lucky",   name: "Lucky Streak",    description: "Adds 1.8% chance for 2× profit per level",        effect: (l) => `${fmtPct(Math.min(45, l * 1.8))} x2`,        baseCost: 100, costGrowth: 1.7,  maxLevel: 15, tint: "#FF6EC7" },
   { id: "slots",   name: "Portfolio Slots", description: "Adds 1 concurrent investment slot per level",    effect: (l) => `${l + 1} slot${l === 0 ? "" : "s"}`,           baseCost: 300, costGrowth: 2.5,  maxLevel: 4,  tint: "#00E5FF" },
 ];
 const upgradeCost = (u: Upgrade, level: number) =>
@@ -240,9 +240,10 @@ type Settings = {
   haptics: boolean;
   notifications: boolean;
   holdToPrestige: boolean;
+  autoReinvest: boolean;
 };
 const defaultSettings = (): Settings => ({
-  music: true, sfx: true, haptics: true, notifications: true, holdToPrestige: true,
+  music: true, sfx: true, haptics: true, notifications: true, holdToPrestige: true, autoReinvest: true,
 });
 
 type CompletionStats = {
@@ -1215,6 +1216,27 @@ export default function Index() {
     investPkg(selected);
   }, [sound, triggerHaptic]);
 
+  const cancelInvestment = (runId: string) => {
+    const state = stateRef.current;
+    const active = state.actives.find(a => a.runId === runId);
+    if (!active) return;
+    
+    // Clear any pending completion timer
+    if (finishRefs.current[runId]) {
+      clearTimeout(finishRefs.current[runId]);
+      delete finishRefs.current[runId];
+    }
+    
+    // Refund the original cost
+    setBalance((b) => b + active.cost);
+    
+    // Remove from actives
+    setActives((list) => list.filter(a => a.runId !== runId));
+    
+    sound.play("click");
+    triggerHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+  };
+
   const ACCELERATE_COOLDOWN_MS = 80;
   const accelerate = (runId: string, opts: { silent?: boolean; strength?: number } = {}) => {
     if (!opts.silent) kickMusicOnce();
@@ -1267,6 +1289,7 @@ export default function Index() {
   useEffect(() => {
     if (!ready) return;
     if (!treeEffects.autoReinvest) return;
+    if (!settings.autoReinvest) return;
     const state = stateRef.current;
     const slots = slotCount(state.levels.slots);
     if (state.actives.length >= slots) return;
@@ -1282,7 +1305,7 @@ export default function Index() {
       if (!investPkg(pkg)) break;
       lastAutoInvestRef.current = Date.now();
     }
-  }, [ready, actives.length, balance, treeEffects.autoReinvest, treeEffects.autoFill, treeEffects.smartSelect, pickAutoPackage, investPkg, levels.slots, legacyUpgrades]);
+  }, [ready, actives.length, balance, treeEffects.autoReinvest, treeEffects.autoFill, treeEffects.smartSelect, pickAutoPackage, investPkg, levels.slots, legacyUpgrades, settings.autoReinvest]);
 
   const buyUpgrade = useCallback((u: Upgrade) => {
     kickMusicOnce();
@@ -1530,7 +1553,7 @@ export default function Index() {
         investmentsCompleted: stats.investmentsCompleted,
         upgradesPurchased: stats.upgradesPurchased,
         accelerateUses: stats.accelerateUses,
-        activePlayTimeMs: runTimeMs,
+        activePlayTimeMs: stats.activePlayTimeMs,
         highestBalance: stats.highestBalance,
         totalMoneyEarned: stats.totalMoneyEarned,
         legacyUpgradesOwned: Object.values(legacyUpgrades).filter(Boolean).length,
@@ -1929,7 +1952,7 @@ export default function Index() {
           investmentsCompleted: stats.investmentsCompleted,
           upgradesPurchased: stats.upgradesPurchased,
           accelerateUses: stats.accelerateUses,
-          activePlayTimeMs: runTimeMs,
+          activePlayTimeMs: stats.activePlayTimeMs,
           highestBalance: stats.highestBalance,
           totalMoneyEarned: stats.totalMoneyEarned,
           legacyUpgradesOwned: Object.values(newLegacyUpgrades).filter(Boolean).length,
@@ -2041,7 +2064,7 @@ export default function Index() {
                     investmentsCompleted: stats.investmentsCompleted,
                     upgradesPurchased: stats.upgradesPurchased,
                     accelerateUses: stats.accelerateUses,
-                    activePlayTimeMs: runTimeMs,
+                    activePlayTimeMs: stats.activePlayTimeMs,
                     highestBalance: stats.highestBalance,
                     totalMoneyEarned: stats.totalMoneyEarned,
                     legacyUpgradesOwned: Object.values(legacyUpgrades).filter(Boolean).length,
@@ -2504,16 +2527,25 @@ export default function Index() {
                       style={[styles.activeBarFill, { width: (progress * 100).toFixed(0) + "%" as any }]}
                     />
                   </View>
-                  <Pressable
-                    onPress={() => accelerate(a.runId)}
-                    style={({ pressed }) => [styles.accelerateBtn, { borderColor: theme.border }, pressed && { transform: [{ scale: 0.97 }] }]}
-                    testID={`accelerate-${a.runId}`}
-                  >
-                    <Text style={[styles.accelerateText, { color: theme.text }]}>ACCELERATE</Text>
-                    <Text style={[styles.accelerateHint, { color: theme.textMuted }]}>
-                      {treeEffects.autoAccelStrength > 0 ? "Auto-tap active · manual for burst" : "Tap to shave time"}
-                    </Text>
-                  </Pressable>
+                  <View style={styles.activeActionsRow}>
+                    <Pressable
+                      onPress={() => cancelInvestment(a.runId)}
+                      style={({ pressed }) => [styles.cancelBtn, { borderColor: theme.loss }, pressed && { transform: [{ scale: 0.97 }] }]}
+                      testID={`cancel-${a.runId}`}
+                    >
+                      <Text style={[styles.cancelBtnText, { color: theme.loss }]}>CANCEL</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => accelerate(a.runId)}
+                      style={({ pressed }) => [styles.accelerateBtn, { borderColor: theme.border }, pressed && { transform: [{ scale: 0.97 }] }]}
+                      testID={`accelerate-${a.runId}`}
+                    >
+                      <Text style={[styles.accelerateText, { color: theme.text }]}>ACCELERATE</Text>
+                      <Text style={[styles.accelerateHint, { color: theme.textMuted }]}>
+                        {treeEffects.autoAccelStrength > 0 ? "Auto-tap active · manual for burst" : "Tap to shave time"}
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
               );
             })}
@@ -3229,13 +3261,38 @@ const styles = StyleSheet.create({
     overflow: "hidden", borderWidth: 0,
   },
   activeBarFill: { height: "100%", borderRadius: 3 },
+  activeActionsRow: {
+    flexDirection: "row",
+    marginTop: 10,
+    gap: 8,
+  },
+  cancelBtn: {
+    flex: 1,
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
   accelerateBtn: {
-    marginTop: 10, height: 52, borderRadius: 12,
-    borderWidth: 0, overflow: "hidden",
-    alignItems: "center", justifyContent: "center",
+    flex: 2,
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 0,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 20,
-    shadowOpacity: 0.08, shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 }, elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   accelerateText: { fontSize: 14, fontWeight: "700", letterSpacing: 0.5 },
   accelerateHint: { fontSize: 11, fontWeight: "600", marginTop: 2 },

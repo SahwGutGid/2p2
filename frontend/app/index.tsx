@@ -52,6 +52,7 @@ import {
   type SkillNode,
   type SkillPath,
   type TreeEffects,
+  getEffectiveUpgradeMaxLevel,
 } from "@/src/game/skillTree";
 import {
   defaultStats,
@@ -310,7 +311,14 @@ const defaultSave = (): SaveData => ({
   activeMarket: null,
   lastMarketRollAt: Date.now(),
   settings: defaultSettings(),
-  prestigeUpgrades: { foundation: false },
+  prestigeUpgrades: { 
+    foundation: false,
+    "yield-expansion": false,
+    "turbo-optimization": false,
+    "passive-research": false,
+    "luck-analysis": false,
+    "portfolio-expansion": false,
+  },
   legacyPoints: 0,
   legacyUpgrades: {
     "investors-foundation": false,
@@ -480,7 +488,14 @@ export default function Index() {
   }, [settings.haptics]);
 
   // Prestige upgrades state
-  const [prestigeUpgrades, setPrestigeUpgrades] = useState<Record<PrestigeUpgradeId, boolean>>({ foundation: false });
+  const [prestigeUpgrades, setPrestigeUpgrades] = useState<Record<PrestigeUpgradeId, boolean>>({ 
+    foundation: false,
+    "yield-expansion": false,
+    "turbo-optimization": false,
+    "passive-research": false,
+    "luck-analysis": false,
+    "portfolio-expansion": false,
+  });
 
   // Legacy endgame state
   const [legacyPoints, setLegacyPoints] = useState<number>(0);
@@ -755,7 +770,14 @@ export default function Index() {
             levels: { ...defaultSave().levels, ...(parsed.levels ?? {}) },
             actives: migratedActives as ActiveInvestment[],
             skills: parsed.skills ?? {},
-            prestigeUpgrades: parsed.prestigeUpgrades ?? { foundation: false },
+            prestigeUpgrades: parsed.prestigeUpgrades ?? { 
+              foundation: false,
+              "yield-expansion": false,
+              "turbo-optimization": false,
+              "passive-research": false,
+              "luck-analysis": false,
+              "portfolio-expansion": false,
+            },
             legacyPoints: parsed.legacyPoints ?? 0,
             legacyUpgrades: parsed.legacyUpgrades ?? {
               "investors-foundation": false,
@@ -874,7 +896,14 @@ export default function Index() {
         setActiveMarket(savedMarket && savedMarket.endsAt > Date.now() ? savedMarket : null);
         setLastMarketRollAt(saved.lastMarketRollAt ?? Date.now());
         setSettings({ ...defaultSettings(), ...(saved.settings ?? {}) });
-        setPrestigeUpgrades(saved.prestigeUpgrades ?? { foundation: false });
+        setPrestigeUpgrades(saved.prestigeUpgrades ?? { 
+          foundation: false,
+          "yield-expansion": false,
+          "turbo-optimization": false,
+          "passive-research": false,
+          "luck-analysis": false,
+          "portfolio-expansion": false,
+        });
         setLegacyPoints(saved.legacyPoints ?? 0);
         setLegacyUpgrades(saved.legacyUpgrades ?? {
           "investors-foundation": false,
@@ -1258,7 +1287,8 @@ export default function Index() {
   const buyUpgrade = useCallback((u: Upgrade) => {
     kickMusicOnce();
     const level = levels[u.id];
-    if (level >= u.maxLevel) return;
+    const effectiveMax = getEffectiveUpgradeMaxLevel(u.id, prestigeUpgrades, u.maxLevel);
+    if (level >= effectiveMax) return;
     const cost = upgradeCost(u, level);
     if (balance < cost) {
       sound.play("error");
@@ -1271,7 +1301,7 @@ export default function Index() {
     setBalance((b) => b - cost);
     setLevels((l) => ({ ...l, [u.id]: l[u.id] + 1 }));
     setStats((s) => ({ ...s, upgradesPurchased: s.upgradesPurchased + 1 }));
-  }, [balance, levels, sound, triggerHaptic]);
+  }, [balance, levels, prestigeUpgrades, sound, triggerHaptic]);
 
   const buySkill = useCallback((node: SkillNode) => {
     kickMusicOnce();
@@ -2615,7 +2645,8 @@ export default function Index() {
 
         {UPGRADES.map((u) => {
           const level = levels[u.id];
-          const maxed = level >= u.maxLevel;
+          const effectiveMax = getEffectiveUpgradeMaxLevel(u.id, prestigeUpgrades, u.maxLevel);
+          const maxed = level >= effectiveMax;
           const cost = upgradeCost(u, level);
           const affordable = balance >= cost && !maxed;
           return (
@@ -2633,7 +2664,7 @@ export default function Index() {
             >
               <View style={styles.upgradeRow}>
                 <View style={[styles.upgradeBadge, { backgroundColor: `${u.tint}22`, borderColor: u.tint }]}>
-                  <Text style={[styles.upgradeBadgeLevel, { color: u.tint }]}>Lv {level}</Text>
+                  <Text style={[styles.upgradeBadgeLevel, { color: u.tint }]}>Lv {level}/{effectiveMax}</Text>
                 </View>
                 <View style={styles.upgradeMain}>
                   <Text style={[styles.upgradeName, { color: theme.text }]}>{u.name}</Text>

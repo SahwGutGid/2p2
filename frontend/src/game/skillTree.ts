@@ -9,7 +9,13 @@ export type Rank = "bronze" | "silver" | "gold" | "platinum" | "diamond" | "lege
 
 // ---------- Prestige Upgrades ----------
 // Separate from skill tree - these are one-time permanent upgrades bought with PP
-export type PrestigeUpgradeId = "foundation";
+export type PrestigeUpgradeId = 
+  | "foundation"
+  | "yield-expansion"
+  | "turbo-optimization"
+  | "passive-research"
+  | "luck-analysis"
+  | "portfolio-expansion";
 
 export type PrestigeUpgrade = {
   id: PrestigeUpgradeId;
@@ -29,7 +35,65 @@ export const PRESTIGE_UPGRADES: PrestigeUpgrade[] = [
     effect: "2x profit, 1.5x speed",
     tint: "#F59E0B",
   },
+  // Advanced Optimization Branch - Upgrade Cap Expansions
+  {
+    id: "yield-expansion",
+    name: "Yield Expansion",
+    description: "Increases Yield Boost maximum level by +10. Keep early profit upgrades relevant throughout the game.",
+    cost: 50,
+    effect: "+10 Yield Boost max level",
+    tint: "#00FF88",
+  },
+  {
+    id: "turbo-optimization",
+    name: "Turbo Optimization",
+    description: "Increases Turbo Trades maximum level by +10. Extend speed upgrade potential for faster investments.",
+    cost: 75,
+    effect: "+10 Turbo Trades max level",
+    tint: "#00E5FF",
+  },
+  {
+    id: "passive-research",
+    name: "Passive Income Research",
+    description: "Increases Passive Yield maximum level by +10. Scale passive income generation for late game.",
+    cost: 100,
+    effect: "+10 Passive Yield max level",
+    tint: "#FFB84D",
+  },
+  {
+    id: "luck-analysis",
+    name: "Luck Analysis",
+    description: "Increases Lucky Streak maximum level by +10. Enhance 2× profit chance potential.",
+    cost: 150,
+    effect: "+10 Lucky Streak max level",
+    tint: "#FF6EC7",
+  },
+  {
+    id: "portfolio-expansion",
+    name: "Portfolio Expansion",
+    description: "Increases Portfolio Slots maximum level by +10. Unlock more concurrent investment slots.",
+    cost: 200,
+    effect: "+10 Portfolio Slots max level",
+    tint: "#00E5FF",
+  },
 ];
+
+// Helper function to calculate effective max level for upgrades based on prestige upgrades
+export const getEffectiveUpgradeMaxLevel = (upgradeId: string, prestigeUpgrades: Record<PrestigeUpgradeId, boolean>, baseMaxLevel: number): number => {
+  const expansionMap: Record<string, PrestigeUpgradeId> = {
+    "yield": "yield-expansion",
+    "turbo": "turbo-optimization",
+    "passive": "passive-research",
+    "lucky": "luck-analysis",
+    "slots": "portfolio-expansion",
+  };
+  
+  const expansionUpgrade = expansionMap[upgradeId];
+  if (expansionUpgrade && prestigeUpgrades[expansionUpgrade]) {
+    return baseMaxLevel + 10;
+  }
+  return baseMaxLevel;
+};
 
 // ---------- Legacy Endgame System ----------
 // Unlocks at 10,000 total Prestige Points. Final progression layer.

@@ -246,79 +246,17 @@ export type LeaderboardData = {
   lastUpdated: number;
 };
 
-// Simulated leaderboard data (in production, this would come from a backend)
-const generateSimulatedLeaderboard = (category: LeaderboardCategory, playerValue: number): LeaderboardData => {
-  const entries: LeaderboardEntry[] = [];
-  const names = ["Alpha Capital", "Quantum Investments", "Global Holdings", "Apex Wealth", "Nexus Finance", "Stellar Capital", "Prime Investments", "Vertex Wealth", "Apex Trading", "Nova Capital"];
-  
-  // Generate values based on category
-  let baseValue: number;
-  let multiplier: number;
-  
-  switch (category) {
-    case "money":
-      baseValue = 1e9; // Start at 1B
-      multiplier = 2.5;
-      break;
-    case "playtime":
-      baseValue = 3600000 * 100; // Start at 100 hours
-      multiplier = 1.8;
-      break;
-    case "prestige":
-      baseValue = 100; // Start at 100 PP
-      multiplier = 2.2;
-      break;
-    case "legacy":
-      baseValue = 100; // Start at 100 LP
-      multiplier = 2.0;
-      break;
-  }
-  
-  // Generate entries
-  for (let i = 0; i < 10; i++) {
-    const value = baseValue * Math.pow(multiplier, 9 - i);
-    entries.push({
-      rank: i + 1,
-      name: names[i],
-      value: Math.floor(value),
-      isPlayer: false,
-    });
-  }
-  
-  // Insert player at appropriate position
-  let playerRank = entries.length + 1;
-  for (let i = 0; i < entries.length; i++) {
-    if (playerValue >= entries[i].value) {
-      entries.splice(i, 0, {
-        rank: i + 1,
-        name: "You",
-        value: playerValue,
-        isPlayer: true,
-      });
-      playerRank = i + 1;
-      // Re-rank remaining entries
-      for (let j = i + 1; j < entries.length; j++) {
-        entries[j].rank = j + 1;
-      }
-      break;
-    }
-  }
-  
-  // Keep only top 10
-  if (entries.length > 10) {
-    entries.length = 10;
-  }
-  
+// Real leaderboard structure (in production, this would come from a backend)
+// For now, returns empty leaderboard ready for real player data
+export const getLeaderboard = (category: LeaderboardCategory, playerValue: number): LeaderboardData => {
+  // In production, this would fetch real data from a backend
+  // For now, return empty leaderboard with player's position
   return {
     category,
-    entries,
-    playerRank,
+    entries: [], // No fake players - will populate with real data when backend is connected
+    playerRank: 1, // Player is rank 1 when no other players exist
     lastUpdated: Date.now(),
   };
-};
-
-export const getLeaderboard = (category: LeaderboardCategory, playerValue: number): LeaderboardData => {
-  return generateSimulatedLeaderboard(category, playerValue);
 };
 
 export const LEADERBOARD_CATEGORIES: { id: LeaderboardCategory; name: string; icon: string }[] = [

@@ -2391,11 +2391,14 @@ export default function Index() {
           const remainingMs = Math.max(0, activeMarket.endsAt - Date.now());
           return (
             <View style={[styles.banner, { backgroundColor: `${event.tint}22`, borderColor: event.tint }]} testID="market-banner">
-              <Text style={[styles.bannerText, { color: event.tint }]}>
-                {event.name} — {event.tag} · {formatDuration(remainingMs)} remaining
+              <Text style={[styles.bannerText, { color: event.tint, flex: 1 }]} numberOfLines={1}>
+                {event.name} — {event.tag}
               </Text>
-              <Pressable onPress={() => setShowMarketBanner(false)} hitSlop={12}>
-                <Text style={[styles.bannerDismiss, { color: event.tint }]}>Dismiss</Text>
+              <Text style={[styles.bannerText, { color: event.tint }]}>
+                {formatDuration(remainingMs)}
+              </Text>
+              <Pressable onPress={() => setShowMarketBanner(false)} hitSlop={12} style={{ marginLeft: 8 }}>
+                <Text style={[styles.bannerDismiss, { color: event.tint }]}>✕</Text>
               </Pressable>
             </View>
           );
@@ -2948,21 +2951,50 @@ export default function Index() {
                   </Text>
                 </View>
                 
-                {leaderboardData.entries.map((entry) => (
-                  <View key={entry.rank} style={[styles.leaderboardEntry, { backgroundColor: entry.isPlayer ? `${theme.legacy}12` : theme.bgSoft, borderColor: entry.isPlayer ? theme.legacy : theme.border }]}>
-                    <Text style={[styles.leaderboardRank, { color: entry.isPlayer ? theme.legacy : theme.textMuted }]}>
-                      #{entry.rank}
+                {leaderboardData.entries.length === 0 ? (
+                  <View style={styles.leaderboardEmpty}>
+                    <Text style={[styles.leaderboardEmptyIcon, { color: theme.legacy }]}>🏆</Text>
+                    <Text style={[styles.leaderboardEmptyText, { color: theme.textMuted }]}>
+                      No investors ranked yet.
                     </Text>
-                    <Text style={[styles.leaderboardName, { color: entry.isPlayer ? theme.legacy : theme.text, fontWeight: entry.isPlayer ? '700' : '400' }]}>
-                      {entry.name}
-                    </Text>
-                    <Text style={[styles.leaderboardValue, { color: theme.text }]}>
-                      {leaderboardCategory === 'money' ? formatCurrency(entry.value) :
-                       leaderboardCategory === 'playtime' ? formatDuration(entry.value) :
-                       formatNumber(entry.value)}
+                    <Text style={[styles.leaderboardEmptySubtext, { color: theme.textMuted }]}>
+                      Be the first!
                     </Text>
                   </View>
-                ))}
+                ) : (
+                  <ScrollView style={styles.leaderboardScroll} showsVerticalScrollIndicator={false}>
+                    {leaderboardData.entries.map((entry) => {
+                      const isTop3 = entry.rank <= 3;
+                      const rankColor = entry.rank === 1 ? '#FFD700' : entry.rank === 2 ? '#C0C0C0' : entry.rank === 3 ? '#CD7F32' : theme.textMuted;
+                      const rankBg = entry.rank === 1 ? '#FFD700' : entry.rank === 2 ? '#C0C0C0' : entry.rank === 3 ? '#CD7F32' : theme.bgSoft;
+                      
+                      return (
+                        <View key={entry.rank} style={[
+                          styles.leaderboardEntry,
+                          { 
+                            backgroundColor: entry.isPlayer ? `${theme.legacy}15` : theme.bgSoft, 
+                            borderColor: entry.isPlayer ? theme.legacy : isTop3 ? rankColor : theme.border,
+                            borderWidth: isTop3 ? 2 : 1
+                          }
+                        ]}>
+                          <View style={[styles.leaderboardRankBadge, { backgroundColor: entry.isPlayer ? theme.legacy : rankBg }]}>
+                            <Text style={[styles.leaderboardRank, { color: entry.isPlayer ? '#FFFFFF' : entry.rank <= 3 ? '#FFFFFF' : theme.textMuted }]}>
+                              #{entry.rank}
+                            </Text>
+                          </View>
+                          <Text style={[styles.leaderboardName, { color: entry.isPlayer ? theme.legacy : theme.text, fontWeight: entry.isPlayer ? '700' : isTop3 ? '600' : '400' }]}>
+                            {entry.name}
+                          </Text>
+                          <Text style={[styles.leaderboardValue, { color: entry.isPlayer ? theme.legacy : isTop3 ? rankColor : theme.text }]}>
+                            {leaderboardCategory === 'money' ? formatCurrency(entry.value) :
+                             leaderboardCategory === 'playtime' ? formatDuration(entry.value) :
+                             formatNumber(entry.value)}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+                )}
               </View>
             )}
           </View>
@@ -3401,33 +3433,35 @@ const styles = StyleSheet.create({
   newsTicker: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: "4%",
+    paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
     marginTop: 12,
   },
   newsIcon: {
-    fontSize: 16,
-    marginRight: 10,
+    fontSize: 14,
+    marginRight: 8,
   },
   newsText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "500",
-    lineHeight: 16,
+    lineHeight: 14,
   },
 
   // Leaderboards Panel
   leaderboardPanel: {
     position: "absolute",
-    top: 60,
-    left: 20,
-    right: 20,
-    bottom: 60,
+    top: "5%",
+    left: "4%",
+    right: "4%",
+    bottom: "8%",
     borderRadius: 20,
     borderWidth: 1,
-    padding: 20,
+    paddingHorizontal: "4%",
+    paddingTop: "4%",
+    paddingBottom: "4%",
     shadowOpacity: 0.25,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 8 },
@@ -3437,35 +3471,35 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 12,
   },
   leaderboardTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.5,
   },
   leaderboardClose: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
   },
   leaderboardTabs: {
     flexDirection: "row",
     marginBottom: 16,
-    gap: 8,
+    gap: 6,
   },
   leaderboardTab: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 8,
     borderWidth: 1,
     alignItems: "center",
   },
   leaderboardTabText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "600",
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   leaderboardContent: {
     flex: 1,
@@ -3485,25 +3519,54 @@ const styles = StyleSheet.create({
   leaderboardEntry: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    marginBottom: 8,
+    marginBottom: 6,
+  },
+  leaderboardRankBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
   },
   leaderboardRank: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: "700",
-    width: 40,
   },
   leaderboardName: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "500",
   },
   leaderboardValue: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
+  },
+  leaderboardScroll: {
+    flex: 1,
+  },
+  leaderboardEmpty: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  leaderboardEmptyIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  leaderboardEmptyText: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  leaderboardEmptySubtext: {
+    fontSize: 13,
+    fontWeight: "500",
   },
 
   prestigeExplanationSection: {

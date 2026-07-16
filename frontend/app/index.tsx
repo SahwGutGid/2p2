@@ -99,43 +99,43 @@ type Pkg = {
 
 const BASE_PACKAGES: Pkg[] = [
   // Consumer Lending (Early Game - Available from start)
-  { id: "micro-loan", name: "Micro Loan", tag: "Low risk", category: "consumer", cost: 10, durationMs: 10000, profitPct: 0.15, tint: "#5EE1B0" },
-  { id: "personal-loan", name: "Personal Loan", tag: "Low risk", category: "consumer", cost: 50, durationMs: 20000, profitPct: 0.25, tint: "#5EE1B0" },
-  { id: "consumer-credit", name: "Consumer Credit Bundle", tag: "Medium", category: "consumer", cost: 200, durationMs: 45000, profitPct: 0.40, tint: "#5EE1B0" },
+  { id: "micro-loan", name: "Micro Loan", tag: "Low risk", category: "consumer", cost: 10, durationMs: 10000, profitPct: 0.50, tint: "#5EE1B0" },
+  { id: "personal-loan", name: "Personal Loan", tag: "Low risk", category: "consumer", cost: 50, durationMs: 20000, profitPct: 0.80, tint: "#5EE1B0" },
+  { id: "consumer-credit", name: "Consumer Credit Bundle", tag: "Medium", category: "consumer", cost: 200, durationMs: 45000, profitPct: 1.20, tint: "#5EE1B0" },
   
   // Business Financing (Early-Mid Game - Unlock via Prestige)
-  { id: "small-business", name: "Small Business Loan", tag: "Medium", category: "business", cost: 500, durationMs: 90000, profitPct: 0.55, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "business-expansion", name: "Business Expansion Fund", tag: "Medium", category: "business", cost: 2000, durationMs: 180000, profitPct: 0.75, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "commercial-financing", name: "Commercial Financing", tag: "High", category: "business", cost: 8000, durationMs: 300000, profitPct: 1.00, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "small-business", name: "Small Business Loan", tag: "Medium", category: "business", cost: 500, durationMs: 90000, profitPct: 1.50, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "business-expansion", name: "Business Expansion Fund", tag: "Medium", category: "business", cost: 2000, durationMs: 180000, profitPct: 2.00, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "commercial-financing", name: "Commercial Financing", tag: "High", category: "business", cost: 8000, durationMs: 300000, profitPct: 2.50, tint: "#00E5FF", unlocked: (t) => t.businessUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
   
   // Diversified Portfolios (Mid Game - Unlock via Prestige)
-  { id: "credit-portfolio", name: "Credit Portfolio", tag: "Low risk", category: "diversified", cost: 1500, durationMs: 480000, profitPct: 1.20, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "diversified-loan", name: "Diversified Loan Portfolio", tag: "Medium", category: "diversified", cost: 5000, durationMs: 720000, profitPct: 1.50, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "international-credit", name: "International Credit Portfolio", tag: "High", category: "diversified", cost: 15000, durationMs: 1080000, profitPct: 1.80, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "credit-portfolio", name: "Credit Portfolio", tag: "Low risk", category: "diversified", cost: 1500, durationMs: 480000, profitPct: 2.80, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "diversified-loan", name: "Diversified Loan Portfolio", tag: "Medium", category: "diversified", cost: 5000, durationMs: 720000, profitPct: 3.50, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "international-credit", name: "International Credit Portfolio", tag: "High", category: "diversified", cost: 15000, durationMs: 1080000, profitPct: 4.20, tint: "#FFB84D", unlocked: (t) => t.diversifiedUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
   
   // Property Investments (Mid-Late Game - Unlock via Prestige)
-  { id: "mortgage-portfolio", name: "Mortgage Portfolio", tag: "Low risk", category: "property", cost: 3000, durationMs: 1800000, profitPct: 2.00, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "commercial-property", name: "Commercial Property Fund", tag: "Medium", category: "property", cost: 10000, durationMs: 2700000, profitPct: 2.50, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "real-estate-dev", name: "Real Estate Development", tag: "High", category: "property", cost: 30000, durationMs: 3600000, profitPct: 3.00, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "mortgage-portfolio", name: "Mortgage Portfolio", tag: "Low risk", category: "property", cost: 3000, durationMs: 1800000, profitPct: 4.50, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "commercial-property", name: "Commercial Property Fund", tag: "Medium", category: "property", cost: 10000, durationMs: 2700000, profitPct: 5.50, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "real-estate-dev", name: "Real Estate Development", tag: "High", category: "property", cost: 30000, durationMs: 3600000, profitPct: 6.50, tint: "#FFD54F", unlocked: (t) => t.propertyUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
   
   // Sector Funds (Late Game - Unlock via Prestige)
-  { id: "renewable-energy", name: "Renewable Energy Fund", tag: "Growth", category: "sector", cost: 8000, durationMs: 5400000, profitPct: 3.50, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "healthcare-growth", name: "Healthcare Growth Fund", tag: "Growth", category: "sector", cost: 25000, durationMs: 7200000, profitPct: 4.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "tech-venture", name: "Technology Venture Fund", tag: "High", category: "sector", cost: 75000, durationMs: 10800000, profitPct: 4.50, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "ai-infrastructure", name: "AI Infrastructure Fund", tag: "Very high", category: "sector", cost: 200000, durationMs: 14400000, profitPct: 5.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "renewable-energy", name: "Renewable Energy Fund", tag: "Growth", category: "sector", cost: 8000, durationMs: 5400000, profitPct: 7.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "healthcare-growth", name: "Healthcare Growth Fund", tag: "Growth", category: "sector", cost: 25000, durationMs: 7200000, profitPct: 8.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "tech-venture", name: "Technology Venture Fund", tag: "High", category: "sector", cost: 75000, durationMs: 10800000, profitPct: 9.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "ai-infrastructure", name: "AI Infrastructure Fund", tag: "Very high", category: "sector", cost: 200000, durationMs: 14400000, profitPct: 10.00, tint: "#B9F2FF", unlocked: (t) => t.sectorUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
   
   // Institutional Investments (End Game - Unlock via Prestige)
-  { id: "corporate-bond", name: "Corporate Bond Portfolio", tag: "Low risk", category: "institutional", cost: 50000, durationMs: 21600000, profitPct: 5.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "private-equity", name: "Private Equity Portfolio", tag: "High", category: "institutional", cost: 150000, durationMs: 28800000, profitPct: 6.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "institutional-growth", name: "Institutional Growth Fund", tag: "High", category: "institutional", cost: 500000, durationMs: 36000000, profitPct: 7.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
-  { id: "global-investment", name: "Global Investment Portfolio", tag: "Very high", category: "institutional", cost: 1500000, durationMs: 43200000, profitPct: 8.50, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "corporate-bond", name: "Corporate Bond Portfolio", tag: "Low risk", category: "institutional", cost: 50000, durationMs: 21600000, profitPct: 11.00, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "private-equity", name: "Private Equity Portfolio", tag: "High", category: "institutional", cost: 150000, durationMs: 28800000, profitPct: 13.00, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "institutional-growth", name: "Institutional Growth Fund", tag: "High", category: "institutional", cost: 500000, durationMs: 36000000, profitPct: 15.00, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
+  { id: "global-investment", name: "Global Investment Portfolio", tag: "Very high", category: "institutional", cost: 1500000, durationMs: 43200000, profitPct: 17.00, tint: "#FF6EC7", unlocked: (t) => t.institutionalUnlocked, unlockRequirement: "Unlock via Prestige Tree" },
   
   // Premium P2P Packages (Late End Game - Unlock via Prestige)
-  { id: "p2p-max-3", name: "P2P MAX 3", tag: "Premium", category: "premium", cost: 100000, durationMs: 1800000, profitPct: 4.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
-  { id: "p2p-max-6", name: "P2P MAX 6", tag: "Premium", category: "premium", cost: 300000, durationMs: 3600000, profitPct: 5.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
-  { id: "p2p-max-12", name: "P2P MAX 12", tag: "Premium", category: "premium", cost: 800000, durationMs: 7200000, profitPct: 6.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
-  { id: "p2p-max-24", name: "P2P MAX 24", tag: "Premium", category: "premium", cost: 2000000, durationMs: 14400000, profitPct: 7.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
-  { id: "p2p-safe", name: "P2P SAFE", tag: "Premium", category: "premium", cost: 5000000, durationMs: 36000000, profitPct: 8.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-3", name: "P2P MAX 3", tag: "Premium", category: "premium", cost: 100000, durationMs: 1800000, profitPct: 8.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-6", name: "P2P MAX 6", tag: "Premium", category: "premium", cost: 300000, durationMs: 3600000, profitPct: 10.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-12", name: "P2P MAX 12", tag: "Premium", category: "premium", cost: 800000, durationMs: 7200000, profitPct: 12.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-max-24", name: "P2P MAX 24", tag: "Premium", category: "premium", cost: 2000000, durationMs: 14400000, profitPct: 14.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
+  { id: "p2p-safe", name: "P2P SAFE", tag: "Premium", category: "premium", cost: 5000000, durationMs: 36000000, profitPct: 16.00, tint: "#FFD700", unlocked: (t) => t.premiumUnlocked, unlockRequirement: "Unlock via Prestige Tree", isPremium: true },
 ];
 
 const getPackages = (t: TreeEffects): Pkg[] =>
